@@ -71,8 +71,7 @@ drv_common_sources = \
 	common/drv_dsl_cpe_debug.c \
 	common/drv_dsl_cpe_os_linux.c \
 	common/drv_dsl_cpe_timeout.c \
-	g997/drv_dsl_cpe_api_g997.c \
-	led/drv_dsl_cpe_led.c
+	g997/drv_dsl_cpe_api_g997.c
 
 ## common driver sources always included additionally in the distribution
 drv_common_extra = \
@@ -81,7 +80,6 @@ drv_common_extra = \
 	include/drv_dsl_cpe_api_error.h \
 	include/drv_dsl_cpe_api_g997.h \
 	include/drv_dsl_cpe_api_ioctl.h \
-	include/drv_dsl_cpe_api_sar.h \
 	include/drv_dsl_cpe_api_types.h \
 	include/drv_dsl_cpe_autoboot.h \
 	include/drv_dsl_cpe_debug.h \
@@ -92,14 +90,9 @@ drv_common_extra = \
 	include/drv_dsl_cpe_device_g997.h \
 	include/drv_dsl_cpe_intern_led.h \
 	include/drv_dsl_cpe_intern_mib.h \
-	include/drv_dsl_cpe_intern_sar.h \
 	include/drv_dsl_cpe_os_lint_map.h \
 	include/drv_dsl_cpe_os.h \
 	include/drv_dsl_cpe_os_linux.h \
-	common/drv_dsl_cpe_os_vxworks.c \
-	include/drv_dsl_cpe_os_vxworks.h \
-	common/drv_dsl_cpe_os_rtems.c \
-	include/drv_dsl_cpe_os_rtems.h \
 	include/drv_dsl_cpe_api_config.h.in
 
 ## Files specific for the Danube
@@ -129,20 +122,16 @@ drv_danube_specific_extra = \
 ## Files specific for the Vinax
 ## driver sources
 drv_vinax_specific_sources = \
-	device/drv_dsl_cpe_device_vxx.c \
 	device/drv_dsl_cpe_device_vinax.c \
 	device/drv_dsl_cpe_msg_vinax.c \
-	g997/drv_dsl_cpe_api_g997_vinax.c \
-	sar/drv_dsl_cpe_sar.c
+	g997/drv_dsl_cpe_api_g997_vinax.c
 
 ## Files specific for the VRx
 ## driver sources
 drv_vrx_specific_sources = \
-	device/drv_dsl_cpe_device_vxx.c \
 	device/drv_dsl_cpe_device_vrx.c \
 	device/drv_dsl_cpe_msg_vrx.c \
-	g997/drv_dsl_cpe_api_g997_vrx.c \
-	sar/drv_dsl_cpe_sar.c
+	g997/drv_dsl_cpe_api_g997_vrx.c
 
 if INCLUDE_DSL_PM
 drv_pm_vinax_specific_sources = \
@@ -160,15 +149,12 @@ endif
 if INCLUDE_DSL_CEOC
 drv_ceoc_vinax_specific_sources = \
 	ceoc/drv_dsl_cpe_vinax_ceoc.c
-drv_ceoc_vrx_specific_sources = \
-	ceoc/drv_dsl_cpe_vrx_ceoc.c
 endif
 
 ## extra distribution for Vinax
 drv_vinax_specific_extra = \
 	include/drv_dsl_cpe_msg_vinax.h \
 	include/drv_dsl_cpe_device_vinax.h \
-	include/drv_dsl_cpe_device_vxx.h \
 	include/drv_dsl_cpe_vinax_msg_config_pmd.h \
 	include/drv_dsl_cpe_vinax_msg_const.h \
 	include/drv_dsl_cpe_vinax_msg_debug.h \
@@ -187,10 +173,8 @@ drv_vinax_specific_extra = \
 drv_vrx_specific_extra = \
 	include/drv_dsl_cpe_msg_vrx.h \
 	include/drv_dsl_cpe_device_vrx.h \
-	include/drv_dsl_cpe_device_vxx.h \
 	include/drv_dsl_cpe_vrx_msg_config_pmd.h \
 	include/drv_dsl_cpe_vrx_msg_const.h \
-	include/drv_dsl_cpe_vrx_msg_debug.h \
 	include/drv_dsl_cpe_vrx_msg_dmt_scope.h \
 	include/drv_dsl_cpe_vrx_msg_ghs_status.h \
 	include/drv_dsl_cpe_vrx_msg_olr.h \
@@ -242,8 +226,7 @@ endif
 if DEVICE_VRX
 drv_dsl_cpe_api_SOURCES += \
 	$(drv_vrx_specific_sources) \
-	$(drv_pm_vrx_specific_sources) \
-	$(drv_ceoc_vrx_specific_sources)
+	$(drv_pm_vrx_specific_sources)
 endif
 
 lib_dsl_cpe_api_a_SOURCES = \
@@ -271,8 +254,7 @@ endif
 if DEVICE_VRX
 lib_dsl_cpe_api_a_SOURCES += \
 	$(drv_vrx_specific_sources) \
-	$(drv_pm_vrx_specific_sources) \
-	$(drv_ceoc_vrx_specific_sources)
+	$(drv_pm_vrx_specific_sources)
 endif
 
 ## all extra sources for the current library distribution
@@ -287,7 +269,6 @@ EXTRA_DIST = \
 	$(drv_ceoc_vinax_specific_sources) \
 	$(drv_vrx_specific_sources) \
 	$(drv_pm_vrx_specific_sources) \
-	$(drv_ceoc_vrx_specific_sources) \
 	$(drv_common_extra) \
 	$(drv_pm_extra) \
 	$(drv_bnd_extra) \
