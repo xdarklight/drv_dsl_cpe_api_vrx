@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -71,7 +70,7 @@ DSL_Error_t DSL_DRV_PM_DEV_Suspend(DSL_Context_t *pContext);
 */
 DSL_Error_t DSL_DRV_PM_DEV_ShowtimeReachedHandle(DSL_Context_t *pContext);
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
 /**
    PM module device specific EAPS timeout handling
 

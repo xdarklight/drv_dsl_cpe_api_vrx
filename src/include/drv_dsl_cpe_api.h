@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -56,8 +55,13 @@
    DSL CPE API interface file for user applications.
 */
 
-/** \defgroup DRV_DSL_CPE_API Lantiq DSL CPE API
+/** \defgroup DRV_DSL_CPE_API Lantiq DSL CPE API Driver
     Lists the entire modules to the DSL CPE_API.
+*/
+
+/** \defgroup DRV_MEI Lantiq MEI Driver
+    This chapter only includes a part of the implementation from the MEI Driver
+    which is not mapped via any DSL CPE API Driver functionality.
 */
 
 /**
@@ -87,24 +91,33 @@
    \ingroup DRV_DSL_CPE_API
 */
 
-#ifdef INCLUDE_DSL_CPE_API_VDSL_SUPPORT
-#if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
-#if defined(INCLUDE_DSL_CPE_API_VINAX)
 /**
-   \defgroup DRV_DSL_CPE_SAR Implementation of Segmentation and Reassembly API
-   This module contains the API of the Segmentation and Reassembly functionality,
-   also called interworking between packet- and cell-oriented data interfaces.
-   \ingroup DRV_DSL_CPE_API
+   \defgroup MEI_DSM_IOCTL Functions for Digital Spectrum Management
+    (DSM/vectoring)
+    This Group contains all the commonly used functions for configuration,
+    control and status request of the [D]igital [S]pectrum [M]anagement related
+    functionality. As vectoring (G.Vector/G.993.5) is classified as DSM Layer 3
+    handling it is the only implemented functionality that belongs to this
+    category at the moment.
+   \ingroup DRV_MEI
 */
 
+#ifdef INCLUDE_DSL_CPE_API_VDSL_SUPPORT
+#if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
 /**
    \defgroup DRV_DSL_CPE_BND Implementation of Bonding functions.
    This module contains the API of the Bonding functionality.
    \ingroup DRV_DSL_CPE_API
 */
 
-#endif /* defined(INCLUDE_DSL_CPE_API_VINAX) */
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX) */
 #endif
+#endif
+
+/* \todo [RTT] Temporary exclude RTT because of important bugfix is needed first! */
+#if defined(INCLUDE_REAL_TIME_TRACE)
+#error Real Time Trace functionality is currently not supported.
 #endif
 
 #ifdef INCLUDE_REAL_TIME_TRACE
@@ -165,9 +178,17 @@
 #undef DSL_CPE_API_USE_KERNEL_INTERFACE
 
 /**
+   This define specifies whether to use ARX300 message blacklist
+*/
+#define ARX300_BRINGUP_CFG_BLACKLIST 0
+#ifndef ARX300_BRINGUP_CFG_BLACKLIST
+#define ARX300_BRINGUP_CFG_BLACKLIST 0
+#endif
+
+/**
    This define specifies the maximum number of device instances
 */
-#if defined (INCLUDE_DSL_CPE_API_VINAX) || defined (INCLUDE_DSL_CPE_API_VRX)
+#if defined (INCLUDE_DSL_CPE_API_VRX)
 #if !defined(DSL_DRV_MAX_DEVICE_NUMBER)
    #define DSL_DRV_MAX_DEVICE_NUMBER 1
 #elif (DSL_DRV_MAX_DEVICE_NUMBER == 0)
@@ -182,7 +203,28 @@
    /* Danube low level driver support only single instance */
    #define DSL_DRV_MAX_DEVICE_NUMBER 1
 #endif /* DSL_DRV_MAX_DEVICE_NUMBER*/
-#endif /* defined (INCLUDE_DSL_CPE_API_VINAX) || defined (INCLUDE_DSL_CPE_API_VRX)*/
+#endif /* defined (INCLUDE_DSL_CPE_API_VRX)*/
+
+#if !defined(DSL_DRV_LINES_PER_DEVICE)
+   #define DSL_DRV_LINES_PER_DEVICE 1
+#elif (DSL_DRV_LINES_PER_DEVICE == 0) || (DSL_DRV_LINES_PER_DEVICE > 2)
+   #error "DSL_DRV_LINES_PER_DEVICE is incorrect!!!"
+#endif
+
+#if defined (INCLUDE_DSL_CPE_API_DANUBE)
+#  if (DSL_DRV_LINES_PER_DEVICE > 2)
+   #error "DSL_DRV_LINES_PER_DEVICE is incorrect!!!"
+#  endif
+#endif
+
+#define DSL_DRV_MAX_ENTITIES  (DSL_DRV_MAX_DEVICE_NUMBER * DSL_DRV_LINES_PER_DEVICE)
+
+#if defined(INCLUDE_DSL_BONDING) && defined (INCLUDE_DSL_CPE_API_VRX)
+#  ifndef INCLUDE_FW_REQUEST_SUPPORT
+#     error "Bonding is only supported with the FW request feature!!!"
+#  endif
+#endif
+
 
 /**
    This define specifies the number of event elements in the FIFO
@@ -211,27 +253,11 @@
 
 #if defined (INCLUDE_DSL_CPE_API_DANUBE)
    #define DSL_MAX_NUMBER_OF_BANDS    1
-#elif defined (INCLUDE_DSL_CPE_API_VINAX) || defined (INCLUDE_DSL_CPE_API_VRX)
+#elif defined (INCLUDE_DSL_CPE_API_VRX)
    #define DSL_MAX_NUMBER_OF_BANDS    9
 #else
    #error "Device is not defined!"
 #endif
-
-#ifdef INCLUDE_DEPRECATED
-   #ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-      #ifndef INCLUDE_DSL_CPE_PM_LINE_EVENT_SHOWTIME_COUNTERS
-         #define INCLUDE_DSL_CPE_PM_LINE_EVENT_SHOWTIME_COUNTERS
-      #endif
-   #endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#else
-   #ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-      #error "PM Line Failure counters are deprecated! Please use --enable-deprecated configure option"
-   #endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-
-   #ifdef INCLUDE_ADSL_LED
-      #error "LED module is deprecated! Please use --enable-deprecated configure option"
-   #endif /* INCLUDE_ADSL_LED*/
-#endif /* INCLUDE_DEPRECATED */
 
 /** \addtogroup DRV_DSL_CPE_G997
  @{ */
@@ -254,13 +280,6 @@
 
 #define DSL_MAC_ADDRESS_OCTETS   6
 
-#ifdef INCLUDE_DSL_CPE_API_DANUBE
-   #if defined(INCLUDE_DEPRECATED) && defined(INCLUDE_ADSL_LED)
-   /* Internal definition. Move to configure process */
-   /*#define INCLUDE_DSL_DATA_LED_SIMULATOR*/
-   #endif /* defined(INCLUDE_DEPRECATED) && defined(INCLUDE_ADSL_LED)*/
-#endif /* INCLUDE_DSL_CPE_API_DANUBE*/
-
 /**
    The driver context contains global information.
 */
@@ -276,11 +295,6 @@ typedef struct DSL_Context DSL_Context_t;
 #ifdef INCLUDE_DSL_CPE_API_DANUBE
    #define INCLUDE_DSL_CPE_API_ADSL_SUPPORT         1
    #define INCLUDE_DSL_CPE_API_VDSL_SUPPORT         0
-#endif
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-   #define INCLUDE_DSL_CPE_API_ADSL_SUPPORT         1
-   #define INCLUDE_DSL_CPE_API_VDSL_SUPPORT         1
 #endif
 
 #ifdef INCLUDE_DSL_CPE_API_VRX
@@ -301,11 +315,11 @@ typedef struct DSL_Context DSL_Context_t;
    #if defined (INCLUDE_DSL_CPE_API_DANUBE)
       /** maximum number of data elements for subcarrier related data */
       #define DSL_MAX_NSC           512
-   #elif defined (INCLUDE_DSL_CPE_API_VINAX) || defined (INCLUDE_DSL_CPE_API_VRX)
+   #elif defined (INCLUDE_DSL_CPE_API_VRX)
       /** maximum number of data elements for subcarrier related data */
       #define DSL_MAX_NSC           4096
       /** maximum number of data elements for subcarrier group related data */
-      #define VNX_MAX_SCGROUPS      512
+      #define VRX_MAX_SCGROUPS      512
    #else
       #error "Device is not defined!"
    #endif
@@ -376,9 +390,9 @@ typedef enum
    DSL_DBG_MIB = 4,
    /** CEOC specific block */
    DSL_DBG_CEOC = 5,
-   /** LED specific block */
+   /** LED specific block (not used anymore!) */
    DSL_DBG_LED = 6,
-   /** SAR specific block */
+   /** SAR specific block (not used anymore!) */
    DSL_DBG_SAR = 7,
    /** Device specific block */
    DSL_DBG_DEVICE = 8,
@@ -505,84 +519,122 @@ typedef enum
    /* *** Common line states !     *** */
    /* ******************************** */
 
-   /** Line State is not initialized! */
+   /** Line State is not initialized!
+       This state only exists within software. During link activation procedure
+       it will be set initially before any DSL firmware response was received
+       within FW download sequence. */
    DSL_LINESTATE_NOT_INITIALIZED   = 0x00000000,
-
    /** Line State: EXCEPTION.
-       corresponds to the VINAX device state FAIL_STATE */
+       Entered upon an initialization or showtime failure or whenever a regular
+       state transition cannot be followed.
+       Corresponds to the following device specific state
+       - Modem Status: FAIL_STATE */
    DSL_LINESTATE_EXCEPTION         = 0x00000001,
-
    /** Line State: NOT_UPDATED.
-       internal line state that indicates stopped autoboot thread */
+       Internal line state that indicates that the autoboot thread is
+       stopped. */
    DSL_LINESTATE_NOT_UPDATED       = 0x00000010,
-
+   /** Line State: DISABLED.
+       This line state indicates that the line has been deactivated for one of
+       the following reasons
+       - line "tear down" has been performed within context of activated on-chip
+         bonding handling (currently only valid for XWAY(TM) VRX200 or XWAY(TM)
+         VRX300). DSL firmware was started in dual-port mode but the CO
+         indicated that bonding is not used (remote PAF_Enable status is false).
+       - line was manually disabled by the user via following command
+         \ref DSL_FIO_AUTOBOOT_CONTROL_SET with nCommand equals
+         \ref DSL_AUTOBOOT_CTRL_DISABLE. */
+   DSL_LINESTATE_DISABLED         = 0x00000020,
    /** Line State: IDLE_REQUEST.
        Interim state between deactivation of line and the time this user request
        is acknowledged by the firmware. */
    DSL_LINESTATE_IDLE_REQUEST      = 0x000000FF,
    /** Line State: IDLE.
-       Corresponds to the following device specific states
-       - Danube Family: Modem Status RESET
-       - VINAX: Device state RESET_STATE */
+       Corresponds to the following device specific state
+       - Modem Status: RESET_STATE */
    DSL_LINESTATE_IDLE              = 0x00000100,
    /** Line State: SILENT_REQUEST.
        Interim state between activation of line and the time this user request
        is acknowledged by the firmware. */
    DSL_LINESTATE_SILENT_REQUEST    = 0x000001FF,
-   /** Line State: SILENT.
-       Corresponds to the following device specific states
-       - Danube Family: Modem status READY
-       - VINAX: Device state READY */
+   /** Line State: SILENT
+       First State after a link initiation has been triggered. The CPE is
+       sending handshake tones (silence from CO side).
+       Corresponds to the following device specific state
+       - Modem status: READY_STATE */
    DSL_LINESTATE_SILENT            = 0x00000200,
-   /** Line State: HANDSHAKE.
-       Corresponds to the following device specific states
-       - Danube Family: Modem status GHS
-       - VINAX: Device state GHS */
+   /** Line State: HANDSHAKE
+       Entered upon detection of a far-end GHS signal.
+       Corresponds to the following device specific state
+       - Modem status: GHS_STATE */
    DSL_LINESTATE_HANDSHAKE         = 0x00000300,
-   /** Line State: HANDSHAKE.
-       Corresponds to the following device specific states
-       - VINAX: Device state BONDING_CLR
-       - Danube Family: Not supported */
+   /** Line State: BONDING_CLR
+       Entered for the preparation and sending of a CLR message in case of
+       bonding. The related bonding handshake primitives are implemented within
+       dsl_cpe_control.
+       Corresponds to the following device specific state
+       - ADSL only patforms: Not supported
+       - XWAY(TM) VRX200 and XWAY(TM) VRX300: Modem status:
+         GHS_BONDING_CLR_STATE */
    DSL_LINESTATE_BONDING_CLR       = 0x00000310,
    /** Line State: T1413.
-       Entered upon detection of a far-end ANSI T1.413 signal. */
+       Entered upon detection of a far-end ANSI T1.413 signal.
+       Corresponds to the following device specific state
+       - Modem status: T1413_STATE */
    DSL_LINESTATE_T1413             = 0x00000370,
    /** Line State: FULL_INIT.
-       - Danube Family: Modem status FULL_INIT
-       - VINAX: Device state FULL_INIT */
+       Entered upon entry into the training phase of initialization following
+       GHS start-up.
+       Corresponds to the following device specific state
+       - Modem status: FULLINIT_STATE */
    DSL_LINESTATE_FULL_INIT         = 0x00000380,
-   /** Line State: SHORT INIT
-       not supported by VINAX*/
+   /** Line State: SHORT INIT. */
    DSL_LINESTATE_SHORT_INIT_ENTRY  = 0x000003C0,
    /** Line State: DISCOVERY.
-       for Danube Family and VINAX this is a substate of FULL_INIT and is not
-       reported */
+       This state is a substate of FULL_INIT and is not reported */
    DSL_LINESTATE_DISCOVERY         = 0x00000400,
    /** Line State: TRAINING.
-       for Danube Family and VINAX this is a substate of FULL_INIT and is not
-       reported */
+       This state is a substate of FULL_INIT and is not reported */
    DSL_LINESTATE_TRAINING          = 0x00000500,
    /** Line State: ANALYSIS.
-       for Danube Family and VINAX this is a substate of FULL_INIT and is not
-       reported */
+       This state is a substate of FULL_INIT and is not reported */
    DSL_LINESTATE_ANALYSIS          = 0x00000600,
    /** Line State: EXCHANGE.
-       for Danube Family and VINAX this is a substate of FULL_INIT and is not
-       reported */
+       This state is a substate of FULL_INIT and is not reported */
    DSL_LINESTATE_EXCHANGE          = 0x00000700,
-   /** Line State: SHOWTIME.
-       for Danube Family and VINAX this is a substate of FULL_INIT and is not
-       reported */
+   /** Line State: SHOWTIME_NO_SYNC.
+       Showtime is reached but TC-Layer is not in sync.
+       Corresponds to the following device specific state
+       - Modem status: STEADY_STATE_TC_NOSYNC */
    DSL_LINESTATE_SHOWTIME_NO_SYNC  = 0x00000800,
    /** Line State: SHOWTIME_TC_SYNC.
-       for Danube Family and VINAX this is a substate of FULL_INIT and is not
-       reported */
+       Showtime is reached and TC-Layer is in sync. Modem is fully
+       operational.
+       Corresponds to the following device specific state
+       - Modem status: STEADY_STATE_TC_SYNC */
    DSL_LINESTATE_SHOWTIME_TC_SYNC  = 0x00000801,
+   /** Line State: ORDERLY_SHUTDOWN_REQUEST.
+      Interim state between request (from API) to deactivation the line and
+      acknowledgment from the DSL Firmware by indicating 'orderly local
+      shutdown' or fail respective exception state.
+      \note Due to timing limitations on updating the DSL Firmware line state the
+            possible next line state could be whether "orderly shutdown"
+            acknowledge (\ref DSL_LINESTATE_ORDERLY_SHUTDOWN) or directly the
+            final fail/exception state (\ref DSL_LINESTATE_EXCEPTION) */
+   DSL_LINESTATE_ORDERLY_SHUTDOWN_REQUEST = 0x0000085F,
+   /** Line State: ORDERLY_SHUTDOWN.
+      This status is indicated by the DSL Firmware during orderly local link
+      shutdown sequence. DSL link is down in this state and the next expected
+      line state will be fail respective exception state (\ref
+      DSL_LINESTATE_EXCEPTION).
+      Corresponds to the following device specific state
+       - ADSL only platforms: Currently not supported
+       - XWAY(TM) VRX200 and XWAY(TM) VRX300: Modem status: PRE_FAIL_STATE */
+   DSL_LINESTATE_ORDERLY_SHUTDOWN = 0x00000860,
    /** Line State: FASTRETRAIN.
-       Currently not supported by Danube Family and VINAX. */
+       Currently not supported. */
    DSL_LINESTATE_FASTRETRAIN       = 0x00000900,
-   /** Line State: LOWPOWER_L2.
-       Not supported by VINAX */
+   /** Line State: LOWPOWER_L2. */
    DSL_LINESTATE_LOWPOWER_L2       = 0x00000A00,
    /** Line State: DIAGNOSTIC ACTIVE. */
    DSL_LINESTATE_LOOPDIAGNOSTIC_ACTIVE   = 0x00000B00,
@@ -591,13 +643,11 @@ typedef enum
    /** This status is used if the DELT data is already available within the
        firmware but has to be updated within the DSL API data elements. If
        the line is within this state the data within a DELT element is NOT
-       consistent and shall be NOT read out by the upper layer software.
-       \note This state is currently used for the GEMINAX-D device only */
+       consistent and shall be NOT read out by the upper layer software.  */
    DSL_LINESTATE_LOOPDIAGNOSTIC_DATA_REQUEST = 0x00000B20,
    /** Line State: DIAGNOSTIC COMPLETE */
    DSL_LINESTATE_LOOPDIAGNOSTIC_COMPLETE = 0x00000C00,
-   /** Line State: RESYNC
-       not supported by VINAX */
+   /** Line State: RESYNC. */
    DSL_LINESTATE_RESYNC            = 0x00000D00,
 
    /* *********************************************************************** */
@@ -619,15 +669,12 @@ typedef enum
    DSL_LINESTATE_TEST_SHOWTIME_LOCK= 0x01000030,
    /** Line State: TEST_QUIET. */
    DSL_LINESTATE_TEST_QUIET        = 0x01000040,
-   /** Line State: FILTERDETECTION_ACTIVE.
-       Not supported by VINAX and VRx*/
+   /** Line State: FILTERDETECTION_ACTIVE. */
    DSL_LINESTATE_TEST_FILTERDETECTION_ACTIVE = 0x01000050,
-   /** Line State: FILTERDETECTION_COMPLETE.
-       Not supported by VINAX and VRx*/
+   /** Line State: FILTERDETECTION_COMPLETE. */
    DSL_LINESTATE_TEST_FILTERDETECTION_COMPLETE = 0x01000060,
 
-   /** Line State: LOWPOWER_L3.
-       Not supported by VINAX */
+   /** Line State: LOWPOWER_L3. */
    DSL_LINESTATE_LOWPOWER_L3       = 0x02000000,
    /** Line State: All line states that are not assigned at the moment */
    DSL_LINESTATE_UNKNOWN           = 0x03000000
@@ -653,11 +700,10 @@ typedef struct
          processed by the firmware and forwarded via a firmware message to the
          API. This handling requires that the hardware related functionality is
          foreseen in every hybrid design!
-         - This functionality is only available on VRX platforms.
-         - For Danube Family platforms refer to the low level configuration
+         - This functionality is only available on VDSL capable platforms
+           (XWAY(TM) VRX200 and XWAY(TM) VRX300)
+         - For ADSL only platforms please refer to the low level configuration
            instead (drv_dsl_cpe_danube_ctx.h:DSL_DEV_Hybrid_t()).
-         - For Vinax platform please refer to the low level configuration
-           instead (drv_dsl_cpe_vinax_ctx.h:DSL_DEV_Hybrid_t()).
 */
 typedef enum
 {
@@ -668,8 +714,7 @@ typedef enum
    DSL_HYBRID_TYPE_UNKNOWN = -1,
    /**
    Hybrid information is not applicable on the hardware platform that is
-   currently used. This is the default value for Danube, Amazon-SE, ARX100
-   and Vinax. */
+   currently used. This is the default value for ADSL only platforms. */
    DSL_HYBRID_TYPE_NA = 0,
    /**
    POTS hybrid detected. */
@@ -705,47 +750,39 @@ typedef struct
    /**
    Firmware version.
 
-   Consists of
-   hw_platform.feature_set.major_ver.minor_ver.rel_indication.application:
+   Format:
+   hw_platform.feature_set.major_ver.minor_ver.rel_indication.application
 
-   hardware platform (hw_platform)
-   - 0x01: Amazon
-   - 0x02: Danube
-   - 0x03: Amazon-SE
-   - 0x04: ARX100
-   - 0x05: VRX200
-   - 0x09: VINAX1X (Vinax Revision 1.1 - 1.3)
+   Hardware platform (hw_platform):
+   - 0x01: XWAY(TM) AMAZON Family (not covered by DSL CPE API!)
+   - 0x02: XWAY(TM) DANUBE Family (not supported anymore)
+   - 0x03: XWAY(TM) AMAZON-SE Family (not supported anymore)
+   - 0x04: XWAY(TM) ARX100 Family
+   - 0x05: XWAY(TM) VRX200 Family
+   - 0x06: XWAY(TM) ARX300 Family
+   - 0x07: XWAY(TM) VRX300 Family
 
-   feature set (feature_set)
-   - indicates the major feature set implementation for firmware (please refer
+   Feature set (feature_set)
+   - Indicates the major feature set implementation for firmware (please refer
      to firmware documentation and/or contact Lantiq for detailed informations).
 
-   major version (major_ver)
-   - logical number (incremented for major updates of firmware)
+   Major version (major_ver)
+   - Logical number (incremented for major updates of firmware)
 
-   minor version (minor_ver)
-   - logical number (incremented for minor updates of firmware)
+   Minor version (minor_ver)
+   - Logical number (incremented for minor updates of firmware)
 
-   release indication (rel_indication)
+   Release indication (rel_indication)
    - 0x00: RELEASE_STATUS_RELEASED, The firmware has been tested and released.
    - 0x01: RELEASE_STATUS_PRE_RELEASE, The firmware is undergoing the release
            process; the release has not been completed.
-   - 0x02: DEVELOP Development version
 
-   application type (application) also includes information about the annex
-   type. The following application types are defined.
-   For Danube Family (Danube/Amazon-SE/ARX100) and VRX Family
+   Application type (application)
+   The following application types are defined.
    - 0x01: ADSL Annex A
    - 0x02: ADSL Annex B
    - 0x06: VDSL
-   For Vinax
-   - 0x02: VDSL1_2 FW for VDSL1 + VDSL2 (CO + CPE with-host)
-   - 0x05: ADSL_A FW for ADSL Annex A only (CO + CPE with-host)
-   - 0x06: ADSL_B FW for ADSL Annex B only (CO + CPE with-host)
-   \attention The list of application types for the Vinax only includes the
-              important CPE related values. For further details please refer to
-              firmware documentation (Firmware Programmers Reference) and/or
-              contact Lantiq. */
+   - 0x07: VDSL with G.Vector support */
    DSL_OUT DSL_char_t DSL_ChipSetFWVersion[MAX_INFO_STRING_LEN];
 
    /**
@@ -756,29 +793,35 @@ typedef struct
    Chip set type string which specifies the chip name.
 
    The following names are defined
-   - Lantiq_Danube
-   - Lantiq_Amazon      (not supported)
-   - Lantiq_Amazon_SE
-   - Lantiq_ARX100
-   - Lantiq_Vinax
-   - Lantiq_VRX200 */
+   - Lantiq-Danube      (not supported anymore)
+   - Lantiq-Amazon      (not supported)
+   - Lantiq-Amazon_SE   (not supported anymore)
+   - Lantiq-ARX100
+   - Lantiq-VRX200
+   - Lantiq-ARX300
+   - Lantiq-VRX300 */
    DSL_OUT DSL_char_t DSL_ChipSetType[MAX_INFO_STRING_LEN];
 
    /**
-   MEI BSP Driver version. This is the version of the low level driver
-   which provides basic access to the according device/firmware interface.
+   MEI BSP Driver version.
+   This is the version of the low level driver which provides basic access to
+   the according device/firmware interface.
 
-   Consists of major.minor.build.rel:
+   Format:
+   major.minor.build.rel:
+
    - major version (major): logical number, incremented for new versions
-   - minor version (minor): logical number, incremented for minor changes in versions
+   - minor version (minor): logical number, incremented for minor changes in
+     versions
    - build step (build): logical number, incremented for each new version build
-   - optional release indictor (rel): specifies different Lantiq internal indications */
+   - optional release indictor (rel): specifies different Lantiq internal
+     indications */
    DSL_OUT DSL_char_t DSL_DriverVersionMeiBsp[MAX_INFO_STRING_LEN];
 
    /**
    Hybrid type.
 
-   \attention This value is only available for VRX family platform. */
+   \attention This value is only available for VDSL capabale platforms */
    DSL_OUT DSL_HybridType_t nHybridType;
 } DSL_VersionInformationData_t;
 
@@ -808,19 +851,20 @@ typedef enum
    /**
    Firmware request is related to an autoboot reboot processing that will start
    in ADSL after successful firmware download.
-   \note For Danube, Amazon-SE and ARX100 this will be the only value that is
-         signaled. */
+   \note For ADSL only platforms this will be the only value that is signaled.*/
    DSL_FW_REQUEST_ADSL = 1,
    /**
    Firmware request is related to an autoboot reboot processing that will start
    in VDSL after successful firmware download.
-   \note This value is only available within Vinax versions of DSL CPE API. */
+   \note This value is only available for VDSL capable platform versions of
+         DSL CPE API. */
    DSL_FW_REQUEST_VDSL = 2,
    /**
-   Firmware request is related to an autoboot reboot processing for the VRX
-   platform that will start in an xDSL mode that is supported by the provided
-   firmware binary.
-   \note This value is only available within VRX versions of DSL CPE API. */
+   Firmware request is related to an autoboot reboot processing on a VDSL
+   capable platform that will start in an xDSL mode that is supported by the
+   provided firmware binary.
+   \note This value is only available for VDSL capable platform versions of
+         DSL CPE API. */
    DSL_FW_REQUEST_XDSL = 3,
    /**
    Delimiter only! */
@@ -839,13 +883,12 @@ typedef enum
    DSL_FW_STATUS_NA = 0,
    /**
    Firmware status indicates ADSL successful firmware download.
-   \note For Danube, Amazon-SE and ARX100 this will be the only value that is
-         signaled. */
+   \note For ADSL only platforms this will be the only value that is signaled.*/
    DSL_FW_STATUS_ADSL = 1,
    /**
    Firmware status indicates VDSL successful firmware download.
-   \note This value is only available within Vinax and VRX versions
-         of DSL CPE API. */
+   \note This value is only available for XWAY(TM) VRX200 and XWAY(TM) VRX300
+         versions of DSL CPE API. */
    DSL_FW_STATUS_VDSL = 2,
    /**
    Delimiter only! */
@@ -853,14 +896,38 @@ typedef enum
 } DSL_FirmwareStatusType_t;
 
 /**
+   Defines the the possible DSL firmware operation types for VDSL capable
+   platforms.
+*/
+typedef enum
+{
+   /**
+   No dedicated information available. */
+   DSL_PORT_MODE_NA = 0,
+   /**
+   Single port mode (single line or off-chip bonding operation) */
+   DSL_PORT_MODE_SINGLE = 1,
+   /**
+   Dual port mode (on-chip bonding opreation) */
+   DSL_PORT_MODE_DUAL = 2,
+   /**
+   Delimiter only! */
+   DSL_PORT_MODE_LAST = 3
+} DSL_PortMode_t;
+/**
    Structure to return the current type of firmware request.
    It defines which kind of firmware is needed for the next reboot sequence.
 */
 typedef struct
 {
    /**
-   Current line state. */
+   xDSL type. */
    DSL_OUT DSL_FirmwareRequestType_t nFirmwareRequestType;
+   /**
+   Port Mode type.
+   \note This value is only available for VDSL capable platform versions of
+         the DSL CPE API.*/
+   DSL_OUT DSL_PortMode_t nPortMode;
 } DSL_FirmwareRequestData_t;
 
 /**
@@ -927,8 +994,13 @@ typedef enum
    Autobooot handling is currently waiting for restart. */
    DSL_AUTOBOOT_STATUS_RESTART_WAIT = 6,
    /**
+   Autoboot handling is currently disabled.
+   \note Please also refer to the description of \ref DSL_LINESTATE_DISABLED for
+         more details on how the line can become disabled. */
+   DSL_AUTOBOOT_STATUS_DISABLED = 7,
+   /**
    Delimiter only */
-   DSL_AUTOBOOT_STATUS_LAST = 7
+   DSL_AUTOBOOT_STATUS_LAST = 8
    /* Might be extended if necessary */
 } DSL_AutobootStatGet_t;
 
@@ -1045,17 +1117,16 @@ typedef struct
          Therefore configurations are only possible for downstream and will be
          ignored for upstream. Additionally a warning
          \ref DSL_WRN_CONFIG_PARAM_IGNORED is returned in that case.
-   \note In case of using VRX200 the configuration is only valid in case of using
-         VDSL link activation mode. */
+   \note In case of using a VDSL capable platform the configuration is only
+         valid in case of using VDSL link activation mode. */
    DSL_CFG DSL_boolean_t bReTxEnable;
    /**
    Virtual noise config/status value.
 
-   \note The status value for virtual noise is directly derived by the
-         configuration value (configuration value only) for the Danube device.
-   \note Supported by VRX
-   \note For the Vinax device virtual noise config/status value is only valid in
-         the VDSL mode.*/
+   \note The status value for virtual noise is directly derived from the
+         configuration value (configuration value only) for ADSL only capable
+         platforms.
+   \note Supported by XWAY(TM) VR200 and XWAY(TM) VR300  */
    DSL_CFG DSL_boolean_t bVirtualNoiseSupport;
    /**
    20 bit constellation config/status value.
@@ -1465,23 +1536,23 @@ typedef enum
 {
    /**
    select the UTOPIA - System Interface
-   \note This configuration/status is only valid for Vinax */
+   \note This configuration/status is not supported. */
    DSL_SYSTEMIF_UNKNOWN = 0,
    /**
    select the UTOPIA - System Interface
-   \note This configuration/status is only valid for Vinax */
+   \note This configuration/status is not supported. */
    DSL_SYSTEMIF_UTOPIA = 1,
    /**
    select the POSPHY - System Interface
-   \note This configuration/status is only valid for Vinax */
+   \note This configuration/status is not supported. */
    DSL_SYSTEMIF_POSPHY = 2,
    /**
    select the MII - System Interface
-   \note For Danube this configuration/status is the only valid one */
+   \note Currently this configuration/status value is the only supported one. */
    DSL_SYSTEMIF_MII = 3,
    /**
    System Interface was not yet configured
-   \note This configuration/status is only valid for Vinax */
+   \note This configuration/status is not supported. */
    DSL_SYSTEMIF_UNDEFINED = 4,
    /*
    Delimiter */
@@ -1490,19 +1561,13 @@ typedef enum
 
 /**
    Definitions for possible TC-Layers.
-
-   \attention In case of VRX200 and configuration access this value is only
-              valid for ADSL link activation sequence. For VDSL link activation
-              sequence the fixed value (DSL_TC_EFM) is used within DSL CPE API
-              internal configuration. The same value will be also returned
-              within status request respective event handling.
 */
 typedef enum
 {
    /**
    Indicates that the TC-layer configuration is unknown at the current system
    state. This initialization value in only valid for status request (not for
-   configuration) and should be only set after first startup of DSL CPE API
+   configuration) and will be set only set after first startup of DSL CPE API
    and before first full init line state is passed. */
    DSL_TC_UNKNOWN = 0,
    /**
@@ -1513,19 +1578,28 @@ typedef enum
    DSL_TC_EFM = 2,
    /**
    select the TC-layer - HDLC
-   \note This configuration is only valid for Vinax */
+   \note This value is not used. */
    DSL_TC_HDLC = 3,
    /**
    select the TC-layer - Autonegotiation
-   \note This configuration is valid for Danube and VRX200
-   \note In case of a status request this value should be never returned */
+   \note In case of a status request this value should be never returned
+   \note Selecting this configuration value provides the maximum flexibility
+         on one hand but might also introduce additional delay within link
+         activation times. For example, in VDSL the negotiation of the actual
+         selected TC-Layer can be only indicated by the DSL Subsystem within
+         context of showtime entry (not after reaching \ref
+         DSL_LINESTATE_FULL_INIT as in ADSL).
+         It is recommended to use a fixed assignment of TC-Layer instead of
+         auto TC whenever possible!
+         For example, the default configuration that would fit for most
+         applications would be to configure ATM for ADSL and PTM for VDSL. */
    DSL_TC_AUTO = 4,
    /**
    forces the TC-layer - EFM (PTM)
-   \note This configuration is only valid for Danube
+   \note This configuration is only valid for ADSL only platforms
    \attention This selection should be only used in case of problems with using
-   \ref DSL_TC_EFM configuration setting because it activates a workaround for
-   special DSLAMs */
+              \ref DSL_TC_EFM configuration setting because it activates a
+              workaround for special DSLAMs */
    DSL_TC_EFM_FORCED = 5,
    /*
    Delimiter */
@@ -1541,16 +1615,19 @@ typedef enum
 */
 typedef enum
 {
-   /* Cleaned. */
+   /** This value is defined for DSL CPE API internal initilaziation purpose
+       only. In case of configuring the TC-Layer you shall always set at
+       least one of the defined bits of the bitmask. */
    DSL_EMF_TC_CLEANED = 0x00000000,
    /**
    64/65-octet encapsulation supported
-   \note For Vinax this is the only valid configuration option
-   \note For Danube downstream this is the only valid configuration option */
+   \note This configuration is only valid for downstream configuration of
+         ADSL only platforms. */
    DSL_EMF_TC_NORMAL = 0x00000001,
    /**
    64/65-octet encapsulation with pre-emption
-   \note This configuration is only valid for upstream configuration of Danube */
+   \note This configuration is only valid for upstream configuration of
+         ADSL only platforms. */
    DSL_EMF_TC_PRE_EMPTION = 0x00000002,
    /**
    64/65-octet encapsulation with short packets
@@ -1576,10 +1653,33 @@ typedef struct
    DSL_CFG DSL_BF_EfmTcConfig_t nEfmTcConfigDs;
    /**
    Specifies the System Interface
-   \note For the Danube version of the DSL CPE API the only possible mode
-         is DSL_SYSTEMIF_MII. */
+   \note For the ADSL only platforms version of the DSL CPE API the only
+         possible mode is DSL_SYSTEMIF_MII. */
    DSL_CFG DSL_SystemInterfaceSelection_t nSystemIf;
 } DSL_SystemInterfaceConfigData_t;
+
+/**
+   Defines the xDSL flavor for which a function call should be applied.
+*/
+typedef enum
+{
+   /** DSL Mode information not applicable */
+   DSL_MODE_NA = -1,
+   /**
+   ADSL mode selected. */
+   DSL_MODE_ADSL = 0,
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+   /**
+   VDSL mode selected.
+   \note This option is only supported for VDSL capable platforms. */
+   DSL_MODE_VDSL = 1,
+   /** Delimiter only */
+   DSL_MODE_LAST = 2
+#else
+   /** Delimiter only */
+   DSL_MODE_LAST = 1
+#endif
+} DSL_DslModeSelection_t;
 
 /**
    Structure used for System Interface configuration.
@@ -1592,6 +1692,9 @@ typedef struct
    /**
    Driver control/status structure */
    DSL_IN_OUT DSL_AccessCtl_t accessCtl;
+   /**
+   Specifies for which DSL flavor the configuration will be applied. */
+   DSL_IN DSL_DslModeSelection_t nDslMode;
    /**
    Structure that contains system interface configuration settings */
    DSL_CFG DSL_SystemInterfaceConfigData_t data;
@@ -2025,8 +2128,6 @@ typedef struct{
       duplex state of an attached ethernet phy. Note that the ethernet
       autonegotiation in the ethernet phy has to be activated separately via a
       MDIO access.
-      \note VINAX supports this parameter for hostless CPE only, means
-            for far end from CO side.
    */
    DSL_CFG DSL_EFM_AutoNegotiation_t nAutoNegotiation;
    /**
@@ -2987,7 +3088,7 @@ typedef enum
    Valid values are
    - '0' for increased Impulse Noise Protection (INP)
    - '1' for increased data rate
-   \note This configuration option is only valid for Danube Family.
+   \note This configuration option is only valid for ADSL only platforms.
    \note The erasure decoding functionality itself is enabled within firmware
          by default. */
    DSL_ERASURE_DECODING_TYPE_DS = 1,
@@ -2997,7 +3098,7 @@ typedef enum
    Valid values are
    - '0' for disabling (do not transmit in G.HS)
    - '1' for enabling (transmit in G.HS)
-   \note This configuration option is only valid for Danube Family. */
+   \note This configuration option is only valid for ADSL only platforms. */
    DSL_TRUST_ME_BIT = 2,
    /**
    Configuration of G.HS option for spectral inband shaping.
@@ -3005,8 +3106,16 @@ typedef enum
    - '0' for not support option during G.HS
    - '1' for support option during G.HS (in this case the CO might send Upstream
          PSD Mask). This is the default configuration.
-   \note This configuration option is only valid for Danube Family. */
+   \note This configuration option is only valid for ADSL only platforms. */
    DSL_INBAND_SPECTRAL_SHAPING_US = 3,
+   /**
+   Enhanced upstream framing (ADSL only)
+   The bit enables enhanced upstream framing parameter support in ADSL2/2+ ,
+   i.e. standard compliant extension of interleaver capabilities in upstream
+   latency path #0 (G.hs Amendment 3).
+   - '0': disable
+   - '1': enable (default) */
+   DSL_ENHANCED_FRAMING_US = 4,
    /**
    Last entry - only used as delimiter! */
    DSL_OPT_LAST
@@ -3045,7 +3154,9 @@ typedef struct
 
 #ifdef INCLUDE_DEVICE_EXCEPTION_CODES
 /**
-   This function returns the last device specific exception codes.
+   This function returns the last firmware specific exception codes.
+   All values are updated in case of link is reaching fail state, means that
+   line state equals \ref DSL_LINESTATE_EXCEPTION (0x1).
    \note This structure might be extended by additional values if necessary.
    \note The return values are transparently forwarded from the firmware and
          thus they are not described in detail with DSL CPE API context.
@@ -3053,25 +3164,54 @@ typedef struct
 typedef struct
 {
    /**
-   This structure includes device specific and optional error code 1.
-   A value of 0 means that there is no error or the value is not used.
-   It is mapped as follows
-   - Danube Family: STAT 5 0  (Current link exception code)
-   - Vinax : CMD_ModemFSM_FailReasonGet, Parameter 3 */
-   DSL_uint32_t nError1;
+   This value returns the major, classification error code as it is given by
+   the Firmware.
+   Device specific mapping as follows
+   - ADSL only platforms: Not used (always 0)
+   - XWAY(TM) VRX200 and XWAY(TM) VRX300: ACK_ModemFSM_FailReasonGet::ErrorCode
+     (System Error Code)
+   \note This value references to the reason for the last fail state
+         transition */
+   DSL_uint8_t nErrorCode1;
    /**
-   This structure includes device specific and optional error code 2
-   (Previous link exception code).
+   This value returns the sub error code as it is given by the Firmware.
+   Device specific mapping as follows
+   - ADSL only platforms: Not used (always 0)
+   - XWAY(TM) VRX200 and XWAY(TM) VRX300:
+     ACK_ModemFSM_FailReasonGet::SubErrorCode (System Sub Error Code)
+   \note This value references to the reason for the last fail state
+         transition */
+   DSL_uint8_t nSubErrorCode1;
+   /**
+   This value returns the device specific and optional error code 1.
    A value of 0 means that there is no error or the value is not used.
-   This value is handled API internally. On a consecutive fail state entry the
-   value from previous error code (nError1) is copied to this value (nError2)
-   before nError1 is updated with the current (new) value */
-   DSL_uint32_t nError2;
-} DSL_DBG_LastExceptionCodesData_t;
+   Device specific mapping as follows
+   - ADSL only platforms: STAT 5 0  (Current link exception code)
+   - XWAY(TM) VRX200 and XWAY(TM) VRX300:
+     ACK_ModemFSM_FailReasonGet::FW_FailCode (Firmware Failure Code)
+   \note This value references to the reason for the last fail state
+         transition */
+   DSL_uint16_t nFwErrorCode1;
+   /**
+   Meaning and device specific mapping as defined for \ref nErrorCode1.
+   \note This value references to the reason for the second last fail state
+         transition */
+   DSL_uint8_t nErrorCode2;
+   /**
+   Meaning and device specific mapping as defined for \ref nSubErrorCode1.
+   \note This value references to the reason for the second last fail state
+         transition */
+   DSL_uint8_t nSubErrorCode2;
+   /**
+   Meaning and device specific mapping as defined for \ref nFwErrorCode1.
+   \note This value references to the reason for the second last fail state
+         transition */
+   DSL_uint16_t nFwErrorCode2;
+} DSL_LastExceptionCodesData_t;
 
 /**
    This structure is used to get the last device specific exception codes.
-   It is used for ioctl \ref DSL_FIO_DBG_LAST_EXCEPTION_CODES_GET
+   It is used for ioctl \ref DSL_FIO_LAST_EXCEPTION_CODES_GET
 */
 typedef struct
 {
@@ -3080,8 +3220,8 @@ typedef struct
    DSL_IN_OUT DSL_AccessCtl_t accessCtl;
    /**
    Structure that contains status data */
-   DSL_OUT DSL_DBG_LastExceptionCodesData_t data;
-} DSL_DBG_LastExceptionCodes_t;
+   DSL_OUT DSL_LastExceptionCodesData_t data;
+} DSL_LastExceptionCodes_t;
 #endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
 
 /** @} DRV_DSL_CPE_COMMON */
@@ -3258,17 +3398,13 @@ typedef enum
    - ref DSL_AutobootStatusData_t */
    DSL_EVENT_S_AUTOBOOT_STATUS = 22,
    /**
-   (23) Multimode FSM status event (system reboot request).
-   For a detailed description of the information provided with this event
-   please refer to the description of the following structure(s)
-   - ref DSL_MultimodeFsmStatus_t */
-   DSL_EVENT_S_MULTIMODE_FSM_STATUS = 23,
-   /**
-   (24) RTT status event.
-   For a detailed description of the information provided with this event
-   please refer to the description of the following structure(s)
+   (23) RTT status event. For a detailed description of the information provided
+   with this event please refer to the description of the following structure(s)
    - ref DSL_RTT_StatusData_t */
-   DSL_EVENT_S_RTT_STATUS = 24,
+   DSL_EVENT_S_RTT_STATUS = 23,
+   /**
+   (24) FarEnd test params available. */
+   DSL_EVENT_S_FE_TESTPARAMS_AVAILABLE = 24,
    /**
    alias for last callback event */
    DSL_EVENT_LAST
@@ -3335,7 +3471,7 @@ typedef enum
    autoboot FSM activation data.
 
    \note This config structure is only used within ADSL/VDSL multimode
-      handling and in case of using VRX device.
+      handling and in case of using VDSL capable platforms.
 */
 typedef struct
 {
@@ -3346,7 +3482,7 @@ typedef struct
    /**
    Within context of ADSL/VDSL multimode handling it defines the ADSL
    activation mode type. This parameter is only effective in case of
-   \ref nActivationSequence is set to \ref DSL_ACT_SEQ_NON_STD */
+   nActivationSequence is set to \ref DSL_ACT_SEQ_NON_STD */
    DSL_CFG DSL_ActivationMode_t nActivationMode;
 } DSL_ActivationFsmConfigData_t;
 
@@ -3355,7 +3491,7 @@ typedef struct
    autoboot FSM.
 
    \note This config structure is only used within ADSL/VDSL multimode
-      handling and in case of using VRX device.
+      handling and in case of using VDSL capable platforms.
 */
 typedef struct
 {
@@ -3370,68 +3506,6 @@ typedef struct
       DSL_FW_TYPE_NA) results in selecting the default value DSL_FW_TYPE_ADSL. */
    DSL_CFG DSL_FirmwareType_t nNextMode;
 } DSL_MultimodeFsmConfigData_t;
-
-/**
-   Structure used for getting status information of the autoboot FSM of the
-   API.
-   This structure has to be used for
-   ioctls \ref DSL_FIO_MULTIMODE_FSM_CONFIG_SET ,
-          \ref DSL_FIO_MULTIMODE_FSM_CONFIG_SET
-*/
-typedef struct
-{
-   /**
-   Driver control/status structure */
-   DSL_IN_OUT DSL_AccessCtl_t accessCtl;
-   /**
-   Structure that contains autoboot control data */
-   DSL_OUT DSL_MultimodeFsmConfigData_t data;
-} DSL_MultimodeFsmConfig_t;
-
-/**
-   Structure used for getting status information of the autoboot FSM.
-   \note This status structure is only used within ADSL/VDSL multimode handling
-         and for the VRX device.
-*/
-typedef struct
-{
-   /**
-   This parameter indicates if a reboot is requested from the automode FSM.
-   This request is signaled within context of switching between ADSL and VDSL
-   or vice versa.
-
-   \note Independently from the status of this parameter the nNextMode
-         parameter always includes the current setting that is used within
-         automode FSM of the API. However, due to that fact this value is
-         changed within context of autoboot handling, it should be only taken
-         into account if the bRebootRequested is DSL_TRUE. */
-   DSL_OUT DSL_boolean_t bRebootRequested;
-   /**
-   Within context of ADSL/VDSL multimode handling it defines the xDSL transmission
-   mode that will be used for the next link activation sequence, which will
-   by default take place after reboot of the system.
-
-   \note It is intended that this parameter will be stored within a reboot
-         (power cycle) persistent memory before reboot and that it will be
-         configured within API after system restart and within context of
-         re-starting the DSL CPE Control Application and DSL CPE API. */
-   DSL_OUT DSL_FirmwareType_t nNextMode;
-} DSL_MultimodeFsmStatusData_t;
-
-/**
-   Structure used for getting status information of the autoboot FSM of the
-   API.
-   This structure has to be used for ioctl \ref DSL_FIO_MULTIMODE_FSM_STATUS_GET
-*/
-typedef struct
-{
-   /**
-   Driver control/status structure */
-   DSL_IN_OUT DSL_AccessCtl_t accessCtl;
-   /**
-   Structure that contains autoboot control data */
-   DSL_OUT DSL_MultimodeFsmStatusData_t data;
-} DSL_MultimodeFsmStatus_t;
 #endif /* #if defined(INCLUDE_DSL_CPE_API_VRX)*/
 
 #include "drv_dsl_cpe_api_g997.h"
@@ -3470,7 +3544,7 @@ typedef struct
    This anomaly occurs when a received DTU (Data Transfer Unit) is detected to
    be a retransmission of a previous sent DTU.
    \note This parameter is only valid for NEAR-END direction and in case of
-         NOT using VRX200. */
+         NOT using XWAY(TM) VRX200 or XWAY(TM) VRX300. */
    DSL_OUT DSL_uint32_t nRxRetransmitted;
    /**
    This anomaly occurs when a received DTU with detected errors is corrected by
@@ -3489,7 +3563,7 @@ typedef struct
    Counter for the number of bits which has been passed from the RTX receiver to
    the next sub-layer.
    \note This parameter is only valid for NEAR-END direction and in case of
-         using VRX200. */
+         using VRX200 or VRX300. */
    DSL_OUT DSL_uint32_t nErrorFreeBits;
 } DSL_ReTxStatisticsData_t;
 
@@ -3792,9 +3866,6 @@ typedef union
 #if defined(INCLUDE_DSL_CPE_API_DANUBE)
    DSL_ReTxStatisticsData_t                      reTxStatistics;
 #endif
-#if defined(INCLUDE_DSL_CPE_API_VRX)
-   DSL_MultimodeFsmStatusData_t                  multimodeFsmStatusData;
-#endif
 #if defined(INCLUDE_DSL_PM)
    #if defined(INCLUDE_DSL_CPE_PM_CHANNEL_THRESHOLDS)
    DSL_PM_ChannelThresholdCrossing_t             channelThresholdCrossing;
@@ -4028,11 +4099,6 @@ typedef struct DSL_DeviceConfig DSL_DeviceConfig_t;
    #include "drv_dsl_cpe_danube_ctx.h"
 #endif
 
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-   #include "drv_dsl_cpe_api_sar.h"
-   #include "drv_dsl_cpe_vinax_ctx.h"
-#endif
-
 #ifdef INCLUDE_DSL_CPE_API_VRX
    #include "drv_dsl_cpe_vrx_ctx.h"
 #endif
@@ -4056,29 +4122,103 @@ typedef struct
 } DSL_LowLevelConfiguration_t;
 
 /**
-   Defines the possible firmware feature sets.
+   Defines the possible xDSL mode specific firmware feature sets.
 
-   \note For VRX there will be usually two bits set according to the combination
-         of firmware binaries that includes by default always VDSL2 plus ADSL
-         AnnexA or AnnexB firmware.
+   \note For VDSL capable platforms there will be usually two bits set according
+         to the combination of firmware binaries that includes by default always
+         VDSL2 plus ADSL AnnexA or AnnexB firmware.
 */
 typedef enum
 {
    /**
-   Firmware includes ADSL Annex A feature set. */
-   DSL_FW_FEATURES_CLEANED = 0x0000,
+   Cleaned.
+   This is a reset value only because firmware will support one or more xDSL
+   modes. */
+   DSL_FW_XDSLMODE_CLEANED = 0x0000,
    /**
    Firmware includes ADSL Annex A feature set. */
-   DSL_FW_FEATURES_ADSL_A  = 0x0001,
+   DSL_FW_XDSLMODE_ADSL_A  = 0x0001,
    /**
    Firmware includes ADSL Annex B feature set. */
-   DSL_FW_FEATURES_ADSL_B  = 0x0002,
+   DSL_FW_XDSLMODE_ADSL_B  = 0x0002,
    /**
    Firmware includes VDSL2 feature set. */
-   DSL_FW_FEATURES_VDSL2   = 0x0004,
+   DSL_FW_XDSLMODE_VDSL2   = 0x0004,
+   /**
+   Firmware includes VDSL2 feature set (including G.Vector support). */
+   DSL_FW_XDSLMODE_VDSL2_VECTOR = 0x0008,
    /**
    Delimiter only! */
-   DSL_FW_FEATURES_LAST    = 0x0008
+   DSL_FW_XDSLMODE_LAST    = 0x0010
+} DSL_FirmwareXdslMode_t;
+
+/**
+   Definition of the xDSL specific firmware feature support flags.
+
+   \note These definitions are only used for VDSL capable platforms.
+
+   This information is provided by the firmware binary via a feature support
+   what string which is defined as follows.
+   \code
+      "@(~)" <"A"|"V"> "0x" <yy> "\0"
+         with:
+         - xDSL mode is indicated by "A" or "V"
+         - yy equals 16 bit hex value indicating feature capabilities
+   \endcode
+
+   For example, in case of VDSL firmware and assuming that dual port mode is
+   supported the string would look as follows.
+   \code
+      "@(~)V0x01\0"
+   \endcode
+
+   The feature support what string is defined to include a maximum number of
+   16 feature flags (bits), each indicating the availability or not availability
+   of a certain feature.
+   The feature support what string will be extracted from the firmware binary
+   within context of dsl_cpe_control application handling for initialization and
+   firmware download purposes.
+*/
+typedef enum
+{
+   /**
+   Cleaned.
+   No dedicated defined feature supported. */
+   DSL_FW_XDSLFEATURE_CLEANED  = 0x0000,
+   /**
+   This feature flag . */
+   DSL_FW_XDSLFEATURE_DUALPORT = 0x0001,
+   /**
+   Delimiter only! */
+   DSL_FW_XDSLFEATURE_LAST     = 0x0004
+} DSL_FirmwareXdslFeature_t;
+
+/**
+   Defines the possible firmware features.
+*/
+typedef struct
+{
+   /**
+   The platform ID is the first digit of the firmware version which will be
+   extracted from the what string within currently used firmware binary.*/
+   DSL_uint8_t nPlatformId;
+   /**
+   Bitfield that defines the xDSL feature sets that are supported by the
+   currently used firmware binary.
+   \note For VDSL capable platforms there will be usually two bits set according
+         to the combination of firmware binaries that includes by default always
+         VDSL2 plus ADSL AnnexA or AnnexB firmware. */
+   DSL_FirmwareXdslMode_t nFirmwareXdslModes;
+   /**
+   Bitfield that includes ADSL specific feature support flags of the currently
+   used ADSL firmware binary.
+   \note This value is currently only used for VDSL capable platforms. */
+   DSL_FirmwareXdslFeature_t nFirmwareAdslFeatures;
+   /**
+   Bitfield that includes VDSL specific feature support flags of the currently
+   used ADSL firmware binary.
+   \note This value is currently only used for VDSL capable platforms. */
+   DSL_FirmwareXdslFeature_t nFirmwareVdslFeatures;
 } DSL_FirmwareFeatures_t;
 
 /**
@@ -4104,10 +4244,17 @@ typedef struct
    This value is only valid if pFirmware pointer is NOT equal DSL_NULL */
    DSL_IN DSL_uint32_t nFirmwareSize;
    /**
-   Defines the features that are supported by the currently used firmware binary.
-   \note This information is mandatory in case of VRX multimode handling and
-         informal in case of all other devices. */
-   DSL_IN DSL_FirmwareFeatures_t nFirmwareFeatures;
+   Defines the following informations
+   - platform ID
+     This is the first digit of the firmware version which will be
+     extracted from the (first) what string within currently used firmware
+     binary.
+   - firmware features
+     features that are supported by the currently used firmware binary.
+   \note The firmware feature information is mandatory in case of ADSL/VDSL
+         multimode and/or bonding handling and informal in case of all other
+         devices. */
+   DSL_IN DSL_FirmwareFeatures_t firmwareFeatures;
    /**
    Pointer to 2nd firmware binary. */
    DSL_IN DSL_uint8_t *pFirmware2;
@@ -4159,15 +4306,45 @@ typedef enum
    Starts the autoboot handling. */
    DSL_AUTOBOOT_CTRL_START = 1,
    /**
-   Restarts the firmware and the DSL CPE API for usage of updated configurations. */
+   Restarts the firmware and the DSL CPE API for usage of updated configurations.
+   \note The standard handling for this command is to perform a hard reset (full
+         firmware download, including a reset and writing the firmware)
+   \note In case of using XWAY(TM) VRX200 and activated bonded (dual-port mode,
+         on-chip bonding) operation this command performs a soft reset instead
+         (using firmware message CMD_ModemFSM_StateSet:LinkControl=0) */
    DSL_AUTOBOOT_CTRL_RESTART = 2,
-   /* Continues at any wait state of the autoboot handling.
-      \note This control trigger is only used if autoboot status is
-      DSL_AUTOBOOT_STATUS_xxx_WAIT
-      otherwise it will be ignored and a special
-      warning code DSL_WRN_NOT_ALLOWED_IN_CURRENT_STATE will be returned.
-      \note Currently there is only one wait on link activation used.*/
-   DSL_AUTOBOOT_CTRL_CONTINUE = 3
+   /**
+   Continues at any wait state of the autoboot handling.
+   \note This control trigger is only used if autoboot status is
+         DSL_AUTOBOOT_STATUS_xxx_WAIT otherwise it will be ignored and a special
+         warning code DSL_WRN_NOT_ALLOWED_IN_CURRENT_STATE will be returned. */
+   DSL_AUTOBOOT_CTRL_CONTINUE = 3,
+   /**
+   Allows to tear down a specific line.
+   In opposite to the \ref DSL_AUTOBOOT_CTRL_STOP it
+   - does not destroy the internally used resources
+   - takes care to tear down the link of a line by triggering a link restart (in
+     case of on-chip bonding activated soft reset) and afterwards does not
+     continue with usual configuration and link activation sequence). After
+     disabling a line, it has to be enabled again using \ref
+     DSL_AUTOBOOT_CTRL_ENABLE to further use the line for operation. */
+   DSL_AUTOBOOT_CTRL_DISABLE = 4,
+   /**
+   Allows to enable a line that is currently disabled.
+   \note Please also refer to the description of \ref DSL_LINESTATE_DISABLED for
+         more details on how the line can become disabled. */
+   DSL_AUTOBOOT_CTRL_ENABLE = 5,
+   /**
+   Allows to perform a full firmware download.
+   This command will do a hard reset (full firmware download, including a reset
+   and writing the firmware).
+   \attention In non-bonded operation this command is equivalent to the standard
+              autoboot restart command \ref DSL_AUTOBOOT_CTRL_RESTART. In case
+              of using XWAY(TM) VRX200 and activated bonded (dual-port mode,
+              on-chip bonding) operation this command forces a hard reset
+              whereas the standard command does a soft reset only to avoid
+              tearing down both lines. */
+   DSL_AUTOBOOT_CTRL_RESTART_FULL = 6
 } DSL_AutobootCtrlSet_t;
 
 /**
@@ -4303,11 +4480,8 @@ typedef struct
    Pointer to firmware binary.
    According to the device for which the DSL CPE API driver has been compiled
    this pointer is defined as follows
-   - Danube: The firmware binary that will be provided with this pointer is the
-     one and only firmware that will be used
-   - Vinax: The firmware binary that will be provided has to have VDSL
-     functionality included if DSL CPE API driver shall support VDSL
-     transmission modes. */
+   - ADSL only platforms: The firmware binary that will be provided with this
+     pointer is the one and only firmware that will be used */
    DSL_IN DSL_uint8_t *pFirmware;
    /**
    Size of firmware binary.
@@ -4315,20 +4489,15 @@ typedef struct
    DSL_IN DSL_uint32_t nFirmwareSize;
    /**
    Defines the features that are supported by the currently used firmware binary.
-   \note This information is mandatory in case of VRX multimode handling and
-         informal in case of all other devices. */
+   \note This information is mandatory in case of ADSL/VDSL multimode and/or
+         bonding handling and informal in case of all other devices. */
    DSL_IN DSL_FirmwareFeatures_t nFirmwareFeatures;
    /**
    Pointer to 2nd firmware binary.
    According to the device for which the DSL CPE API driver has been compiled
    this pointer is defined as follows
-   - Danube: This parameter is NOT used and has to be set to DSL_NULL
-   - Vinax: The firmware binary that will be provided has to have ADSL
-     functionality included if DSL CPE API driver shall support ADSL
-     transmission modes.
-   \note For future versions of Vinax firmware which includes both VDSL and
-         ADSL functionality (as "real" standalone functionality) this parameter
-         will be not necessary anymore and can be set to DSL_NULL. */
+   - ADSL only platforms: This parameter is NOT used and has to be set to
+     DSL_NULL */
    DSL_IN DSL_uint8_t *pFirmware2;
    /**
    Size of the 2nd firmware binary.
@@ -4379,8 +4548,8 @@ typedef struct
 
 /**
    Defines the control functionalities of the autoboot handling
-   \note Please note that this configurations are only used for Danube,
-         Amazon-SE and ARX100
+   \note Please note that this configurations are only used for ADSL only
+         platforms such like XWAY(TM) ARX100 and XWAY(TM) ARX300
 */
 typedef enum
 {
@@ -4434,8 +4603,8 @@ typedef enum
 
 /**
    Structure used for configuration of MinSnrMarging reboot criteria.
-   \note Please note that this configurations are only used for Danube
-         Amazon-SE and ARX100
+   \note Please note that this configurations are only used for ADSL only
+         platforms such like XWAY(TM) ARX100 and XWAY(TM) ARX300
 */
 typedef struct
 {
@@ -4618,20 +4787,11 @@ typedef struct
 */
 typedef enum
 {
-   /* Data LED behavior. Please refer to the - \ref DSL_DataLedBehavior_t
-      structure for the valid selection*/
-   DSL_DFC_DATA_LED_BEHAVIOR = 0,
-   /* Timeout value expressed in [ms].
-      Optional parameter to specify Data LED timeout before consecutive
-      Data LED blink triggers. Used only in conjunction with DAL_DATA_LED_BLINK.
-      Valid range is: 1...10000 with 1 ms steps,
-      Default value is 1000 ms*/
-   DSL_DFC_DATA_LED_BLINK_TIMEOUT = 1
+   DSL_DFC_NOT_USED = 0
 } DSL_DebugFeatureSelector_t;
 
 /**
-   DATA LED Simulator control data
-   This structure has to be used for ioctl
+   DATA control data This structure has to be used for ioctl
    - \ref DSL_FIO_DBG_DEBUG_FEATURE_CONFIG_SET
    - \ref DSL_FIO_DBG_DEBUG_FEATURE_CONFIG_SET
 */
@@ -4666,7 +4826,6 @@ typedef struct
 
 /** @} DRV_DSL_CPE_DEBUG */
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
 #ifdef INCLUDE_DSL_FILTER_DETECTION
 /**
    Bridge Tap Flag (rough length Indication).
@@ -4752,7 +4911,96 @@ typedef struct
    DSL_IN_OUT DSL_FilterDetectionData_t data;
 } DSL_FilterDetection_t;
 #endif /* INCLUDE_DSL_FILTER_DETECTION */
-#endif /* INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_VRX */
+
+/**
+   Structure for getting counters that are related to OLR statistics.
+   These counters are total wrap around counters.
+*/
+typedef struct
+{
+   /**
+   Count of requested bitswaps
+   Returns the number of requested bitswaps during showtime. */
+   DSL_OUT DSL_uint16_t nBitswapRequested;
+   /**
+   Count of requested extended bitswaps
+   Returns the number of requested extended bitswaps during showtime.
+   \note This counter is only used (incremented) in ADSL1 (G.992.1) mode. */
+   DSL_OUT DSL_uint16_t nExtBitswapRequested;
+   /**
+   Count of executed bitswaps
+   Returns the number of executed bitswaps during showtime. */
+   DSL_OUT DSL_uint16_t nBitswapExecuted;
+   /**
+   Count of rejected bitswaps
+   Returns the number of rejected bitswaps during showtime. */
+   DSL_OUT DSL_uint16_t nBitswapRejected;
+   /**
+   Count of timeouts for bitswaps
+   Returns the number of timeouts (no response) for bitswap requests. Counted at
+   CPE only as the downstream OLR initiating side.
+   \note This counter is only valid for the downstream direction. */
+   DSL_OUT DSL_uint16_t nBitswapTimeout;
+   /**
+   Count of requested SRAs
+   Returns the number of requested Seamless Rate Adaptions during showtime. */
+   DSL_OUT DSL_uint16_t nSraRequested;
+   /**
+   Count of executed SRAs
+   Returns the number of executed Seamless Rate Adaptions during showtime. */
+   DSL_OUT DSL_uint16_t nSraExecuted;
+   /**
+   Count of rejected SRAs
+   Returns the number of rejected Seamless Rate Adaptions during showtime. */
+   DSL_OUT DSL_uint16_t nSraRejected;
+   /**
+   Count of timeouts for SRA
+   Returns the number of timeouts (no response) for Seamless Rate Adaption
+   requests during showtime. Counted at CPE only as the downstream OLR
+   initiating side.
+   \note This counter is only valid for the downstream direction. */
+   DSL_OUT DSL_uint16_t nSraTimeout;
+   /**
+   Count of requested SOSs
+   Returns the number of requested SOS procedures during showtime.
+   \note This counter is currently not used (incremented). */
+   DSL_OUT DSL_uint16_t nSosRequested;
+   /**
+   Count of executed SOSs
+   Returns the number of executed SOS procedures during showtime.
+   \note This counter is currently not used (incremented). */
+   DSL_OUT DSL_uint16_t nSosExecuted;
+   /**
+   Count of rejected SOSs
+   Returns the number of rejected SOS procedures during showtime.
+   \note This counter is currently not used (incremented). */
+   DSL_OUT DSL_uint16_t nSosRejected;
+   /**
+   Count of timeouts for SOSs
+   Returns the number of timeouts (no response) for SOS procedures during
+   showtime. Counted at CPE only as the downstream OLR initiating side.
+   \note This counter is currently not used (incremented). */
+   DSL_OUT DSL_uint16_t nSosTimeout;
+} DSL_OlrStatisticsData_t;
+
+/**
+   Structure for getting counters that are related to OLR statistics.
+   This structure has to be used for ioctl
+   - \ref DSL_FIO_OLR_STATISTICS_GET
+*/
+typedef struct
+{
+   /**
+   Driver control/status structure */
+   DSL_IN_OUT DSL_AccessCtl_t accessCtl;
+   /**
+   Specifies for which direction (upstream/downstream) the function will
+   apply */
+   DSL_IN DSL_AccessDir_t nDirection;
+   /**
+   Structure that contains statistics data */
+   DSL_OUT DSL_OlrStatisticsData_t data;
+} DSL_OlrStatistics_t;
 
 /**
    AFE Hybrid Metric Data.
@@ -4881,7 +5129,8 @@ typedef enum
    /**
    Loss-of-Frame.
 
-   \note This criteria is only used for VDSL-CPE and ADSL-CPE (Vinax/VRx)
+   \note This criteria is used for ADSL and VDSL modes of VDSL capable
+         platforms (XWAY(TM) VRX200 and XWAY(TM) VRX300).
    \note Default is DSL_TRUE */
    DSL_REBOOT_CRITERIA_LOF = 0x00000002,
    /**
@@ -4892,27 +5141,32 @@ typedef enum
    /**
    Excessive Severe Errors (ESE) Failure, (10 seconds SES).
 
-   \note This criteria is only used for VDSL-CPE (Vinax/VRx)
+   \note This criteria is used for VDSL mode of VDSL capable plaforms
+         (XWAY(TM) VRX200 and XWAY(TM) VRX300).
    \note Default is DSL_TRUE */
    DSL_REBOOT_CRITERIA_ESE = 0x00000008,
    /**
    90 consecutive errored seconds (ES).
 
-   \note This criteria is only used for ADSL-CPE (DanubeFamily) and
-         ADSL-CPE (Vinax/VRx)
+   \note This criteria is used for ADSL only platforms
+         - XWAY(TM) ARX100
+         - XWAY(TM) ARX300)
+         and ADSL mode of VDSL capable plaforms
+         - XWAY(TM) VRX200
+         - XWAY(TM) VRX300).
    \note Default is DSL_FALSE */
    DSL_REBOOT_CRITERIA_ES90 = 0x00000010,
    /**
    30 consecutive severely errored seconds (SES).
 
-   \note This criteria is only used for ADSL-CPE (DanubeFamily) and
-         ADSL-CPE (Vinax/VRx)
+   \note This criteria is used for ADSL mode of ADSL only platforms and ADSL
+         mode of VDSL capable platforms (XWAY(TM) VRX200 and XWAY(TM) VRX300).
    \note Default is DSL_FALSE */
    DSL_REBOOT_CRITERIA_SES30 = 0x00000020,
    /**
    Negative SNR margin.
 
-   \note This criteria is only used for ADSL-CPE
+   \note This criteria is only used for ADSL only platforms.
    \note Default is DSL_TRUE */
    DSL_REBOOT_CRITERIA_NEGATIVE_MARGIN = 0x00000040,
    /**
@@ -5023,9 +5277,8 @@ typedef struct
    #endif
 
    #if defined(INCLUDE_DSL_BONDING)
-   #if defined(INCLUDE_DSL_CPE_API_VINAX)
-      #include "drv_dsl_cpe_api_bnd_vinax.h"
-      #include "drv_dsl_cpe_api_bnd_vinax_fpga.h"
+   #if defined(INCLUDE_DSL_CPE_API_VRX)
+      #include "drv_dsl_cpe_api_bnd_vrx.h"
    #endif
    #endif
 #endif

@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2012
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -42,8 +42,6 @@
 #define ACK_T1413_RevNo_O_Get_T1413REV2 0x1
 #define ACK_T1413_RevNo_R_Get_T1413REV1 0x0
 #define ACK_T1413_RevNo_R_Get_T1413REV2 0x1
-#define ACK_XTSE_StatusGet_L0 0
-#define ACK_XTSE_StatusGet_L3 3
 #define CMD_RFI_BandControlGet_FV 33
 #define ACK_RFI_BandControlGet_FV 33
 #define CMD_LineStatusPerBandDS_Get_FV 25
@@ -52,10 +50,10 @@
 #define ACK_LineStatusPerBandUS_Get_FV 25
 #define CMD_PSD_BreakpointsUS_Get_FV 97
 #define ACK_PSD_BreakpointsUS_Get_FV 97
-#define CMD_BearerChsDS_Get_FV 14
-#define ACK_BearerChsDS_Get_FV 14
-#define CMD_BearerChsUS_Get_FV 14
-#define ACK_BearerChsUS_Get_FV 14
+#define CMD_BearerChsDS_Get_FV 18
+#define ACK_BearerChsDS_Get_FV 18
+#define CMD_BearerChsUS_Get_FV 18
+#define ACK_BearerChsUS_Get_FV 18
 #define CMD_FrameDataExt2DS_Get_FV 40
 #define ACK_FrameDataExt2DS_Get_FV 40
 #define CMD_FrameDataExt2US_Get_FV 40
@@ -96,7 +94,8 @@ typedef struct ACK_HS_ToneGroupSet ACK_HS_ToneGroupSet_t;
 
 /**
    Configures the profile settings to be used for the handshake phase. (See
-   G.994.1 Amendment 4 [10], NPAR(3) coding).
+   G.994.1 Amendment 4 [10], NPAR(3) coding).All "support" bits should be set to
+   "Enable".
 */
 typedef struct CMD_HS_VDSL2ProfileControl CMD_HS_VDSL2ProfileControl_t;
 
@@ -510,8 +509,9 @@ typedef struct ACK_T1413_VendorRevNo_R_Get ACK_T1413_VendorRevNo_R_Get_t;
 #define CMD_XTSE_STATUSGET 0x0102
 
 /**
-   Requests the transmission system in use on the line (DSL flavour).(Section
-   7.5.1.1. of G.997.1 [11])
+   Requests the transmission system in use on the line (DSL flavour). (Section
+   7.5.1.1. of G.997.1 [11]) See note at ACK_XTSE_StatusGet about the expected
+   behaviour.
 */
 typedef struct CMD_XTSE_StatusGet CMD_XTSE_StatusGet_t;
 
@@ -520,7 +520,11 @@ typedef struct CMD_XTSE_StatusGet CMD_XTSE_StatusGet_t;
 
 /**
    Reports the transmission system mode in use as requested by
-   CMD_XTSE_StatusGet.
+   CMD_XTSE_StatusGet.The information is set by the FW after mode select (MS)
+   during the handshake phase or during T1.413 state. Before mode selection the
+   value "0" is reported (=none), after selection of a common mode exactly this
+   single mode must be indicated. If there is no common mode, "0" is to be
+   reported (here modem enters FAIL state).
 */
 typedef struct ACK_XTSE_StatusGet ACK_XTSE_StatusGet_t;
 
@@ -528,7 +532,9 @@ typedef struct ACK_XTSE_StatusGet ACK_XTSE_StatusGet_t;
 #define CMD_BANDCONTROL_DS_GET 0xC803
 
 /**
-   Reads the used downstream band configuration.
+   Reads the used downstream band configuration.The reported used DS band
+   configuration reflects the MEDLEYds set as defined in the O-PRM message of
+   the channel discovery phase according to G.993.2.
 */
 typedef struct CMD_BandControl_DS_Get CMD_BandControl_DS_Get_t;
 
@@ -544,7 +550,9 @@ typedef struct ACK_BandControl_DS_Get ACK_BandControl_DS_Get_t;
 #define CMD_BANDCONTROL_US_GET 0xC903
 
 /**
-   Reads the used upstream band configuration.
+   Reads the used upstream band configuration.The reported used US band
+   configuration reflects the MEDLEYus set as defined in the R-PRM message of
+   the channel discovery phase in G.993.2.
 */
 typedef struct CMD_BandControl_US_Get CMD_BandControl_US_Get_t;
 
@@ -786,9 +794,12 @@ typedef struct CMD_BearerChsDS_Get CMD_BearerChsDS_Get_t;
 #define ACK_BEARERCHSDS_GET 0x0106
 
 /**
-   Delivers status information for the downstream bearer channels.Attention: In
-   VRX V1.x the "LP1/Fast Path" parameters are populated only in ADSL1 mode with
-   selected fast path.
+   Delivers status information for the downstream bearer channels. **: The terms
+   "LP0/Interleaved Path" and "LP1/Fast Path" below refer to the terminology
+   used in ITU DSL standards [1],[2], [3], [5] which means:- LP0 or LP1 in case
+   of VDSL2, ADSL2/2+- "Interleaved Path" or "Fast Path" in case of
+   ADSL1.Attention: In VRX V1.x the "LP1/Fast Path" parameters are populated
+   only in ADSL1 mode with selected fast path.
 */
 typedef struct ACK_BearerChsDS_Get ACK_BearerChsDS_Get_t;
 
@@ -804,9 +815,12 @@ typedef struct CMD_BearerChsUS_Get CMD_BearerChsUS_Get_t;
 #define ACK_BEARERCHSUS_GET 0x0006
 
 /**
-   Delivers status information for the upstream bearer channels.Attention: In
-   VRX V1.x the "LP1/Fast Path" parameters are populated only in ADSL1 mode with
-   selected fast path.
+   Delivers status information for the upstream bearer channels. **: The terms
+   "LP0/Interleaved Path" and "LP1/Fast Path" below refer to the terminology
+   used in ITU DSL standards [1],[2], [3], [5] which means:- LP0 or LP1 in case
+   of VDSL2, ADSL2/2+- "Interleaved Path" or "Fast Path" in case of
+   ADSL1.Attention: In VRX V1.x the "LP1/Fast Path" parameters are populated
+   only in ADSL1 mode with selected fast path.
 */
 typedef struct ACK_BearerChsUS_Get ACK_BearerChsUS_Get_t;
 
@@ -923,6 +937,22 @@ typedef struct CMD_ADSL_FrameDataUS_LP1Get CMD_ADSL_FrameDataUS_LP1Get_t;
    G.992.3 [2] and 7.4 of G.992.1 [1])
 */
 typedef struct ACK_ADSL_FrameDataUS_LP1Get ACK_ADSL_FrameDataUS_LP1Get_t;
+
+/** Message ID for CMD_AlgorithmControlGet */
+#define CMD_ALGORITHMCONTROLGET 0x0205
+
+/**
+   Reads back the parameter values configured with CMD_AlgorithmControlSet.
+*/
+typedef struct CMD_AlgorithmControlGet CMD_AlgorithmControlGet_t;
+
+/** Message ID for ACK_AlgorithmControlGet */
+#define ACK_ALGORITHMCONTROLGET 0x0205
+
+/**
+   Provides the information requested by CMD_AlgorithmControlGet.
+*/
+typedef struct ACK_AlgorithmControlGet ACK_AlgorithmControlGet_t;
 
 /** Message ID for CMD_HybridGet */
 #define CMD_HYBRIDGET 0x0922
@@ -1094,7 +1124,8 @@ struct ACK_HS_ToneGroupSet
 
 /**
    Configures the profile settings to be used for the handshake phase. (See
-   G.994.1 Amendment 4 [10], NPAR(3) coding).
+   G.994.1 Amendment 4 [10], NPAR(3) coding).All "support" bits should be set to
+   "Enable".
 */
 struct CMD_HS_VDSL2ProfileControl
 {
@@ -1471,11 +1502,11 @@ struct ACK_HS_StandardInfoFE_VDSL2Get
    DSL_uint16_t B_US0PsdSup4 : 1;
    /** 12b Profile, Annex B US0 PSDs Supported Bit 3 */
    DSL_uint16_t B_US0PsdSup3 : 1;
-   /** US0 In 25 to 138 kHz, Annex B US0 PSDs Supported Bit 2 */
+   /** US0 In 138 to 276 kHz, Annex B US0 PSDs Supported Bit 2 */
    DSL_uint16_t B_US0PsdSup2 : 1;
-   /** US0 In 138 to 276 kHz, Annex B US0 PSDs Supported Bit 1 */
+   /** US0 In 25 to 276 kHz, Annex B US0 PSDs Supported Bit 1 */
    DSL_uint16_t B_US0PsdSup1 : 1;
-   /** US0 In 25 to 276 kHz, Annex B US0 PSDs Supported Bit 0 */
+   /** US0 In 25 to 138 kHz, Annex B US0 PSDs Supported Bit 0 */
    DSL_uint16_t B_US0PsdSup0 : 1;
    /** Reserved */
    DSL_uint16_t Res4 : 2;
@@ -1566,11 +1597,11 @@ struct ACK_HS_StandardInfoFE_VDSL2Get
    DSL_uint16_t A_US0PsdSup21 : 1;
    /** Reserved */
    DSL_uint16_t Res2 : 10;
-   /** US0 In 25 to 276 kHz, Annex B US0 PSDs Supported Bit 0 */
+   /** US0 In 25 to 138 kHz, Annex B US0 PSDs Supported Bit 0 */
    DSL_uint16_t B_US0PsdSup0 : 1;
-   /** US0 In 138 to 276 kHz, Annex B US0 PSDs Supported Bit 1 */
+   /** US0 In 25 to 276 kHz, Annex B US0 PSDs Supported Bit 1 */
    DSL_uint16_t B_US0PsdSup1 : 1;
-   /** US0 In 25 to 138 kHz, Annex B US0 PSDs Supported Bit 2 */
+   /** US0 In 138 to 276 kHz, Annex B US0 PSDs Supported Bit 2 */
    DSL_uint16_t B_US0PsdSup2 : 1;
    /** 12b Profile, Annex B US0 PSDs Supported Bit 3 */
    DSL_uint16_t B_US0PsdSup3 : 1;
@@ -1633,7 +1664,15 @@ struct ACK_HS_SelectedProfileVDSL2Get
    /** Length */
    DSL_uint16_t  Length;
    /** Reserved */
-   DSL_uint16_t Res0;
+   DSL_uint16_t Res0 : 12;
+   /** G.993.2 Annex N, Selected Bit 3 */
+   DSL_uint16_t dsmSel3 : 1;
+   /** G.993.2 Annex O, Selected Bit 2 */
+   DSL_uint16_t dsmSel2 : 1;
+   /** G.993.5 DS Vectoring, Selected Bit 1 */
+   DSL_uint16_t dsmSel1 : 1;
+   /** G.993.5 DS+US Vectoring, Selected Bit 0 */
+   DSL_uint16_t dsmSel0 : 1;
    /** Reserved */
    DSL_uint8_t Res1;
    /** 30a, Profile Selected Bit 7 */
@@ -1721,8 +1760,16 @@ struct ACK_HS_SelectedProfileVDSL2Get
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t  Length;
+   /** G.993.5 DS+US Vectoring, Selected Bit 0 */
+   DSL_uint16_t dsmSel0 : 1;
+   /** G.993.5 DS Vectoring, Selected Bit 1 */
+   DSL_uint16_t dsmSel1 : 1;
+   /** G.993.2 Annex O, Selected Bit 2 */
+   DSL_uint16_t dsmSel2 : 1;
+   /** G.993.2 Annex N, Selected Bit 3 */
+   DSL_uint16_t dsmSel3 : 1;
    /** Reserved */
-   DSL_uint16_t Res0;
+   DSL_uint16_t Res0 : 12;
    /** 8a, Profile Selected Bit 0 */
    DSL_uint16_t profileSel0 : 1;
    /** 8b, Profile Selected Bit 1 */
@@ -2872,8 +2919,9 @@ struct ACK_T1413_VendorRevNo_R_Get
 
 
 /**
-   Requests the transmission system in use on the line (DSL flavour).(Section
-   7.5.1.1. of G.997.1 [11])
+   Requests the transmission system in use on the line (DSL flavour). (Section
+   7.5.1.1. of G.997.1 [11]) See note at ACK_XTSE_StatusGet about the expected
+   behaviour.
 */
 struct CMD_XTSE_StatusGet
 {
@@ -2893,7 +2941,11 @@ struct CMD_XTSE_StatusGet
 
 /**
    Reports the transmission system mode in use as requested by
-   CMD_XTSE_StatusGet.
+   CMD_XTSE_StatusGet.The information is set by the FW after mode select (MS)
+   during the handshake phase or during T1.413 state. Before mode selection the
+   value "0" is reported (=none), after selection of a common mode exactly this
+   single mode must be indicated. If there is no common mode, "0" is to be
+   reported (here modem enters FAIL state).
 */
 struct ACK_XTSE_StatusGet
 {
@@ -2940,10 +2992,6 @@ struct ACK_XTSE_StatusGet
    DSL_uint16_t V2 : 1;
    /** Reserved */
    DSL_uint16_t Res2 : 2;
-   /** Reserved */
-   DSL_uint16_t Res3 : 14;
-   /** Line Power Management State */
-   DSL_uint16_t LxState : 2;
 #else
    /** Index */
    DSL_uint16_t Index;
@@ -2987,16 +3035,14 @@ struct ACK_XTSE_StatusGet
    DSL_uint16_t V2 : 1;
    /** Reserved */
    DSL_uint16_t Res1 : 13;
-   /** Line Power Management State */
-   DSL_uint16_t LxState : 2;
-   /** Reserved */
-   DSL_uint16_t Res3 : 14;
 #endif
 } __PACKED__ ;
 
 
 /**
-   Reads the used downstream band configuration.
+   Reads the used downstream band configuration.The reported used DS band
+   configuration reflects the MEDLEYds set as defined in the O-PRM message of
+   the channel discovery phase according to G.993.2.
 */
 struct CMD_BandControl_DS_Get
 {
@@ -3046,7 +3092,9 @@ struct ACK_BandControl_DS_Get
 
 
 /**
-   Reads the used upstream band configuration.
+   Reads the used upstream band configuration.The reported used US band
+   configuration reflects the MEDLEYus set as defined in the R-PRM message of
+   the channel discovery phase in G.993.2.
 */
 struct CMD_BandControl_US_Get
 {
@@ -3077,7 +3125,7 @@ struct ACK_BandControl_US_Get
    /** Reserved */
    DSL_uint8_t Res0;
    /** Number of Upstream Bands */
-   DSL_uint8_t NumBandsDS;
+   DSL_uint8_t NumBandsUS;
    /** Band Descriptor US */
    VRX_ToneIndex_t band[8];
 #else
@@ -3086,7 +3134,7 @@ struct ACK_BandControl_US_Get
    /** Length */
    DSL_uint16_t Length;
    /** Number of Upstream Bands */
-   DSL_uint8_t NumBandsDS;
+   DSL_uint8_t NumBandsUS;
    /** Reserved */
    DSL_uint8_t Res0;
    /** Band Descriptor US */
@@ -3817,9 +3865,12 @@ struct CMD_BearerChsDS_Get
 
 
 /**
-   Delivers status information for the downstream bearer channels.Attention: In
-   VRX V1.x the "LP1/Fast Path" parameters are populated only in ADSL1 mode with
-   selected fast path.
+   Delivers status information for the downstream bearer channels. **: The terms
+   "LP0/Interleaved Path" and "LP1/Fast Path" below refer to the terminology
+   used in ITU DSL standards [1],[2], [3], [5] which means:- LP0 or LP1 in case
+   of VDSL2, ADSL2/2+- "Interleaved Path" or "Fast Path" in case of
+   ADSL1.Attention: In VRX V1.x the "LP1/Fast Path" parameters are populated
+   only in ADSL1 mode with selected fast path.
 */
 struct ACK_BearerChsDS_Get
 {
@@ -3828,13 +3879,13 @@ struct ACK_BearerChsDS_Get
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Net Data Rate DS for LP0, LSW */
+   /** ACTNDR DS for LP0, LSW */
    DSL_uint16_t DRdsLP0_LSW;
-   /** Net Data Rate DS for LP0, MSW */
+   /** ACTNDR DS for LP0, MSW */
    DSL_uint16_t DRdsLP0_MSW;
-   /** Data Rate DS for LP1, LSW */
+   /** ACTNDR DS for LP1, LSW */
    DSL_uint16_t DRdsLP1_LSW;
-   /** Data Rate DS for LP1, MSW */
+   /** ACTNDR DS for LP1, MSW */
    DSL_uint16_t DRdsLP1_MSW;
    /** Reserved */
    DSL_uint16_t Res0[4];
@@ -3869,13 +3920,13 @@ struct ACK_BearerChsDS_Get
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Net Data Rate DS for LP0, LSW */
+   /** ACTNDR DS for LP0, LSW */
    DSL_uint16_t DRdsLP0_LSW;
-   /** Net Data Rate DS for LP0, MSW */
+   /** ACTNDR DS for LP0, MSW */
    DSL_uint16_t DRdsLP0_MSW;
-   /** Data Rate DS for LP1, LSW */
+   /** ACTNDR DS for LP1, LSW */
    DSL_uint16_t DRdsLP1_LSW;
-   /** Data Rate DS for LP1, MSW */
+   /** ACTNDR DS for LP1, MSW */
    DSL_uint16_t DRdsLP1_MSW;
    /** Reserved */
    DSL_uint16_t Res0[4];
@@ -3929,9 +3980,12 @@ struct CMD_BearerChsUS_Get
 
 
 /**
-   Delivers status information for the upstream bearer channels.Attention: In
-   VRX V1.x the "LP1/Fast Path" parameters are populated only in ADSL1 mode with
-   selected fast path.
+   Delivers status information for the upstream bearer channels. **: The terms
+   "LP0/Interleaved Path" and "LP1/Fast Path" below refer to the terminology
+   used in ITU DSL standards [1],[2], [3], [5] which means:- LP0 or LP1 in case
+   of VDSL2, ADSL2/2+- "Interleaved Path" or "Fast Path" in case of
+   ADSL1.Attention: In VRX V1.x the "LP1/Fast Path" parameters are populated
+   only in ADSL1 mode with selected fast path.
 */
 struct ACK_BearerChsUS_Get
 {
@@ -3940,13 +3994,13 @@ struct ACK_BearerChsUS_Get
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Net Data Rate US for LP0, LSW */
+   /** ACTNDR US for LP0, LSW */
    DSL_uint16_t DRusLP0_LSW;
-   /** Net Data Rate US for LP0, MSW */
+   /** ACTNDR US for LP0, MSW */
    DSL_uint16_t DRusLP0_MSW;
-   /** Data Rate US for LP1, LSW */
+   /** ACTNDR US for LP1, LSW */
    DSL_uint16_t DRusLP1_LSW;
-   /** Data Rate US for LP1, MSW */
+   /** ACTNDR US for LP1, MSW */
    DSL_uint16_t DRusLP1_MSW;
    /** Reserved */
    DSL_uint16_t Res0[4];
@@ -3981,13 +4035,13 @@ struct ACK_BearerChsUS_Get
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Net Data Rate US for LP0, LSW */
+   /** ACTNDR US for LP0, LSW */
    DSL_uint16_t DRusLP0_LSW;
-   /** Net Data Rate US for LP0, MSW */
+   /** ACTNDR US for LP0, MSW */
    DSL_uint16_t DRusLP0_MSW;
-   /** Data Rate US for LP1, LSW */
+   /** ACTNDR US for LP1, LSW */
    DSL_uint16_t DRusLP1_LSW;
-   /** Data Rate US for LP1, MSW */
+   /** ACTNDR US for LP1, MSW */
    DSL_uint16_t DRusLP1_MSW;
    /** Reserved */
    DSL_uint16_t Res0[4];
@@ -4759,6 +4813,48 @@ struct ACK_ADSL_FrameDataUS_LP1Get
    DSL_uint16_t SEQp;
    /** Bytes in MSG-OH "MSGc" US */
    DSL_uint16_t MSGc;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Reads back the parameter values configured with CMD_AlgorithmControlSet.
+*/
+struct CMD_AlgorithmControlGet
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Provides the information requested by CMD_AlgorithmControlGet.
+*/
+struct ACK_AlgorithmControlGet
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** Algorithm Control Parameter Status */
+   DSL_uint16_t Readback;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** Algorithm Control Parameter Status */
+   DSL_uint16_t Readback;
 #endif
 } __PACKED__ ;
 

@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -39,6 +38,7 @@ typedef float           DSL_float_t;
 typedef void            DSL_void_t;
 /** integer type, width is depending on processor arch */
 typedef int             DSL_int_t;
+typedef long            DSL_long_t;
 typedef unsigned long   DSL_ulong_t;
 /** unsigned integer type, width is depending on processor arch */
 typedef unsigned int    DSL_uint_t;

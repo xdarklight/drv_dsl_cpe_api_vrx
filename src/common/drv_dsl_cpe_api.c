@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -22,7 +21,12 @@
 #define DSL_DBG_BLOCK DSL_DBG_CPE_API
 
 /* handles to the low-level BSP driver */
-DSL_devCtx_t ifxDevices[DSL_DRV_MAX_DEVICE_NUMBER] = { {DSL_NULL} };
+DSL_devCtx_t ifxDevices[DSL_DRV_MAX_ENTITIES] = { {DSL_NULL} };
+
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 1)
+DSL_DRV_Mutex_t bndLineLockMutex;
+DSL_int_t       nLineLocked = -1;
+#endif
 
 #ifdef INCLUDE_DSL_DELT
 #ifdef DSL_CPE_STATIC_DELT_DATA
@@ -39,9 +43,6 @@ DSL_OpenContext_t *pOpenContextList = DSL_NULL;
 #if defined(INCLUDE_DSL_CPE_API_VRX)
 DSL_uint8_t g_XTSEposs[DSL_G997_NUM_XTSE_OCTETS] =
    {0x15, 0x01, 0x14, 0x51, 0x4C, 0x45, 0x05, 0x07};
-#elif defined(INCLUDE_DSL_CPE_API_VINAX)
-DSL_uint8_t g_XTSEposs[DSL_G997_NUM_XTSE_OCTETS] =
-   {0x17, 0x01, 0x14, 0x51, 0x4C, 0x45, 0x05, 0x07};
 #else
 DSL_uint8_t g_XTSEposs[DSL_G997_NUM_XTSE_OCTETS] =
    {0x17, 0x01, 0x14, 0x51, 0x4C, 0x45, 0x05, 0x00};
@@ -334,7 +335,7 @@ DSL_Error_t DSL_DRV_HandleInit(
    DSL_IN     DSL_int_t nNum,
    DSL_IN_OUT DSL_OpenContext_t **pRefOpenContext)
 {
-   if (nNum >= DSL_DRV_MAX_DEVICE_NUMBER || pRefOpenContext == DSL_NULL)
+   if (nNum >= DSL_DRV_MAX_ENTITIES || pRefOpenContext == DSL_NULL)
    {
       return DSL_ERR_INVALID_PARAMETER;
    }
@@ -365,6 +366,7 @@ DSL_Error_t DSL_DRV_HandleInit(
       }
 
       ifxDevices[nNum].pContext->pDevCtx = &ifxDevices[nNum];
+      ifxDevices[nNum].pContext->pXDev = ifxDevices;
 
       /* Set device number*/
       ifxDevices[nNum].nNum = nNum;
@@ -477,6 +479,10 @@ DSL_Error_t DSL_DRV_HandleInit(
 
    /* Unlock Open Context List*/
    DSL_DRV_MUTEX_UNLOCK(ifxDevices[nNum].openContextListMutex);
+
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 1)
+   DSL_DRV_MUTEX_INIT(bndLineLockMutex);
+#endif
 
    DSL_DEBUG( DSL_DBG_MSG,
       (DSL_NULL, SYS_DBG_MSG"DSL[%02d]: Open: Use count: %d"DSL_DRV_CRLF,
@@ -676,7 +682,7 @@ DSL_void_t DSL_DRV_Cleanup(DSL_void_t)
 {
    DSL_int_t i;
 
-   for (i = 0; i < DSL_DRV_MAX_DEVICE_NUMBER; i++)
+   for (i = 0; i < DSL_DRV_MAX_ENTITIES; i++)
    {
       DSL_DRV_HandleCleanup(&ifxDevices[i], DSL_TRUE);
 
@@ -737,6 +743,43 @@ DSL_Error_t DSL_DRV_LinkReset(
    return nErrCode;
 }
 
+/*
+   For a detailed description of the function, its arguments and return value
+   please refer to the description in the header file 'drv_dsl_cpe_intern.h'
+*/
+DSL_Error_t DSL_DRV_LinkFreeze(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_uint8_t *pXTSE)
+{
+   DSL_Error_t nErrCode = DSL_SUCCESS;
+
+   DSL_DEBUG( DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_LinkFreeze"DSL_DRV_CRLF,
+      DSL_DEV_NUM(pContext)));
+
+   nErrCode = DSL_DRV_DEV_LinkFreeze(pContext, pXTSE);
+   if (nErrCode != DSL_SUCCESS)
+   {
+      DSL_DEBUG( DSL_DBG_ERR,
+         (pContext, SYS_DBG_ERR"DSL[%02d]: Modem couldn't be freeze"DSL_DRV_CRLF,
+         DSL_DEV_NUM(pContext)));
+   }
+   else
+   {
+      DSL_DEBUG( DSL_DBG_MSG,
+         (pContext, SYS_DBG_MSG"DSL[%02d]: Modem was frozen..."DSL_DRV_CRLF,
+         DSL_DEV_NUM(pContext)));
+
+      nErrCode = DSL_SUCCESS;
+   }
+
+   DSL_DEBUG( DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_LinkFreeze"DSL_DRV_CRLF,
+      DSL_DEV_NUM(pContext)));
+
+   return nErrCode;
+}
+
 DSL_Error_t DSL_DRV_ModulesInit(
    DSL_IN DSL_Context_t *pContext)
 {
@@ -771,15 +814,6 @@ DSL_Error_t DSL_DRV_ModulesInit(
 
       return DSL_ERROR;
    }
-
-#if defined(INCLUDE_DEPRECATED) && defined(INCLUDE_ADSL_LED) && defined(INCLUDE_DSL_CPE_API_DANUBE)
-   if ( DSL_DRV_LED_ModuleInit(pContext) != DSL_SUCCESS )
-   {
-      DSL_DEBUG( DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - LED module initialization failed"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-   }
-#endif /* defined(INCLUDE_DEPRECATED) && defined(INCLUDE_ADSL_LED) && defined(INCLUDE_DSL_CPE_API_DANUBE)*/
 
 #if defined(INCLUDE_DSL_ADSL_MIB)
    if ( DSL_DRV_MIB_ModuleInit(pContext) != DSL_SUCCESS )
@@ -929,6 +963,11 @@ DSL_Error_t DSL_DRV_Init(
    DSL_boolean_t bFwRequest = DSL_FALSE;
 #endif /* INCLUDE_FW_REQUEST_SUPPORT*/
    DSL_FirmwareRequestType_t nFwType = DSL_FW_REQUEST_NA;
+#ifndef DSL_DEBUG_DISABLE
+   #if defined(INCLUDE_DSL_CPE_API_VRX)
+      DSL_DBG_ModuleLevel_t dbgModLev;
+   #endif /* #ifndef DSL_DEBUG_DISABLE*/
+#endif /* INCLUDE_DSL_CPE_API_VRX */
 
    DSL_CHECK_CTX_POINTER(pContext);
    DSL_CHECK_ERR_CODE();
@@ -952,6 +991,20 @@ DSL_Error_t DSL_DRV_Init(
       return DSL_WRN_ALREADY_INITIALIZED;
    }
 
+#ifndef DSL_DEBUG_DISABLE
+   #if defined(INCLUDE_DSL_CPE_API_VRX)
+      /* Take care that initial value for low level (MEI) driver are configured */
+      dbgModLev.data.nDbgModule = DSL_DBG_LOW_LEVEL_DRIVER;
+      dbgModLev.data.nDbgLevel = DSL_g_dbgLvl[DSL_DBG_LOW_LEVEL_DRIVER].nDbgLvl;
+      DSL_DRV_DBG_ModuleLevelSet(pContext, &dbgModLev);
+
+      dbgModLev.data.nDbgModule = DSL_DBG_MESSAGE_DUMP;
+      dbgModLev.data.nDbgLevel = DSL_g_dbgLvl[DSL_DBG_MESSAGE_DUMP].nDbgLvl;
+      DSL_DRV_DBG_ModuleLevelSet(pContext, &dbgModLev);
+   #endif /* #ifndef DSL_DEBUG_DISABLE*/
+#endif /* INCLUDE_DSL_CPE_API_VRX */
+
+
 #ifdef INCLUDE_DSL_DELT
 #ifdef DSL_CPE_STATIC_DELT_DATA
    DSL_DRV_MemSet(&deltData, 0, sizeof(DSL_G997_DeltData_t));
@@ -967,6 +1020,16 @@ DSL_Error_t DSL_DRV_Init(
    #endif /* INCLUDE_DSL_DELT_SHOWTIME*/
 #endif
 #endif /* #ifdef INCLUDE_DSL_DELT*/
+
+#if defined (INCLUDE_DSL_CPE_API_DANUBE)
+   /* Set platform ID */
+   pContext->pDevCtx->data.version.fwVersion.nMajorVersion =
+        pData->data.nFirmwareFeatures.nPlatformId;
+   DSL_DEBUG(DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+      "DSL[%02d]: Initial platform ID (FW major version): %d"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext),
+      pContext->pDevCtx->data.version.fwVersion.nMajorVersion));
+#endif
 
    /* Initialize possible XTSE configurations*/
    memcpy(pContext->xtsePoss, g_XTSEposs, DSL_G997_NUM_XTSE_OCTETS);
@@ -1034,22 +1097,46 @@ DSL_Error_t DSL_DRV_Init(
       &(pData->data.nAutobootConfig),
       sizeof(DSL_AutobootConfigData_t));
 
-   /* TODO: check these initialization parameters*/
+   /* *********************************************************************** */
+   /*              Initiliatize API default configurations                    */
+   /* *********************************************************************** */
+   /* Note: Values with default value zero/false does not need to be set
+            necessarily because the complete pContext structure is initialized
+            with zero at the beginning. */
    pContext->lineFeatureDataCfg[DSL_UPSTREAM].bTrellisEnable = DSL_TRUE;
    pContext->lineFeatureDataCfg[DSL_DOWNSTREAM].bTrellisEnable = DSL_TRUE;
+
    pContext->lineFeatureDataCfg[DSL_UPSTREAM].bBitswapEnable = DSL_TRUE;
    pContext->lineFeatureDataCfg[DSL_DOWNSTREAM].bBitswapEnable = DSL_TRUE;
-   pContext->lineFeatureDataCfg[DSL_UPSTREAM].bVirtualNoiseSupport = DSL_FALSE;
-   pContext->lineFeatureDataCfg[DSL_DOWNSTREAM].bVirtualNoiseSupport = DSL_FALSE;
-   pContext->powerMgmtStatus.nPowerManagementStatus = DSL_G997_PMS_L3;
+
+   /* ReTx is only valid for downstream direction */
+   pContext->lineFeatureDataCfg[DSL_DOWNSTREAM].bReTxEnable = DSL_TRUE;
+
+#ifdef INCLUDE_DSL_CPE_API_VRX
+   /* Virtual Noise support is only enabled for VRX */
+   pContext->lineFeatureDataCfg[DSL_UPSTREAM].bVirtualNoiseSupport = DSL_TRUE;
+   pContext->lineFeatureDataCfg[DSL_DOWNSTREAM].bVirtualNoiseSupport = DSL_TRUE;
+#endif /* INCLUDE_DSL_CPE_API_VRX*/
 
    pContext->lineFeatureDataCfg[DSL_UPSTREAM].b20BitSupport = DSL_FEATURE_NA;
    pContext->lineFeatureDataCfg[DSL_DOWNSTREAM].b20BitSupport = DSL_FEATURE_DISABLED;
+
+   pContext->powerMgmtStatus.nPowerManagementStatus = DSL_G997_PMS_L3;
 
    /* Set default reboot criteria*/
    pContext->RebootCriteriaNeConfigData =
       DSL_REBOOT_CRITERIA_ESE | DSL_REBOOT_CRITERIA_LOM | DSL_REBOOT_CRITERIA_LOF |
       DSL_REBOOT_CRITERIA_LOS | DSL_REBOOT_CRITERIA_NEGATIVE_MARGIN;
+
+   /* Enhanced upstream framing shall be enabled by default */
+   pContext->lineOptionsConfig[DSL_ENHANCED_FRAMING_US] = (DSL_int32_t)DSL_TRUE;
+
+#ifdef INCLUDE_DSL_CPE_API_VRX
+   /* Set initialization default power mode*/
+   pContext->PMMode = DSL_G997_PMMODE_BIT_L3_STATE;
+#endif /* INCLUDE_DSL_CPE_API_VRX*/
+
+   /* *********************************************************************** */
 
    DSL_DRV_MUTEX_UNLOCK(pContext->dataMutex);
 
@@ -1064,7 +1151,8 @@ DSL_Error_t DSL_DRV_Init(
       return nErrCode;
    }
 
-   pContext->nFwFeatures = pData->data.nFirmwareFeatures;
+   memcpy(&(pContext->nFwFeatures), &(pData->data.nFirmwareFeatures),
+      sizeof(DSL_FirmwareFeatures_t));
 
    /* Download FW if available and Start Autoboot handling.
        If no FW specified, do it later with appropriate IOCTLs*/
@@ -1101,7 +1189,6 @@ DSL_Error_t DSL_DRV_Init(
          return DSL_ERROR;
       }
 
-#if defined(INCLUDE_DSL_CPE_API_VRX) || defined(INCLUDE_DSL_CPE_API_DANUBE)
       nErrCode = DSL_DRV_DEV_G994VendorIdFirmwareUpdate(pContext);
       if( nErrCode != DSL_SUCCESS )
       {
@@ -1111,7 +1198,6 @@ DSL_Error_t DSL_DRV_Init(
 
          return nErrCode;
       }
-#endif /* defined(INCLUDE_DSL_CPE_API_VRX) || defined(INCLUDE_DSL_CPE_API_DANUBE) */
 
       /* Start Autoboot handling if allowed*/
       if( pData->data.nAutobootStartupMode != DSL_AUTOBOOT_CTRL_STOP )
@@ -1139,13 +1225,11 @@ DSL_Error_t DSL_DRV_Init(
    }
    else
    {
-#if defined(INCLUDE_DSL_CPE_API_VINAX)
-      DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.deviceCfg.nFwType, nFwType);
-#elif defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
       nFwType = DSL_FW_REQUEST_XDSL;
 #else
       nFwType = DSL_FW_REQUEST_ADSL;
-#endif /* defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)*/
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX) */
 #ifdef INCLUDE_FW_REQUEST_SUPPORT
       bFwRequest = DSL_TRUE;
 #endif /* INCLUDE_FW_REQUEST_SUPPORT*/
@@ -1179,7 +1263,16 @@ DSL_Error_t DSL_DRV_Init(
 #ifdef INCLUDE_FW_REQUEST_SUPPORT
    if (bFwRequest)
    {
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+      DSL_PortMode_t nPortMode;
+
+      /* get port mode type*/
+      DSL_CTX_READ_SCALAR(pContext, nErrCode, pDevCtx->data.nPortMode, nPortMode);
+      fwReqData.nPortMode = nPortMode;
+#endif
+
       fwReqData.nFirmwareRequestType = nFwType;
+
       /* Generate DSL_EVENT_S_FIRMWARE_REQUEST event*/
       DSL_DRV_EventGenerate( pContext, 0, DSL_ACCESSDIR_NA,
          DSL_XTUDIR_NA, DSL_EVENT_S_FIRMWARE_REQUEST,
@@ -1187,7 +1280,6 @@ DSL_Error_t DSL_DRV_Init(
    }
 #endif /* INCLUDE_FW_REQUEST_SUPPORT*/
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
    nErrCode = DSL_DRV_HybridContextReset(pContext);
    if (nErrCode != DSL_SUCCESS)
    {
@@ -1195,7 +1287,7 @@ DSL_Error_t DSL_DRV_Init(
          "init failed!"DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
       /* Continue with activation sequence anyhow */
    }
-#endif /* INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_VRX */
+
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_Init, retCode=%d"DSL_DRV_CRLF,
       DSL_DEV_NUM(pContext) ,nErrCode));
@@ -1233,17 +1325,6 @@ DSL_void_t DSL_DRV_Free(
 #ifdef INCLUDE_DSL_TIMEOUT
    DSL_DRV_Timeout_Shutdown(pContext);
 #endif /* INCLUDE_DSL_TIMEOUT*/
-
-#if defined(INCLUDE_DEPRECATED) && defined(INCLUDE_ADSL_LED)
-   if (pContext->bLedInit)
-   {
-      stop_led_module = 1;
-      DSL_DRV_WAKEUP_EVENT(pContext->ledPollingEvent);
-#ifdef INCLUDE_DSL_DATA_LED_SIMULATOR
-      DSL_DRV_WAKEUP_EVENT(pContext->dataLedSimEvent);
-#endif /* INCLUDE_DSL_DATA_LED_SIMULATOR*/
-   }
-#endif /* defined(INCLUDE_DEPRECATED) && defined(INCLUDE_ADSL_LED)*/
 
 #ifdef INCLUDE_DSL_PM
    /* Stop PM module processing*/
@@ -1317,8 +1398,7 @@ DSL_Error_t DSL_DRV_AutobootLoadFirmware(
          (pContext, SYS_DBG_MSG"DSL[%02d]: Preparing to download FW..."
          DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-      DSL_CTX_WRITE_SCALAR(pContext, nErrCode, nFwFeatures,
-         pData->data.nFirmwareFeatures);
+      DSL_CTX_WRITE(pContext, nErrCode, nFwFeatures, pData->data.firmwareFeatures);
    }
    else
    {
@@ -1434,7 +1514,7 @@ DSL_Error_t DSL_DRV_AutobootLoadFirmware(
 
    if (nErrCode == DSL_SUCCESS)
    {
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
       /* Download FW*/
       nErrCode = DSL_DRV_FwDownload(
                     pContext,
@@ -1469,13 +1549,12 @@ DSL_Error_t DSL_DRV_AutobootLoadFirmware(
       DSL_DRV_VFree(pFirmware2);
    }
 
-   if( nErrCode == DSL_SUCCESS )
+   if( nErrCode >= DSL_SUCCESS )
    {
       /* Get bFirmwareReady flag*/
       DSL_CTX_READ_SCALAR(pContext, nErrCode, pDevCtx->bFirmwareReady, bFirmwareReady);
       if( bFirmwareReady )
       {
-#if defined(INCLUDE_DSL_CPE_API_VRX) || defined(INCLUDE_DSL_CPE_API_DANUBE)
          nErrCode = DSL_DRV_DEV_G994VendorIdFirmwareUpdate(pContext);
          if( nErrCode != DSL_SUCCESS )
          {
@@ -1485,7 +1564,6 @@ DSL_Error_t DSL_DRV_AutobootLoadFirmware(
 
             return nErrCode;
          }
-#endif /* defined(INCLUDE_DSL_CPE_API_VRX) || defined(INCLUDE_DSL_CPE_API_DANUBE) */
 
          DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bAutobootFwLoadPending, DSL_FALSE);
          DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bFwRequestHandled, DSL_TRUE);
@@ -1560,13 +1638,18 @@ DSL_Error_t DSL_DRV_AutobootControlSet(
    DSL_IN_OUT DSL_AutobootControl_t *pData)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
-#if defined(INCLUDE_DSL_DELT) || \
-((defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)) && \
-defined(INCLUDE_DSL_FILTER_DETECTION))
+#if defined(INCLUDE_DSL_DELT) || defined(INCLUDE_DSL_FILTER_DETECTION)
    DSL_G997_LDSF_t nLoopMode = DSL_G997_INHIBIT_LDSF;
-#endif /* INCLUDE_DSL_DELT*/
-   DSL_boolean_t bFirmwareReady = DSL_FALSE, bInitComplete = DSL_FALSE;
+#endif /* defined(INCLUDE_DSL_DELT) || defined(INCLUDE_DSL_FILTER_DETECTION) */
+   DSL_boolean_t bFirmwareReady = DSL_FALSE, bInitComplete = DSL_FALSE, bAutobootDisable = DSL_FALSE;
    DSL_Autoboot_State_t nState = DSL_AUTOBOOTSTATE_UNKNOWN;
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 2)
+   DSL_PortMode_t nPortMode;
+#endif
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 1)
+   DSL_uint32_t nOppositeLine;
+   DSL_uint16_t nRemotePafAvailable = 0;
+#endif
 
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_AutobootControlSet(%d)"
@@ -1578,129 +1661,265 @@ defined(INCLUDE_DSL_FILTER_DETECTION))
    DSL_CTX_READ_SCALAR(pContext, nErrCode, bInitComplete, bInitComplete);
    if (bInitComplete == DSL_FALSE)
    {
-      DSL_DEBUG( DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - DSL CPE API was not initialized yet!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
       nErrCode = DSL_ERR_NOT_INITIALIZED;
    }
 
+   DSL_CTX_READ_SCALAR(pContext, nErrCode, pDevCtx->bFirmwareReady,
+      bFirmwareReady);
+
    if (nErrCode == DSL_SUCCESS)
    {
-      switch (pData->data.nCommand)
+      DSL_CTX_READ(pContext, nErrCode, bAutobootDisable, bAutobootDisable);
+
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 1)
+      /* Ignore for locked line */
+      if (nLineLocked == DSL_DEV_NUM(pContext))
       {
-         case DSL_AUTOBOOT_CTRL_START:
-            DSL_CTX_READ_SCALAR(pContext, nErrCode, pDevCtx->bFirmwareReady,
-               bFirmwareReady);
+         DSL_DEBUG(DSL_DBG_WRN, (pContext,
+            SYS_DBG_WRN"DSL[%02d]: WARNING - PAF not available, line disabled!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-            if (bFirmwareReady == DSL_FALSE)
-            {
-               DSL_DEBUG(DSL_DBG_ERR,
-                  (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Autoboot Start failed, no FW loaded!"
-                  DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-               nErrCode = DSL_ERROR;
-               break;
-            }
-
-            nErrCode = DSL_DRV_AutobootThreadStart(pContext);
-            if( nErrCode != DSL_SUCCESS )
-            {
-               DSL_DEBUG(DSL_DBG_ERR,
-                 (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Autoboot Thread start failed!"
-                 DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-               break;
-            }
-
-            /* Initialize additional modules PM, CEOC,...*/
-            nErrCode = DSL_DRV_ModulesInit(pContext);
-            if( nErrCode != DSL_SUCCESS )
-            {
-               DSL_DEBUG( DSL_DBG_ERR,
-                  (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - additional modules init failed!"
-                  DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-               break;
-            }
-            break;
-
-         case DSL_AUTOBOOT_CTRL_STOP:
-            /* Stop Autoboot thread*/
-            DSL_DRV_AutobootThreadStop(pContext);
-#ifdef INCLUDE_DSL_PM
-            /* Suspend PM module*/
-            nErrCode = DSL_DRV_PM_Suspend(pContext);
-
-            if (nErrCode != DSL_SUCCESS)
-            {
-               DSL_DEBUG( DSL_DBG_ERR,
-                  (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - PM module suspend failed!"
-                  DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-               return nErrCode;
-            }
-#endif /* #ifdef INCLUDE_DSL_PM*/
-            /* Trigger restart sequence*/
-            DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bAutobootRestart, DSL_TRUE);
-            break;
-
-         case DSL_AUTOBOOT_CTRL_RESTART:
-#if defined(INCLUDE_DSL_DELT) || \
-((defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)) && \
-defined(INCLUDE_DSL_FILTER_DETECTION))
-            DSL_CTX_READ_SCALAR(pContext, nErrCode, lineActivateConfig.nLDSF, nLoopMode);
+         nErrCode = DSL_ERR_BND_REMOTE_PAF_DISABLED;
+      }
+      else
 #endif
+      {
+         switch (pData->data.nCommand)
+         {
+            case DSL_AUTOBOOT_CTRL_START:
+               if (bFirmwareReady == DSL_FALSE)
+               {
+                  DSL_DEBUG(DSL_DBG_WRN,
+                     (pContext, SYS_DBG_ERR"DSL[%02d]: WARNING - Autoboot Start failed, no FW loaded!"
+                     DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+                  nErrCode = DSL_WRN_CONFIG_PARAM_IGNORED;
+                  break;
+               }
+
+               nErrCode = DSL_DRV_AutobootThreadStart(pContext);
+               if( nErrCode != DSL_SUCCESS )
+               {
+                  DSL_DEBUG(DSL_DBG_ERR,
+                    (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Autoboot Thread start failed!"
+                    DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+                  break;
+               }
+
+               /* Initialize additional modules PM, CEOC,...*/
+               nErrCode = DSL_DRV_ModulesInit(pContext);
+               if( nErrCode != DSL_SUCCESS )
+               {
+                  DSL_DEBUG( DSL_DBG_ERR,
+                     (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - additional modules init failed!"
+                     DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+                  break;
+               }
+
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 1)
+               DSL_DRV_MUTEX_LOCK(bndLineLockMutex);
+               /* Start for unlocked line */
+               if ((nLineLocked != -1) && (nLineLocked != DSL_DEV_NUM(pContext)))
+               {
+                  /* No line is lock now */
+                  nLineLocked = -1;
+               }
+               DSL_DRV_MUTEX_UNLOCK(bndLineLockMutex);
+#endif
+               break;
+
+            case DSL_AUTOBOOT_CTRL_STOP:
+               /* Stop Autoboot thread*/
+               DSL_DRV_AutobootThreadStop(pContext);
+#ifdef INCLUDE_DSL_PM
+               /* Suspend PM module*/
+               nErrCode = DSL_DRV_PM_Suspend(pContext);
+
+               if (nErrCode != DSL_SUCCESS)
+               {
+                  DSL_DEBUG( DSL_DBG_ERR,
+                     (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - PM module suspend failed!"
+                     DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+                  return nErrCode;
+               }
+#endif /* #ifdef INCLUDE_DSL_PM*/
+               /* Trigger restart sequence*/
+               DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bAutobootRestart, DSL_TRUE);
+               break;
+
+            case DSL_AUTOBOOT_CTRL_ENABLE:
+            case DSL_AUTOBOOT_CTRL_DISABLE:
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 1)
+               if (!bAutobootDisable && pData->data.nCommand == DSL_AUTOBOOT_CTRL_DISABLE)
+               {
+                  nOppositeLine = (DSL_DEV_NUM(pContext) + 1) % DSL_DRV_MAX_ENTITIES;
+
+                  /* Check other line state FULL_INIT or SHOWTIME */
+                  if (ifxDevices[nOppositeLine].pContext->bGotFullInit ||
+                      ifxDevices[nOppositeLine].pContext->bGotShowtime)
+                  {
+                     /* Check current line PAF support */
+                     nErrCode = DSL_DRV_BND_RemotePafAvailableCheck(pContext, &nRemotePafAvailable);
+                     if (nErrCode < DSL_SUCCESS)
+                     {
+                        DSL_DEBUG( DSL_DBG_ERR, (pContext,
+                           SYS_DBG_ERR"DSL[%02d]: ERROR - PAF check failed!"
+                           DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+                        return DSL_ERROR;
+                     }
+
+                     /* If current line support PAF */
+                     if (nRemotePafAvailable)
+                     {
+                        /* If opposite line disabled */
+                        if (ifxDevices[nOppositeLine].pContext->bAutobootDisable)
+                        {
+                           nRemotePafAvailable = 0;
+                        }
+                     }
+
+                     /* If current line support PAF and opposite line not disabled */
+                     if (nRemotePafAvailable)
+                     {
+                        /* Check opposite line PAF support */
+                        nErrCode = DSL_DRV_BND_RemotePafAvailableCheck(ifxDevices[nOppositeLine].pContext, &nRemotePafAvailable);
+                        if (nErrCode < DSL_SUCCESS)
+                        {
+                           DSL_DEBUG( DSL_DBG_ERR, (pContext,
+                              SYS_DBG_ERR"DSL[%02d]: ERROR - PAF check failed!"
+                              DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+                           return DSL_ERROR;
+                        }
+                     }
+
+                     /* remote PAF disabled (for at least for one line)*/
+                     if (!nRemotePafAvailable)
+                     {
+                        DSL_DRV_MUTEX_LOCK(bndLineLockMutex);
+                        /* If no locked lines => lock current line */
+                        if (nLineLocked == -1)
+                        {
+                           nLineLocked = DSL_DEV_NUM(pContext);
+                        }
+                        DSL_DRV_MUTEX_UNLOCK(bndLineLockMutex);
+                     }
+                  }
+               }
+#endif
+
+               if (bAutobootDisable && pData->data.nCommand == DSL_AUTOBOOT_CTRL_DISABLE)
+               {
+                  return DSL_SUCCESS;
+               }
+
+               if (!bAutobootDisable && pData->data.nCommand == DSL_AUTOBOOT_CTRL_ENABLE)
+               {
+                  return DSL_SUCCESS;
+               }
+
+               bAutobootDisable = pData->data.nCommand == DSL_AUTOBOOT_CTRL_DISABLE ?
+                                    DSL_TRUE : DSL_FALSE;
+
+               if (pContext->bAutobootThreadStarted)
+               {
+                  DSL_CTX_WRITE(pContext, nErrCode, bAutobootDisable, bAutobootDisable);
+               }
+
+               /* ... pass to restart*/
+
+            case DSL_AUTOBOOT_CTRL_RESTART:
+            case DSL_AUTOBOOT_CTRL_RESTART_FULL:
+               if (bAutobootDisable && pData->data.nCommand == DSL_AUTOBOOT_CTRL_RESTART)
+               {
+                  return DSL_ERR_AUTOBOOT_DISABLED;
+               }
+#if defined(INCLUDE_DSL_DELT) || defined(INCLUDE_DSL_FILTER_DETECTION)
+               DSL_CTX_READ_SCALAR(pContext, nErrCode, lineActivateConfig.nLDSF, nLoopMode);
+#endif /* defined(INCLUDE_DSL_DELT) || defined(INCLUDE_DSL_FILTER_DETECTION) */
 
 #ifdef INCLUDE_DSL_DELT
-            if (nLoopMode == DSL_G997_AUTO_LDSF)
-            {
-               DSL_CTX_WRITE_SCALAR(pContext, nErrCode, nLoopAutoCount, 1);
-            }
+               if (nLoopMode == DSL_G997_AUTO_LDSF)
+               {
+                  DSL_CTX_WRITE_SCALAR(pContext, nErrCode, nLoopAutoCount, 1);
+               }
 #endif /* #ifdef INCLUDE_DSL_DELT*/
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
-            nErrCode = DSL_DRV_HybridContextInit(pContext);
-            if (nErrCode != DSL_SUCCESS)
-            {
-               DSL_DEBUG(DSL_DBG_ERR, (pContext, "DSL[%02d]: ERROR - HybridContextInit "
-                  "init failed!"DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-               /* Continue with activation sequence anyhow */
-            }
-#endif /* INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_VRX */
+               nErrCode = DSL_DRV_HybridContextInit(pContext);
+               if (nErrCode != DSL_SUCCESS)
+               {
+                  DSL_DEBUG(DSL_DBG_ERR, (pContext, "DSL[%02d]: ERROR - HybridContextInit "
+                     "init failed!"DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+                  /* Continue with activation sequence anyhow */
+               }
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
 #ifdef INCLUDE_DSL_FILTER_DETECTION
-            if (nLoopMode == DSL_G997_AUTO_FILTER_DETECTION)
-            {
-               DSL_CTX_WRITE_SCALAR(pContext, nErrCode, showtimeMeasurement.bFilterDetectionActive, DSL_TRUE);
-            }
+               if (nLoopMode == DSL_G997_AUTO_FILTER_DETECTION)
+               {
+                  DSL_CTX_WRITE_SCALAR(pContext, nErrCode, showtimeMeasurement.bFilterDetectionActive, DSL_TRUE);
+               }
 #endif
+               if (pData->data.nCommand == DSL_AUTOBOOT_CTRL_RESTART_FULL)
+               {
+                  DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bAutobootDisable, DSL_FALSE);
+                  DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bSoftRestart, DSL_FALSE);
+               }
+
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 2)
+               if (pData->data.nCommand == DSL_AUTOBOOT_CTRL_RESTART)
+               {
+                  /* get port mode type*/
+                  DSL_CTX_READ_SCALAR(pContext, nErrCode, pDevCtx->data.nPortMode, nPortMode);
+                  if (nPortMode == DSL_PORT_MODE_DUAL)
+                  {
+                     DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bSoftRestart, DSL_TRUE);
+                  }
+               }
 #endif
-            DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bAutobootRestart, DSL_TRUE);
+               DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bAutobootRestart, DSL_TRUE);
 
-            if (pContext->bAutobootThreadStarted)
-            {
-               /* Change Autoboot Status*/
-               nErrCode = DSL_DRV_AutobootStatusSet(pContext,
-                             DSL_AUTOBOOT_STATUS_RUNNING, DSL_FW_REQUEST_NA);
-            }
+               if (pContext->bAutobootThreadStarted)
+               {
+                  /* Change Autoboot Status*/
+                  nErrCode = DSL_DRV_AutobootStatusSet(pContext,
+                                DSL_AUTOBOOT_STATUS_RUNNING, DSL_FW_REQUEST_NA);
+               }
 
-            break;
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 1)
+               if ((pData->data.nCommand == DSL_AUTOBOOT_CTRL_RESTART) ||
+                  (pData->data.nCommand == DSL_AUTOBOOT_CTRL_RESTART_FULL))
+               {
+                  DSL_DRV_MUTEX_LOCK(bndLineLockMutex);
+                  /* Restart for unlocked line */
+                  if ((nLineLocked != -1) && (nLineLocked != DSL_DEV_NUM(pContext)))
+                  {
+                     /* No line is lock now */
+                     nLineLocked = -1;
+                  }
+                  DSL_DRV_MUTEX_UNLOCK(bndLineLockMutex);
+               }
+#endif
+               break;
 
-         case DSL_AUTOBOOT_CTRL_CONTINUE:
-            DSL_CTX_READ_SCALAR(pContext, nErrCode, nAutobootState, nState);
-            if ((nState != DSL_AUTOBOOTSTATE_LINK_ACTIVATE_WAIT) &&
-                (nState != DSL_AUTOBOOTSTATE_CONFIG_WRITE_WAIT) &&
-                (nState != DSL_AUTOBOOTSTATE_RESTART_WAIT))
-            {
-               nErrCode = DSL_WRN_NOT_ALLOWED_IN_CURRENT_STATE;
-            }
-            else
-            {
-               /* Trigger to continue Autoboot handling*/
-               DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bAutobootContinue, DSL_TRUE);
-            }
-            break;
-         default:
-            nErrCode = DSL_ERR_INVALID_PARAMETER;
-            break;
+            case DSL_AUTOBOOT_CTRL_CONTINUE:
+               DSL_CTX_READ_SCALAR(pContext, nErrCode, nAutobootState, nState);
+               if ((nState != DSL_AUTOBOOTSTATE_LINK_ACTIVATE_WAIT) &&
+                   (nState != DSL_AUTOBOOTSTATE_CONFIG_WRITE_WAIT) &&
+                   (nState != DSL_AUTOBOOTSTATE_RESTART_WAIT))
+               {
+                  nErrCode = DSL_WRN_NOT_ALLOWED_IN_CURRENT_STATE;
+               }
+               else
+               {
+                  /* Trigger to continue Autoboot handling*/
+                  DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bAutobootContinue, DSL_TRUE);
+               }
+               break;
+            default:
+               nErrCode = DSL_ERR_INVALID_PARAMETER;
+               break;
+         }
       }
    }
 
@@ -1939,7 +2158,7 @@ DSL_Error_t DSL_DRV_ResourceUsageStatisticsGet(
    */
    DSL_DEBUG( DSL_DBG_PRN, (pContext, SYS_DBG_PRN"DSL: Device specific static memory usage" DSL_DRV_CRLF ));
    DSL_DEBUG( DSL_DBG_PRN, (pContext,
-      SYS_DBG_PRN"DSL:   device context structure     : %10d bytes" DSL_DRV_CRLF, (int)(sizeof(DSL_devCtx_t)*DSL_DRV_MAX_DEVICE_NUMBER)));
+      SYS_DBG_PRN"DSL:   device context structure     : %10d bytes" DSL_DRV_CRLF, (int)(sizeof(DSL_devCtx_t)*DSL_DRV_MAX_ENTITIES)));
    staticMemUsageTotal += sizeof(DSL_devCtx_t);
    DSL_DEBUG( DSL_DBG_PRN, (pContext,
       SYS_DBG_PRN"DSL:   device auxiliary data        : %10d bytes" DSL_DRV_CRLF, devResourceUsageStatisticsData.staticMemUsage));
@@ -2213,23 +2432,18 @@ DSL_Error_t DSL_DRV_LineFeatureConfigSet(
    DSL_CHECK_DIRECTION(pData->nDirection);
    DSL_CHECK_ERR_CODE();
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX)
-   /* Retransmission mode not supported for Vinax yet */
-   if (pData->data.bReTxEnable == DSL_TRUE)
-   {
-      pData->data.bReTxEnable = DSL_FALSE;
-      nRet = DSL_WRN_CONFIG_PARAM_IGNORED;
-   }
-#else
    if (pData->nDirection == DSL_UPSTREAM)
    {
-      /* Retransmission mode not supported for US yet */
-      pData->data.bReTxEnable = DSL_FALSE;
-      nRet = DSL_WRN_CONFIG_PARAM_IGNORED;
+      if(pData->data.bReTxEnable == DSL_TRUE)
+      {
+         /* Retransmission mode not supported for US */
+         pData->data.bReTxEnable = DSL_FALSE;
+         nRet = DSL_WRN_CONFIG_PARAM_IGNORED;
+      }
    }
-#endif
 
-   if (pData->nDirection == DSL_UPSTREAM)
+   if ((pData->nDirection == DSL_UPSTREAM) &&
+       (pData->data.bTrellisEnable == DSL_FALSE))
    {
       /* Fixed default value for the US direction*/
       pData->data.bTrellisEnable = DSL_TRUE;
@@ -2237,23 +2451,6 @@ DSL_Error_t DSL_DRV_LineFeatureConfigSet(
    }
 
    DSL_CTX_WRITE(pContext, nErrCode, lineFeatureDataCfg[pData->nDirection], pData->data);
-
-#if defined(INCLUDE_DSL_CPE_API_VRX) || defined(INCLUDE_DSL_CPE_API_VINAX)
-   if (pData->nDirection == DSL_UPSTREAM)
-   {
-      DSL_CTX_WRITE(
-         pContext, nErrCode,
-         pDevCtx->data.deviceCfg.cfg.bVirtualNoiseSupportUs,
-         pData->data.bVirtualNoiseSupport);
-   }
-   else
-   {
-      DSL_CTX_WRITE(
-         pContext, nErrCode,
-         pDevCtx->data.deviceCfg.cfg.bVirtualNoiseSupportDs,
-         pData->data.bVirtualNoiseSupport);
-   }
-#endif /* defined(INCLUDE_DSL_CPE_API_VRX) || defined(INCLUDE_DSL_CPE_API_VINAX) */
 
 #if defined(INCLUDE_DSL_CPE_API_DANUBE)
    if ( (pData->nDirection == DSL_UPSTREAM) &&
@@ -2291,23 +2488,6 @@ DSL_Error_t DSL_DRV_LineFeatureConfigGet(
    DSL_CHECK_ERR_CODE();
 
    DSL_CTX_READ(pContext, nErrCode, lineFeatureDataCfg[pData->nDirection], pData->data);
-
-#if defined(INCLUDE_DSL_CPE_API_VRX) || defined(INCLUDE_DSL_CPE_API_VINAX)
-   if (pData->nDirection == DSL_UPSTREAM)
-   {
-      DSL_CTX_READ(
-         pContext, nErrCode,
-         pDevCtx->data.deviceCfg.cfg.bVirtualNoiseSupportUs,
-         pData->data.bVirtualNoiseSupport);
-   }
-   else
-   {
-      DSL_CTX_READ(
-         pContext, nErrCode,
-         pDevCtx->data.deviceCfg.cfg.bVirtualNoiseSupportDs,
-         pData->data.bVirtualNoiseSupport);
-   }
-#endif /* defined(INCLUDE_DSL_CPE_API_VRX) || defined(INCLUDE_DSL_CPE_API_VINAX) */
 
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_LineFeatureConfigGet"
@@ -2428,7 +2608,6 @@ DSL_Error_t DSL_DRV_InteropFeatureConfigGet(
 #endif /* INCLUDE_DSL_CONFIG_GET*/
 #endif /* INCLUDE_DSL_CPE_API_DANUBE*/
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
 DSL_Error_t DSL_DRV_LoopLengthStatusGet(
    DSL_IN DSL_Context_t *pContext,
    DSL_IN_OUT DSL_LoopLengthStatus_t *pData)
@@ -2448,7 +2627,7 @@ DSL_Error_t DSL_DRV_LoopLengthStatusGet(
 
 #ifdef INCLUDE_DSL_CPE_API_VRX
    /* Only for ADSL mode */
-   if (!DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   if (!DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL))
    {
       DSL_DEBUG(DSL_DBG_ERR, (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - "
                "hybrid/filter/looplength statistics are not supported "
@@ -2501,9 +2680,6 @@ DSL_Error_t DSL_DRV_LoopLengthStatusGet(
 
    return nErrCode;
 }
-#endif /* INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_VRX */
-
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
 
 DSL_Error_t DSL_DRV_RetxStatisticsGet(
    DSL_IN DSL_Context_t *pContext,
@@ -2529,15 +2705,24 @@ DSL_Error_t DSL_DRV_RetxStatisticsGet(
    return nErrCode;
 }
 
-#endif /* INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_VRX */
-
 DSL_Error_t DSL_DRV_SystemInterfaceConfigCheck(
    DSL_Context_t *pContext,
+   DSL_DslModeSelection_t nDslMode,
    DSL_SystemInterfaceConfigData_t *pData)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
+#if defined(INCLUDE_DSL_CPE_API_VRX) && defined(INCLUDE_DSL_BONDING)
+   DSL_boolean_t bPafEnable = DSL_FALSE;
+#endif
+
    DSL_CHECK_POINTER(pContext, pData);
    DSL_CHECK_ERR_CODE();
+
+#if defined(INCLUDE_DSL_CPE_API_VRX) && defined(INCLUDE_DSL_BONDING)
+   /* Bonding is always enabled for both lines/devices together so using the
+      configuration from the current line/device is ok. */
+   DSL_CTX_READ_SCALAR( pContext, nErrCode, BndConfig.bPafEnable, bPafEnable);
+#endif
 
    if ((pData->nTcLayer <= DSL_TC_UNKNOWN) ||
        (pData->nTcLayer >= DSL_TC_LAST))
@@ -2550,12 +2735,7 @@ DSL_Error_t DSL_DRV_SystemInterfaceConfigCheck(
       {
       case DSL_TC_ATM:
       case DSL_TC_EFM:
-#if defined(INCLUDE_DSL_CPE_API_VINAX)
-      case DSL_TC_HDLC:
-#endif
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
       case DSL_TC_AUTO:
-#endif
 #if defined(INCLUDE_DSL_CPE_API_DANUBE)
       case DSL_TC_EFM_FORCED:
 #endif
@@ -2566,23 +2746,35 @@ DSL_Error_t DSL_DRV_SystemInterfaceConfigCheck(
       }
    }
 
+   /* Set error/warning return codes in order of priority */
    if ((pData->nEfmTcConfigUs < DSL_EMF_TC_CLEANED) ||
-       (pData->nEfmTcConfigUs >= DSL_EMF_TC_SHORT_PACKETS))
+       (pData->nEfmTcConfigUs >= (DSL_EMF_TC_SHORT_PACKETS << 1)))
    {
       nErrCode = DSL_ERR_PARAM_RANGE;
    }
-
-   if ((pData->nEfmTcConfigDs < DSL_EMF_TC_CLEANED) ||
-       (pData->nEfmTcConfigDs >= DSL_EMF_TC_SHORT_PACKETS))
+   else if ((pData->nEfmTcConfigDs < DSL_EMF_TC_CLEANED) ||
+            (pData->nEfmTcConfigDs >= (DSL_EMF_TC_SHORT_PACKETS << 1)))
    {
       nErrCode = DSL_ERR_PARAM_RANGE;
    }
-
-   if ((pData->nSystemIf < DSL_SYSTEMIF_UNKNOWN) ||
-       (pData->nSystemIf >= DSL_SYSTEMIF_LAST))
+   else if ((pData->nSystemIf < DSL_SYSTEMIF_UNKNOWN) ||
+            (pData->nSystemIf >= DSL_SYSTEMIF_LAST))
    {
       nErrCode = DSL_ERR_PARAM_RANGE;
    }
+#if defined(INCLUDE_DSL_CPE_API_VRX) && defined(INCLUDE_DSL_BONDING)
+   else if ((bPafEnable == DSL_TRUE) && (nDslMode == DSL_MODE_VDSL))
+   {
+      if (pData->nTcLayer == DSL_TC_ATM)
+      {
+         nErrCode = DSL_ERR_CONFIG_BND_VS_TCLAYER;
+      }
+      else if (pData->nTcLayer == DSL_TC_AUTO)
+      {
+         nErrCode = DSL_WRN_CONFIG_BND_VS_TCLAYER;
+      }
+   }
+#endif
 
    return (nErrCode);
 }
@@ -2596,24 +2788,29 @@ DSL_Error_t DSL_DRV_SystemInterfaceConfigSet(
    DSL_Context_t *pContext,
    DSL_SystemInterfaceConfig_t *pData)
 {
-   DSL_Error_t nErrCode = DSL_SUCCESS;
+   DSL_Error_t nErrCode = DSL_SUCCESS, nRetCode = DSL_SUCCESS;
    DSL_CHECK_POINTER(pContext, pData);
    DSL_CHECK_ERR_CODE();
 
-   DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_SystemInterfaceConfigSet(nSystemIf=%#x, nTcLayer=%#x)"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext), pData->data.nSystemIf, pData->data.nTcLayer));
+   DSL_CHECK_DSLMODE(pData->nDslMode);
+   DSL_CHECK_ERR_CODE();
 
+   DSL_DEBUG( DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+      "DSL[%02d]: IN - DSL_SystemInterfaceConfigSet(nSystemIf=%#x, nTcLayer=%#x)"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext),
+      pData->data.nSystemIf, pData->data.nTcLayer));
 
-   nErrCode = DSL_DRV_SystemInterfaceConfigCheck(pContext, &(pData->data));
+   nErrCode = DSL_DRV_SystemInterfaceConfigCheck(pContext, pData->nDslMode,
+      &(pData->data));
 
    if (nErrCode >= DSL_SUCCESS)
    {
-      nErrCode = DSL_DRV_DEV_SystemInterfaceConfigSet(pContext, pData);
+      nRetCode = DSL_DRV_DEV_SystemInterfaceConfigSet(pContext, pData);
+      DSL_SET_ERROR_CODE(nRetCode, nErrCode);
    }
 
-   DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_SystemInterfaceConfigSet, retCode=%d"
+   DSL_DEBUG( DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+      "DSL[%02d]: OUT - DSL_SystemInterfaceConfigSet, retCode=%d"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
 
    return (nErrCode);
@@ -2632,6 +2829,9 @@ DSL_Error_t DSL_DRV_SystemInterfaceConfigGet(
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
    DSL_CHECK_POINTER(pContext, pData);
+   DSL_CHECK_ERR_CODE();
+
+   DSL_CHECK_DSLMODE(pData->nDslMode);
    DSL_CHECK_ERR_CODE();
 
    DSL_DEBUG( DSL_DBG_MSG,
@@ -2913,6 +3113,16 @@ DSL_Error_t DSL_DRV_LineOptionsConfigSet(
 #endif /* INCLUDE_DSL_CPE_API_DANUBE*/
       break;
 
+   case DSL_ENHANCED_FRAMING_US:
+      if ((pData->data.nConfigValue != 0) && (pData->data.nConfigValue != 1))
+      {
+         DSL_DEBUG( DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Enhanced framing US is out of range [0..1]!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         nRet = DSL_ERR_INVALID_PARAMETER;
+      }
+      break;
+
    default:
       DSL_DEBUG( DSL_DBG_ERR,
          (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Invalid nConfigSelector=%d specified!"
@@ -2956,6 +3166,7 @@ DSL_Error_t DSL_DRV_LineOptionsConfigGet(
    switch (pData->data.nConfigSelector)
    {
    case DSL_OPT_NOISE_MARGIN_DELTA_DS:
+   case DSL_ENHANCED_FRAMING_US:
       break;
 
    case DSL_ERASURE_DECODING_TYPE_DS:
@@ -2992,23 +3203,23 @@ DSL_Error_t DSL_DRV_LineOptionsConfigGet(
 #endif /* INCLUDE_DSL_CONFIG_GET*/
 
 #ifdef INCLUDE_DEVICE_EXCEPTION_CODES
-DSL_Error_t DSL_DBG_LastExceptionCodesGet(
+DSL_Error_t DSL_LastExceptionCodesGet(
    DSL_Context_t *pContext,
-   DSL_DBG_LastExceptionCodes_t *pData)
+   DSL_LastExceptionCodes_t *pData)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
    DSL_CHECK_POINTER(pContext, pData);
    DSL_CHECK_ERR_CODE();
 
    DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DBG_LastExceptionCodesGet"
+      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_LastExceptionCodesGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
    /* Get Last Exception Codes*/
    DSL_CTX_READ(pContext, nErrCode, LastExceptionCodes, pData->data);
 
    DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DBG_LastExceptionCodesGet, retCode=%d"
+      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_LastExceptionCodesGet, retCode=%d"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
 
    return nErrCode;
@@ -3033,7 +3244,7 @@ DSL_Error_t DSL_DRV_LowLevelConfigurationSet(
 
    /* Call device specific implementation*/
    nErrCode = DSL_DRV_DEV_LowLevelConfigurationSet(pContext, &(pData->data));
-#if defined(INCLUDE_DSL_CPE_API_VRX) && !defined(INCLUDE_DSL_CPE_API_VRX_FULL_MSG)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
    if (nErrCode > DSL_SUCCESS)
    {
       nErrCode = DSL_WRN_CONFIG_PARAM_IGNORED;
@@ -3074,68 +3285,6 @@ DSL_Error_t DSL_DRV_LowLevelConfigurationGet(
 }
 
 #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/*
-   For a detailed description of the function, its arguments and return value
-   please refer to the description in the header file 'drv_dsl_cpe_intern.h'
-*/
-DSL_Error_t DSL_DRV_LinePathCounterTotalGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_LinePathCounterTotal_t *pData )
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-
-   DSL_CHECK_POINTER(pContext, pData);
-   DSL_CHECK_ERR_CODE();
-   DSL_CHECK_CHANNEL_RANGE(pData->nChannel);
-   DSL_CHECK_ERR_CODE();
-
-   DSL_DEBUG(DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_LinePathCounterTotalGet"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-   /* Call device specific implementation*/
-   nErrCode = DSL_DRV_DEV_LinePathCounterTotalGet(
-                pContext, pData->nChannel, &(pData->data));
-
-   DSL_DEBUG(DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_LinePathCounterTotalGet"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-   return nErrCode;
-}
-
-/*
-   For a detailed description of the function, its arguments and return value
-   please refer to the description in the header file 'drv_dsl_cpe_intern.h'
-*/
-DSL_Error_t DSL_DRV_DataPathCounterTotalGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_DataPathCounterTotal_t *pData )
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-
-   DSL_CHECK_POINTER(pContext, pData);
-   DSL_CHECK_ERR_CODE();
-   DSL_CHECK_CHANNEL_RANGE(pData->nChannel);
-   DSL_CHECK_ERR_CODE();
-
-   DSL_DEBUG(DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_DataPathCounterTotalGet"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-   /* Call device specific implementation*/
-   nErrCode = DSL_DRV_DEV_DataPathCounterTotalGet(
-                pContext, pData->nChannel, &(pData->data));
-
-   DSL_DEBUG(DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_DataPathCounterTotalGet"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-   return nErrCode;
-}
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX*/
-
 /*
    For a detailed description of the function, its arguments and return value
    please refer to the description in the header file 'drv_dsl_cpe_api.h'
@@ -3190,7 +3339,7 @@ DSL_Error_t DSL_DRV_BandPlanStatusGet(
         (nCurrentState == DSL_LINESTATE_SHOWTIME_NO_SYNC) )
    {
       /* Call device specific implementation*/
-      nErrCode = DSL_DRV_VXX_BandPlanStatusGet(pContext,&(pData->data));
+      nErrCode = DSL_DRV_VRX_BandPlanStatusGet(pContext,&(pData->data));
 
       /* This parameter is not applicable at the CPE side*/
       pData->data.nBandPlan = DSL_BANDPLAN_NA;
@@ -3223,8 +3372,8 @@ DSL_Error_t DSL_DRV_BandPlanSupportedGet(
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_BandPlanSupportedGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-   /* Call VINAX device specific implementation*/
-   nErrCode = DSL_DRV_VXX_BandPlanSupportedGet(pContext, &(pData->data));
+   /* Call VRX device specific implementation*/
+   nErrCode = DSL_DRV_VRX_BandPlanSupportedGet(pContext, &(pData->data));
 
    DSL_DEBUG( DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_BandPlanSupportedGet, retCode=%d"
@@ -3233,238 +3382,6 @@ DSL_Error_t DSL_DRV_BandPlanSupportedGet(
    return (nErrCode);
 }
 
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-DSL_Error_t DSL_DRV_EfmMacConfigCheck(
-   DSL_Context_t *pContext,
-   DSL_EFM_MacConfigData_t *pData)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-   DSL_CHECK_POINTER(pContext, pData);
-   DSL_CHECK_ERR_CODE();
-
-   /* Check nEfmSpeed parameter validity*/
-   if (pData->nEfmSpeed < DSL_EFM_SPEED_100 ||
-       pData->nEfmSpeed >= DSL_EFM_SPEED_LAST)
-   {
-      DSL_DEBUG( DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Wrong EfmSpeed=%d specified"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext), pData->nEfmSpeed));
-      nErrCode = DSL_ERR_INVALID_PARAMETER;
-   }
-
-   /* Check nEfmDuplex parameter validity*/
-   if (pData->nEfmDuplex < DSL_EFM_DUPLEX_FULL ||
-       pData->nEfmDuplex >= DSL_EFM_DUPLEX_LAST)
-   {
-      DSL_DEBUG( DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Wrong nEfmDuplex=%d specified"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext), pData->nEfmDuplex));
-      nErrCode = DSL_ERR_INVALID_PARAMETER;
-   }
-
-   /* Check nFlowControl parameter validity*/
-   if (pData->nFlowControl < DSL_EFM_FLOWCTRL_OFF ||
-       pData->nFlowControl >= DSL_EFM_FLOWCTRL_LAST)
-   {
-      DSL_DEBUG( DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Wrong nFlowControl=%d specified"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext), pData->nFlowControl));
-      nErrCode = DSL_ERR_INVALID_PARAMETER;
-   }
-
-   /* Check nAutoNegotiation parameter validity*/
-   if (pData->nAutoNegotiation < DSL_EFM_AUTONEG_OFF ||
-       pData->nAutoNegotiation >= DSL_EFM_AUTONEG_LAST)
-   {
-      DSL_DEBUG( DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Wrong nAutoNegotiation=%d specified"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext), pData->nAutoNegotiation));
-      nErrCode = DSL_ERR_INVALID_PARAMETER;
-   }
-
-   /* Check nMaxFrameSize parameter validity*/
-   if (pData->nMaxFrameSize < 1518 || pData->nMaxFrameSize > 1580)
-   {
-      DSL_DEBUG( DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Wrong nMaxFrameSize=%d specified"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext), pData->nMaxFrameSize));
-      nErrCode = DSL_ERR_INVALID_PARAMETER;
-   }
-
-   return nErrCode;
-}
-
-/*
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_EFM_MAC_CONFIG_SET
-*/
-DSL_Error_t DSL_DRV_EfmMacConfigSet(
-   DSL_Context_t *pContext,
-   DSL_EFM_MacConfig_t *pData)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-   DSL_CHECK_POINTER(pContext, pData);
-   DSL_CHECK_ERR_CODE();
-   DSL_CHECK_ATU_DIRECTION(pData->nDirection);
-   DSL_CHECK_ERR_CODE();
-
-   DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_EfmMacConfigSet(nDirection=%d)"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext), pData->nDirection));
-
-   nErrCode = DSL_DRV_EfmMacConfigCheck(pContext, &(pData->data));
-
-   /* Copy EFM MAC Configuration data to internal VINAX device context*/
-   if (nErrCode == DSL_SUCCESS)
-   {
-      DSL_CTX_WRITE(pContext, nErrCode, pDevCtx->data.deviceCfg.MacCfg, pData->data);
-   }
-
-   DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_EfmMacConfigSet, retCode=%d"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
-
-   return (nErrCode);
-}
-
-/*
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_EFM_MAC_CONFIG_GET
-*/
-#ifdef INCLUDE_DSL_CONFIG_GET
-DSL_Error_t DSL_DRV_EfmMacConfigGet(
-   DSL_Context_t *pContext,
-   DSL_EFM_MacConfig_t *pData)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-   DSL_CHECK_POINTER(pContext, pData);
-   DSL_CHECK_ERR_CODE();
-   DSL_CHECK_ATU_DIRECTION(pData->nDirection);
-   DSL_CHECK_ERR_CODE();
-
-   DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_EfmMacConfigGet(nDirection=%d)"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext), pData->nDirection));
-
-   /* Get EFM MAC Configuration data from the internal VINAX device context*/
-   DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.deviceCfg.MacCfg, pData->data);
-
-   DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_EfmMacConfigGet, retCode=%d"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
-
-   return (nErrCode);
-}
-#endif /* INCLUDE_DSL_CONFIG_GET*/
-
-/*
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_UTOPIA_BUS_WIDTH_CONFIG_SET
-*/
-DSL_Error_t DSL_DRV_UtopiaBusWidthConfigSet(
-   DSL_Context_t *pContext,
-   DSL_UtopiaBusWidthConfig_t *pData)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-   DSL_CHECK_POINTER(pContext, pData);
-   DSL_CHECK_ERR_CODE();
-
-   DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_UtopiaBusWidthConfigSet"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-   /* Call device specific implementation*/
-   nErrCode = DSL_DRV_DEV_UtopiaBusWidthConfigSet(pContext, &(pData->data));
-
-   DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_UtopiaBusWidthConfigSet, retCode=%d"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
-
-   return (nErrCode);
-}
-
-/*
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_UTOPIA_BUS_WIDTH_CONFIG_GET
-*/
-#ifdef INCLUDE_DSL_CONFIG_GET
-DSL_Error_t DSL_DRV_UtopiaBusWidthConfigGet(
-   DSL_Context_t *pContext,
-   DSL_UtopiaBusWidthConfig_t *pData)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-   DSL_CHECK_POINTER(pContext, pData);
-   DSL_CHECK_ERR_CODE();
-
-   DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_UtopiaBusWidthConfigGet"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-   /* Call device specific implementation*/
-   nErrCode = DSL_DRV_DEV_UtopiaBusWidthConfigGet(pContext, &(pData->data));
-
-   DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_UtopiaBusWidthConfigGet, retCode=%d"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
-
-   return (nErrCode);
-}
-#endif /* INCLUDE_DSL_CONFIG_GET*/
-
-/*
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_UTOPIA_ADDRESS_CONFIG_SET
-*/
-DSL_Error_t DSL_DRV_UtopiaAddressConfigSet(
-   DSL_Context_t *pContext,
-   DSL_PhyAddressConfig_t *pData)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-   DSL_CHECK_POINTER(pContext, pData);
-   DSL_CHECK_ERR_CODE();
-
-   DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_UtopiaAddressConfigSet"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-   /* Call device specific implementation*/
-   nErrCode = DSL_DRV_DEV_UtopiaAddressConfigSet(pContext,pData->nChannel,&(pData->data));
-
-   DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_UtopiaAddressConfigSet, retCode=%d"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
-
-   return (nErrCode);
-}
-
-/*
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_UTOPIA_ADDRESS_CONFIG_GET
-*/
-#ifdef INCLUDE_DSL_CONFIG_GET
-DSL_Error_t DSL_DRV_UtopiaAddressConfigGet(
-   DSL_Context_t *pContext,
-   DSL_PhyAddressConfig_t *pData)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-   DSL_CHECK_POINTER(pContext, pData);
-   DSL_CHECK_ERR_CODE();
-
-   DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_UtopiaAddressConfigGet"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-   /* Call device specific implementation*/
-   nErrCode = DSL_DRV_DEV_UtopiaAddressConfigGet(pContext,pData->nChannel,&(pData->data));
-
-   DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_UtopiaAddressConfigGet, retCode=%d"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
-
-   return (nErrCode);
-}
-#endif /* INCLUDE_DSL_CONFIG_GET*/
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX*/
 #endif /* #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)*/
 
 /*
@@ -3551,8 +3468,8 @@ DSL_Error_t DSL_DRV_EventStatusMaskConfigSet(
       case DSL_EVENT_S_SYSTEM_INTERFACE_STATUS:
       case DSL_EVENT_S_FIRMWARE_DOWNLOAD_STATUS:
       case DSL_EVENT_S_AUTOBOOT_STATUS:
-      case DSL_EVENT_S_MULTIMODE_FSM_STATUS:
       case DSL_EVENT_S_RTT_STATUS:
+      case DSL_EVENT_S_FE_TESTPARAMS_AVAILABLE:
          if (pData->data.bMask)
          {
             nEventMask |= DSL_EVENT2MASK(pData->data.nEventType);
@@ -3648,8 +3565,8 @@ DSL_Error_t DSL_DRV_EventStatusMaskConfigGet(
          case DSL_EVENT_S_SYSTEM_INTERFACE_STATUS:
          case DSL_EVENT_S_FIRMWARE_DOWNLOAD_STATUS:
          case DSL_EVENT_S_AUTOBOOT_STATUS:
-         case DSL_EVENT_S_MULTIMODE_FSM_STATUS:
          case DSL_EVENT_S_RTT_STATUS:
+         case DSL_EVENT_S_FE_TESTPARAMS_AVAILABLE:
             pData->data.bMask = nEventMask & DSL_EVENT2MASK(pData->data.nEventType) ?
                                 DSL_TRUE : DSL_FALSE;
             break;
@@ -3804,104 +3721,6 @@ DSL_Error_t DSL_DRV_RebootCriteriaConfigGet(
    return nErrCode;
 }
 
-#ifdef INCLUDE_DSL_CPE_API_VRX
-/*
-   For a detailed description of the function, its arguments and return value
-   please refer to the description in the header file 'drv_dsl_cpe_intern.h'
-*/
-DSL_Error_t DSL_DRV_MultimodeFsmConfigSet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_MultimodeFsmConfig_t *pData)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-
-   DSL_CHECK_POINTER(pContext, pData);
-   DSL_CHECK_ERR_CODE();
-
-   DSL_DEBUG(DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_MultimodeFsmConfigSet"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-   if ((pData->data.nNextMode < DSL_FW_TYPE_NA) ||
-       (pData->data.nNextMode > DSL_FW_TYPE_VDSL))
-   {
-      DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_MSG"DSL[%02d]: ERROR - invalid nNextMode=%d specified!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext), pData->data.nNextMode));
-
-      nErrCode = DSL_ERR_INVALID_PARAMETER;
-   }
-   else
-   {
-      /* Write FSM configuration values*/
-      DSL_CTX_WRITE(pContext, nErrCode, pDevCtx->data.nCamConfig, pData->data);
-   }
-
-   DSL_DEBUG(DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_MultimodeFsmConfigSet, "
-      "retCode(%d)"DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
-
-   return nErrCode;
-}
-
-#ifdef INCLUDE_DSL_CONFIG_GET
-/*
-   For a detailed description of the function, its arguments and return value
-   please refer to the description in the header file 'drv_dsl_cpe_intern.h'
-*/
-DSL_Error_t DSL_DRV_MultimodeFsmConfigGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_MultimodeFsmConfig_t *pData)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-
-   DSL_CHECK_POINTER(pContext, pData);
-   DSL_CHECK_ERR_CODE();
-
-   DSL_DEBUG(DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_MultimodeFsmConfigGet"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-   /* Read FSM configuration values*/
-   DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.nCamConfig, pData->data);
-
-   DSL_DEBUG(DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_MultimodeFsmConfigGet, "
-      "retCode(%d)"DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
-
-   return nErrCode;
-}
-#endif
-
-/*
-   For a detailed description of the function, its arguments and return value
-   please refer to the description in the header file 'drv_dsl_cpe_intern.h'
-*/
-DSL_Error_t DSL_DRV_MultimodeFsmStatusGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_MultimodeFsmStatus_t *pData)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-
-   DSL_CHECK_POINTER(pContext, pData);
-   DSL_CHECK_ERR_CODE();
-
-   DSL_DEBUG(DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_MultimodeFsmStatusGet"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-   DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.bRebootRequested, pData->data.bRebootRequested);
-
-   DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.nCamStatus.nNextMode, pData->data.nNextMode);
-
-   DSL_DEBUG(DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_MultimodeFsmStatusGet, "
-      "retCode(%d)"DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
-
-   return nErrCode;
-}
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VRX*/
-
 /*
    For a detailed description of the function, its arguments and return value
    please refer to the description in the header file 'drv_dsl_cpe_intern.h'
@@ -3916,6 +3735,10 @@ DSL_Error_t DSL_DRV_DBG_ModuleLevelSet(
    DSL_boolean_t bModOk = DSL_FALSE, bLvlOk = DSL_FALSE;
    DSL_debugLevelEntry_t *pDbgEntry = DSL_NULL;
    DSL_debugLevelEntry_t *pDbgLvlNames = DSL_NULL;
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+   DSL_DEV_Handle_t dev;
+   IOCTL_MEI_dbgLevel_t fioVrxDrvDbgLevelSet;
+#endif /* INCLUDE_DSL_CPE_API_VRX */
 
    DSL_CHECK_POINTER(pContext, pData);
    DSL_CHECK_ERR_CODE();
@@ -3996,6 +3819,74 @@ DSL_Error_t DSL_DRV_DBG_ModuleLevelSet(
                  pDbgLvlNames->pcName,
                  pData->data.nDbgLevel) );
       }
+
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+      if (pData->data.nDbgModule == DSL_DBG_MESSAGE_DUMP)
+      {
+         dev = DSL_DEVICE_LOWHANDLE(pContext);
+         fioVrxDrvDbgLevelSet.eDbgModule = e_MEI_DBGMOD_MEI_MSG_DUMP_API;
+         switch (pData->data.nDbgLevel)
+         {
+            case DSL_DBG_NONE:
+            case DSL_DBG_PRN:
+            default:
+               fioVrxDrvDbgLevelSet.valLevel = MEI_DBG_LEVEL_OFF;
+               break;
+
+            case DSL_DBG_ERR:
+            case DSL_DBG_WRN:
+            case DSL_DBG_MSG:
+               fioVrxDrvDbgLevelSet.valLevel = MEI_DBG_LEVEL_NORMAL;
+               break;
+
+            case DSL_DBG_LOCAL:
+               fioVrxDrvDbgLevelSet.valLevel = MEI_DBG_LEVEL_LOW;
+               break;
+         }
+         if (DSL_DRV_VRX_InternalDebugLevelSet((MEI_DYN_CNTRL_T*)dev, &fioVrxDrvDbgLevelSet) < 0)
+         {
+            DSL_DEBUG( DSL_DBG_ERR, (pContext,
+               SYS_DBG_ERR"DSL[%02d]: MEI debug level set failed, error %d" DSL_DRV_CRLF,
+               DSL_DEV_NUM(pContext), fioVrxDrvDbgLevelSet.ictl.retCode));
+
+            return DSL_ERROR;
+         }
+      }
+      if (pData->data.nDbgModule == DSL_DBG_LOW_LEVEL_DRIVER)
+      {
+         dev = DSL_DEVICE_LOWHANDLE(pContext);
+         fioVrxDrvDbgLevelSet.eDbgModule = e_MEI_DBGMOD_MEI_DRV;
+         switch (pData->data.nDbgLevel)
+         {
+            case DSL_DBG_NONE:
+            case DSL_DBG_PRN:
+            default:
+               fioVrxDrvDbgLevelSet.valLevel = MEI_DBG_LEVEL_OFF;
+               break;
+
+            case DSL_DBG_ERR:
+               fioVrxDrvDbgLevelSet.valLevel = MEI_DBG_LEVEL_HIGH;
+               break;
+
+            case DSL_DBG_WRN:
+               fioVrxDrvDbgLevelSet.valLevel = MEI_DBG_LEVEL_NORMAL;
+               break;
+
+            case DSL_DBG_MSG:
+            case DSL_DBG_LOCAL:
+               fioVrxDrvDbgLevelSet.valLevel = MEI_DBG_LEVEL_LOW;
+               break;
+         }
+         if (DSL_DRV_VRX_InternalDebugLevelSet((MEI_DYN_CNTRL_T*)dev, &fioVrxDrvDbgLevelSet) < 0)
+         {
+            DSL_DEBUG( DSL_DBG_ERR, (pContext,
+               SYS_DBG_ERR"DSL[%02d]: MEI debug level set failed, error %d" DSL_DRV_CRLF,
+               DSL_DEV_NUM(pContext), fioVrxDrvDbgLevelSet.ictl.retCode));
+
+            return DSL_ERROR;
+         }
+      }
+#endif /* INCLUDE_DSL_CPE_API_VRX */
    }
    else
    {
@@ -4109,105 +4000,12 @@ DSL_Error_t DSL_DRV_DBG_DebugFeatureConfigSet(
    DSL_IN DSL_DBG_DebugFeatureConfig_t *pData)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
-#if defined(INCLUDE_DSL_DATA_LED_SIMULATOR)
-   DSL_uint16_t nLedCtrl = 0;
-#endif /* defined(INCLUDE_DSL_DATA_LED_SIMULATOR)*/
    DSL_CHECK_POINTER(pContext, pData);
    DSL_CHECK_ERR_CODE();
 
-   switch (pData->data.nConfigSelector)
-   {
-#if defined(INCLUDE_DSL_DATA_LED_SIMULATOR)
-   case DSL_DFC_DATA_LED_BEHAVIOR:
-      switch ((DSL_DataLedBehavior_t)pData->data.nFeatureValue)
-      {
-      case DSL_DATA_LED_OFF:
-      case DSL_DATA_LED_ON:
-         if (pContext->nDataLedSimControlData.nLedBehavior == DAL_DATA_LED_BLINK)
-         {
-            DSL_DEBUG( DSL_DBG_ERR,
-               (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Stop blinking first!"
-               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-            nErrCode = DSL_ERROR;
-            break;
-         }
-
-         pContext->nDataLedSimControlData.nLedBehavior =
-            (DSL_DataLedBehavior_t)pData->data.nFeatureValue == DSL_DATA_LED_OFF ?
-            DSL_DATA_LED_OFF : DSL_DATA_LED_ON;
-         DSL_DRV_WAKEUP_EVENT(pContext->dataLedSimEvent);
-
-         /* OFF/ON*/
-         /* use GPIO9 for TR68 data led off. */
-         nLedCtrl = (DSL_DataLedBehavior_t)pData->data.nFeatureValue == DSL_DATA_LED_OFF ? off : on;
-         if (DSL_DRV_DANUBE_CmvWrite(pContext, DSL_CMV_GROUP_INFO,
-            DSL_CMV_ADDRESS_INFO_GPIO_CONTROL, 5, 1, &nLedCtrl) != DSL_SUCCESS)
-         {
-            DSL_DEBUG( DSL_DBG_ERR,
-               (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - CMV INFO 91 5 write failed!"
-               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-            nErrCode = DSL_ERROR;
-         }
-         break;
-
-      case DAL_DATA_LED_BLINK:
-         pContext->nDataLedSimControlData.nLedBehavior = DAL_DATA_LED_BLINK;
-         DSL_DRV_WAKEUP_EVENT(pContext->dataLedSimEvent);
-         break;
-
-      case DAL_DATA_LED_STOP_BLINK:
-         pContext->nDataLedSimControlData.nLedBehavior = DAL_DATA_LED_STOP_BLINK;
-         DSL_DRV_WAKEUP_EVENT(pContext->dataLedSimEvent);
-         break;
-
-      default:
-         DSL_DEBUG( DSL_DBG_ERR,
-            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Unsupported Data LED behavior (%d) specified!"
-            DSL_DRV_CRLF, DSL_DEV_NUM(pContext), pData->data.nFeatureValue));
-         nErrCode = DSL_ERROR;
-
-         break;
-      }
-
-      if (nErrCode >= DSL_SUCCESS)
-      {
-         nErrCode = DSL_WRN_DEPRECATED;
-      }
-      break;
-
-   case DSL_DFC_DATA_LED_BLINK_TIMEOUT:
-      if (pData->data.nFeatureValue == 0)
-      {
-         pContext->nDataLedSimControlData.nBlinkTimeout = 1000;
-      }
-      else if (pData->data.nFeatureValue > 10000)
-      {
-         pContext->nDataLedSimControlData.nBlinkTimeout = 10000;
-         DSL_DEBUG( DSL_DBG_WRN,
-            (pContext, SYS_DBG_WRN"DSL[%02d]: WARNING - nBlinkTimeout truncated to 10000 ms!"
-            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-         nErrCode = DSL_WRN_CONFIG_PARAM_TRUNCATED;
-      }
-      else
-      {
-         pContext->nDataLedSimControlData.nBlinkTimeout =
-            pData->data.nFeatureValue;
-      }
-
-      if (nErrCode >= DSL_SUCCESS)
-      {
-         nErrCode = DSL_WRN_DEPRECATED;
-      }
-      break;
-#endif /* defined(INCLUDE_DSL_DATA_LED_SIMULATOR)*/
-   default:
-      DSL_DEBUG( DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Unsupported Debug Feature selector (%d)!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext), pData->data.nConfigSelector));
-      nErrCode = DSL_ERROR;
-      break;
-   }
+   DSL_DEBUG( DSL_DBG_WRN,
+      (DSL_NULL, SYS_DBG_WRN"DSL[%02d]: WARNING - No debug features are defined."
+      DSL_DRV_CRLF, pOpenContextList->pDevCtx->nNum));
 
    return (nErrCode);
 }
@@ -4221,29 +4019,9 @@ DSL_Error_t DSL_DRV_DBG_DebugFeatureConfigGet(
    DSL_CHECK_POINTER(pContext, pData);
    DSL_CHECK_ERR_CODE();
 
-   switch (pData->data.nConfigSelector)
-   {
-#if defined(INCLUDE_DSL_DATA_LED_SIMULATOR)
-   case DSL_DFC_DATA_LED_BEHAVIOR:
-      pData->data.nFeatureValue =
-         (DSL_int32_t)pContext->nDataLedSimControlData.nLedBehavior;
-      nErrCode = DSL_WRN_DEPRECATED;
-      break;
-
-   case DSL_DFC_DATA_LED_BLINK_TIMEOUT:
-      pData->data.nFeatureValue =
-         (DSL_int32_t)pContext->nDataLedSimControlData.nBlinkTimeout;
-      nErrCode = DSL_WRN_DEPRECATED;
-      break;
-#endif /* defined(INCLUDE_DSL_DATA_LED_SIMULATOR)*/
-
-   default:
-      DSL_DEBUG( DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Unsupported Debug Feature selector (%d)!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext), pData->data.nConfigSelector));
-      nErrCode = DSL_ERROR;
-      break;
-   }
+   DSL_DEBUG( DSL_DBG_WRN,
+      (DSL_NULL, SYS_DBG_WRN"DSL[%02d]: WARNING - No debug features are defined."
+      DSL_DRV_CRLF, pOpenContextList->pDevCtx->nNum));
 
    return (nErrCode);
 }
@@ -4251,7 +4029,6 @@ DSL_Error_t DSL_DRV_DBG_DebugFeatureConfigGet(
 #endif /* defined(INCLUDE_DSL_CPE_API_DANUBE)*/
 #endif /* DSL_DEBUG_DISABLE*/
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
 #ifdef INCLUDE_DSL_FILTER_DETECTION
 DSL_Error_t DSL_DRV_FilterDetectionDataGet(
    DSL_IN DSL_Context_t *pContext,
@@ -4268,7 +4045,7 @@ DSL_Error_t DSL_DRV_FilterDetectionDataGet(
 
 #ifdef INCLUDE_DSL_CPE_API_VRX
    /* Only for ADSL mode */
-   if (!DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   if (!DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL))
    {
       DSL_DEBUG(DSL_DBG_ERR, (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - "
                "hybrid/filter/looplength statistics are not supported "
@@ -4302,9 +4079,7 @@ DSL_Error_t DSL_DRV_FilterDetectionDataGet(
    return nErrCode;
 }
 #endif /* INCLUDE_DSL_FILTER_DETECTION */
-#endif /* INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_VRX */
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
 DSL_Error_t DSL_DRV_HybridSelectionDataGet(
    DSL_IN DSL_Context_t *pContext,
    DSL_OUT DSL_HybridSelection_t *pData)
@@ -4320,7 +4095,7 @@ DSL_Error_t DSL_DRV_HybridSelectionDataGet(
 
 #ifdef INCLUDE_DSL_CPE_API_VRX
    /* Only for ADSL mode */
-   if (!DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   if (!DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL))
    {
       DSL_DEBUG(DSL_DBG_ERR, (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - "
                "hybrid/filter/looplength statistics are not supported "
@@ -4358,7 +4133,30 @@ DSL_Error_t DSL_DRV_HybridSelectionDataGet(
 
    return nErrCode;
 }
-#endif /* INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_VRX */
+
+DSL_Error_t DSL_DRV_OlrStatisticsGet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_OUT DSL_OlrStatistics_t *pData)
+{
+   DSL_Error_t nErrCode = DSL_SUCCESS;
+
+   DSL_CHECK_POINTER(pContext, pData);
+   DSL_CHECK_ERR_CODE();
+   DSL_CHECK_DIRECTION(pData->nDirection);
+   DSL_CHECK_ERR_CODE();
+
+   DSL_DEBUG( DSL_DBG_MSG,
+      (pContext, "DSL[%02d]: IN - DSL_DRV_OlrStatisticsGet" DSL_DRV_CRLF,
+      DSL_DEV_NUM(pContext)));
+
+   nErrCode = DSL_DRV_DEV_OlrStatisticsGet(pContext, pData);
+
+   DSL_DEBUG( DSL_DBG_MSG,
+      (pContext, "DSL[%02d]: OUT - DSL_DRV_OlrStatisticsGet, retCode=%d"DSL_DRV_CRLF,
+      DSL_DEV_NUM(pContext), nErrCode));
+
+   return nErrCode;
+}
 
 /*
    For a detailed description of the function, its arguments and return value
@@ -4815,12 +4613,10 @@ DSL_IOCTL_REGISTER(DSL_FIO_INTEROP_FEATURE_CONFIG_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_InteropFeatureConfigGet,
                    sizeof(DSL_InteropFeatureConfig_t)),
 #endif /* INCLUDE_DSL_CPE_API_DANUBE*/
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
 /* DSL_FIO_LOOP_LENGTH_STATUS_GET */
 DSL_IOCTL_REGISTER(DSL_FIO_LOOP_LENGTH_STATUS_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_LoopLengthStatusGet,
                    sizeof(DSL_LoopLengthStatus_t)),
-#endif /* INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_VRX */
 /* DSL_FIO_EVENT_STATUS_MASK_CONFIG_GET */
 DSL_IOCTL_REGISTER(DSL_FIO_EVENT_STATUS_MASK_CONFIG_GET, DSL_IOCTL_HELPER_GET,
                    DSL_TRUE, DSL_DRV_EventStatusMaskConfigGet,
@@ -4870,9 +4666,9 @@ DSL_IOCTL_REGISTER(DSL_FIO_LINE_OPTIONS_CONFIG_GET, DSL_IOCTL_HELPER_GET,
 #endif /* INCLUDE_DSL_CONFIG_GET*/
 
 #ifdef INCLUDE_DEVICE_EXCEPTION_CODES
-DSL_IOCTL_REGISTER(DSL_FIO_DBG_LAST_EXCEPTION_CODES_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DBG_LastExceptionCodesGet,
-                   sizeof(DSL_DBG_LastExceptionCodes_t)),
+DSL_IOCTL_REGISTER(DSL_FIO_LAST_EXCEPTION_CODES_GET, DSL_IOCTL_HELPER_GET,
+                   DSL_FALSE, DSL_LastExceptionCodesGet,
+                   sizeof(DSL_LastExceptionCodes_t)),
 #endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
 
 #ifdef INCLUDE_DSL_CPE_API_DANUBE
@@ -4890,18 +4686,18 @@ DSL_IOCTL_REGISTER(DSL_FIO_DBG_DEBUG_FEATURE_CONFIG_GET, DSL_IOCTL_HELPER_GET,
 #endif /* INCLUDE_DSL_CPE_API_DANUBE*/
 
 #ifdef INCLUDE_DSL_FILTER_DETECTION
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
 DSL_IOCTL_REGISTER(DSL_FIO_FILTER_DETECTION_DATA_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_FilterDetectionDataGet,
                    sizeof(DSL_FilterDetection_t)),
-#endif /* INCLUDE_DSL_CPE_API_DANUBE ||INCLUDE_DSL_CPE_API_VRX */
 #endif /* INCLUDE_DSL_FILTER_DETECTION */
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
 DSL_IOCTL_REGISTER(DSL_FIO_HYBRID_SELECTION_DATA_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_HybridSelectionDataGet,
                    sizeof(DSL_HybridSelection_t)),
-#endif /* INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_DANUBE */
+
+DSL_IOCTL_REGISTER(DSL_FIO_OLR_STATISTICS_GET, DSL_IOCTL_HELPER_GET,
+                   DSL_FALSE, DSL_DRV_OlrStatisticsGet,
+                   sizeof(DSL_OlrStatistics_t)),
 
 #ifdef INCLUDE_DSL_PM
 #ifdef INCLUDE_DSL_CPE_PM_CONFIG
@@ -5297,37 +5093,16 @@ DSL_IOCTL_REGISTER(DSL_FIO_PM_LINE_INIT_THRESHOLDS_1DAY_GET, DSL_IOCTL_HELPER_GE
 DSL_IOCTL_REGISTER(DSL_FIO_PM_LINE_EVENT_SHOWTIME_COUNTERS_15MIN_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_PM_LineEventShowtimeCounters15MinGet,
                    sizeof(DSL_PM_LineEventShowtimeCounters_t)),
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_IOCTL_REGISTER(DSL_FIO_PM_LINE_FAILURE_COUNTERS_15MIN_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_PM_LineFailureCounters15MinGet,
-                   sizeof(DSL_PM_LineFailureCounters_t)),
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /* INCLUDE_DEPRECATED */
 /* DSL_FIO_PM_LINE_EVENT_SHOWTIME_COUNTERS_1DAY_GET */
 DSL_IOCTL_REGISTER(DSL_FIO_PM_LINE_EVENT_SHOWTIME_COUNTERS_1DAY_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_PM_LineEventShowtimeCounters1DayGet,
                    sizeof(DSL_PM_LineEventShowtimeCounters_t)),
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_IOCTL_REGISTER(DSL_FIO_PM_LINE_FAILURE_COUNTERS_1DAY_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_PM_LineFailureCounters1DayGet,
-                   sizeof(DSL_PM_LineFailureCounters_t)),
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /* INCLUDE_DEPRECATED */
 #endif /* INCLUDE_DSL_CPE_PM_HISTORY*/
 #ifdef INCLUDE_DSL_CPE_PM_TOTAL_COUNTERS
 /* DSL_FIO_PM_LINE_EVENT_SHOWTIME_COUNTERS_TOTAL_GET */
 DSL_IOCTL_REGISTER(DSL_FIO_PM_LINE_EVENT_SHOWTIME_COUNTERS_TOTAL_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_PM_LineEventShowtimeCountersTotalGet,
                    sizeof(DSL_PM_LineEventShowtimeCountersTotal_t)),
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_IOCTL_REGISTER(DSL_FIO_PM_LINE_FAILURE_COUNTERS_TOTAL_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_PM_LineFailureCountersTotalGet,
-                   sizeof(DSL_PM_LineFailureCountersTotal_t)),
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /* INCLUDE_DEPRECATED */
 #endif /* INCLUDE_DSL_CPE_PM_TOTAL_COUNTERS*/
 
 #ifdef INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS
@@ -5335,13 +5110,6 @@ DSL_IOCTL_REGISTER(DSL_FIO_PM_LINE_FAILURE_COUNTERS_TOTAL_GET, DSL_IOCTL_HELPER_
 DSL_IOCTL_REGISTER(DSL_FIO_PM_LINE_EVENT_SHOWTIME_COUNTERS_SHOWTIME_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_PM_LineEventShowtimeCountersShowtimeGet,
                    sizeof(DSL_PM_LineEventShowtimeCounters_t)),
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_IOCTL_REGISTER(DSL_FIO_PM_LINE_FAILURE_COUNTERS_SHOWTIME_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_PM_LineFailureCountersShowtimeGet,
-                   sizeof(DSL_PM_LineFailureCounters_t)),
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /* INCLUDE_DEPRECATED */
 #endif /* INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS*/
 
 #ifdef INCLUDE_DSL_CPE_PM_HISTORY
@@ -5350,24 +5118,10 @@ DSL_IOCTL_REGISTER(DSL_FIO_PM_LINE_FAILURE_COUNTERS_SHOWTIME_GET, DSL_IOCTL_HELP
 DSL_IOCTL_REGISTER(DSL_FIO_PM_LINE_EVENT_SHOWTIME_HISTORY_STATS_15MIN_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_PM_LineEventShowtimeHistoryStats15MinGet,
                    sizeof(DSL_PM_HistoryStatsChDir_t)),
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_IOCTL_REGISTER(DSL_FIO_PM_LINE_FAILURE_HISTORY_STATS_15MIN_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_PM_LineFailureHistoryStats15MinGet,
-                   sizeof(DSL_PM_HistoryStatsChDir_t)),
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /* INCLUDE_DEPRECATED */
 /* DSL_FIO_PM_LINE_EVENT_SHOWTIME_HISTORY_STATS_1DAY_GET */
 DSL_IOCTL_REGISTER(DSL_FIO_PM_LINE_EVENT_SHOWTIME_HISTORY_STATS_1DAY_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_PM_LineEventShowtimeHistoryStats1DayGet,
                    sizeof(DSL_PM_HistoryStatsChDir_t)),
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_IOCTL_REGISTER(DSL_FIO_PM_LINE_FAILURE_HISTORY_STATS_1DAY_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_PM_LineFailureHistoryStats1DayGet,
-                   sizeof(DSL_PM_HistoryStatsChDir_t)),
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /* INCLUDE_DEPRECATED */
 #endif /* INCLUDE_DSL_CPE_PM_OPTIONAL_PARAMETERS*/
 #endif /* INCLUDE_DSL_CPE_PM_HISTORY*/
 #endif /* INCLUDE_DSL_CPE_PM_LINE_EVENT_SHOWTIME_COUNTERS*/
@@ -5445,6 +5199,10 @@ DSL_IOCTL_REGISTER(DSL_FIO_G997_DELT_QLN_GET, DSL_IOCTL_HELPER_GET,
 DSL_IOCTL_REGISTER(DSL_FIO_G997_DELT_SNR_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_G997_DeltSNRGet,
                    sizeof(DSL_G997_DeltSnr_t)),
+/* DSL_FIO_DELT_SNR_GET */
+DSL_IOCTL_REGISTER(DSL_FIO_DELT_SNR_GET, DSL_IOCTL_HELPER_GET,
+                   DSL_FALSE, DSL_DRV_DeltSNRGet,
+                   sizeof(DSL_G997_DeltSnr_t)),
 /* DSL_FIO_G997_DELT_FREE_RESOURCES */
 DSL_IOCTL_REGISTER(DSL_FIO_G997_DELT_FREE_RESOURCES, DSL_IOCTL_HELPER_SET,
                    DSL_FALSE, DSL_DRV_G997_DeltFreeResources,
@@ -5456,6 +5214,10 @@ DSL_IOCTL_REGISTER(DSL_FIO_G997_DELT_FREE_RESOURCES, DSL_IOCTL_HELPER_SET,
 DSL_IOCTL_REGISTER(DSL_FIO_G997_LINE_STATUS_PER_BAND_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_G997_LineStatusPerBandGet,
                   sizeof(DSL_G997_LineStatusPerBand_t)),
+/* DSL_FIO_G997_US_POWER_BACK_OFF_STATUS_GET */
+DSL_IOCTL_REGISTER(DSL_FIO_G997_US_POWER_BACK_OFF_STATUS_GET, DSL_IOCTL_HELPER_GET,
+                   DSL_FALSE, DSL_DRV_G997_UsPowerBackOffStatusGet,
+                  sizeof(DSL_G997_UsPowerBackOffStatus_t)),
 #endif /* (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1) */
 
 #ifdef INCLUDE_DSL_G997_FRAMING_PARAMETERS
@@ -5540,22 +5302,24 @@ DSL_IOCTL_REGISTER(DSL_FIO_G997_RATE_ADAPTATION_CONFIG_GET, DSL_IOCTL_HELPER_GET
                    sizeof(DSL_G997_RateAdaptationConfig_t)),
 #endif /* INCLUDE_DSL_CONFIG_GET*/
 
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/* DSL_FIO_G997_RATE_ADAPTATION_STATUS_GET */
-DSL_IOCTL_REGISTER(DSL_FIO_G997_RATE_ADAPTATION_STATUS_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_G997_RateAdaptationStatusGet,
-                   sizeof(DSL_G997_RateAdaptationStatus_t)),
-#endif /* INCLUDE_DSL_CPE_API_VINAX*/
+#ifdef INCLUDE_DSL_CPE_API_VRX
+/* DSL_FIO_G997_LOW_POWER_MODE_CONFIG_SET */
+DSL_IOCTL_REGISTER(DSL_FIO_G997_LOW_POWER_MODE_CONFIG_SET, DSL_IOCTL_HELPER_GET,
+                   DSL_FALSE, DSL_DRV_G997_LowPowerModeConfigSet,
+                   sizeof(DSL_G997_LowPowerModeConfig_t)),
+#ifdef INCLUDE_DSL_CONFIG_GET
+/* DSL_FIO_G997_LOW_POWER_MODE_CONFIG_GET */
+DSL_IOCTL_REGISTER(DSL_FIO_G997_LOW_POWER_MODE_CONFIG_GET, DSL_IOCTL_HELPER_GET,
+                   DSL_FALSE, DSL_DRV_G997_LowPowerModeConfigGet,
+                   sizeof(DSL_G997_LowPowerModeConfig_t)),
+#endif /* INCLUDE_DSL_CONFIG_GET*/
+#endif /* INCLUDE_DSL_CPE_API_VRX*/
 
 #ifdef INCLUDE_DSL_BONDING
 /* DSL_FIO_BND_HW_INIT */
 DSL_IOCTL_REGISTER(DSL_FIO_BND_HW_INIT, DSL_IOCTL_HELPER_SET,
                    DSL_FALSE, DSL_DRV_BND_HwInit,
                    sizeof(DSL_BND_HwInit_t)),
-/* DSL_FIO_BND_SETUP */
-DSL_IOCTL_REGISTER(DSL_FIO_BND_SETUP, DSL_IOCTL_HELPER_SET,
-                   DSL_FALSE, DSL_DRV_BND_Setup,
-                   sizeof(DSL_BND_Setup_t)),
 /* DSL_FIO_BND_CONFIG_SET */
 DSL_IOCTL_REGISTER(DSL_FIO_BND_CONFIG_SET, DSL_IOCTL_HELPER_SET,
                    DSL_FALSE, DSL_DRV_BND_ConfigSet,
@@ -5574,10 +5338,6 @@ DSL_IOCTL_REGISTER(DSL_FIO_BND_HS_STATUS_GET, DSL_IOCTL_HELPER_GET,
 DSL_IOCTL_REGISTER(DSL_FIO_BND_HS_CONTINUE, DSL_IOCTL_HELPER_SET,
                    DSL_FALSE, DSL_DRV_BND_HsContinue,
                    sizeof(DSL_BND_HsContinue_t)),
-/* DSL_FIO_BND_TEAR_DOWN */
-DSL_IOCTL_REGISTER(DSL_FIO_BND_TEAR_DOWN, DSL_IOCTL_HELPER_SET,
-                   DSL_FALSE, DSL_DRV_BND_TearDown,
-                   sizeof(DSL_BND_TearDown_t)),
 /* DSL_FIO_BND_ETH_DBG_COUNTERS_GET */
 DSL_IOCTL_REGISTER(DSL_FIO_BND_ETH_DBG_COUNTERS_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_BND_EthDbgCountersGet,
@@ -5586,6 +5346,12 @@ DSL_IOCTL_REGISTER(DSL_FIO_BND_ETH_DBG_COUNTERS_GET, DSL_IOCTL_HELPER_GET,
 DSL_IOCTL_REGISTER(DSL_FIO_BND_ETH_COUNTERS_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_BND_EthCountersGet,
                    sizeof(DSL_BND_EthCounters_t)),
+#if (DSL_DRV_LINES_PER_DEVICE == 2)
+/* DSL_FIO_BND_PORT_MODE_SYNC_SET */
+DSL_IOCTL_REGISTER(DSL_FIO_BND_PORT_MODE_SYNC_SET, DSL_IOCTL_HELPER_SET,
+                   DSL_FALSE, DSL_DRV_BND_PortModeSyncSet,
+                   sizeof(DSL_BND_PortModeSync_t)),
+#endif /* DSL_DRV_LINES_PER_DEVICE == 2*/
 #endif /* INCLUDE_DSL_BONDING*/
 
 /* DSL_FIO_VERSION_INFORMATION_GET */
@@ -5613,16 +5379,6 @@ DSL_IOCTL_REGISTER(DSL_FIO_LOW_LEVEL_CONFIGURATION_GET, DSL_IOCTL_HELPER_GET,
                    sizeof(DSL_LowLevelConfiguration_t)),
 
 #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/* DSL_FIO_LINE_PATH_COUNTER_TOTAL_GET */
-DSL_IOCTL_REGISTER(DSL_FIO_LINE_PATH_COUNTER_TOTAL_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_LinePathCounterTotalGet,
-                   sizeof(DSL_LinePathCounterTotal_t)),
-/* DSL_FIO_DATA_PATH_COUNTER_TOTAL_GET */
-DSL_IOCTL_REGISTER(DSL_FIO_DATA_PATH_COUNTER_TOTAL_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_DataPathCounterTotalGet,
-                   sizeof(DSL_DataPathCounterTotal_t)),
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX*/
 #ifdef INCLUDE_DSL_G997_LINE_INVENTORY
 /* DSL_FIO_AUX_LINE_INVENTORY_GET */
 DSL_IOCTL_REGISTER(DSL_FIO_AUX_LINE_INVENTORY_GET, DSL_IOCTL_HELPER_GET,
@@ -5637,77 +5393,7 @@ DSL_IOCTL_REGISTER(DSL_FIO_BAND_PLAN_SUPPORT_GET, DSL_IOCTL_HELPER_GET,
 DSL_IOCTL_REGISTER(DSL_FIO_BAND_PLAN_STATUS_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_BandPlanStatusGet,
                    sizeof(DSL_BandPlanStatus_t)),
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/* DSL_FIO_EFM_MAC_CONFIG_SET */
-DSL_IOCTL_REGISTER(DSL_FIO_EFM_MAC_CONFIG_SET, DSL_IOCTL_HELPER_SET,
-                   DSL_FALSE, DSL_DRV_EfmMacConfigSet,
-                   sizeof(DSL_EFM_MacConfig_t)),
-#ifdef INCLUDE_DSL_CONFIG_GET
-/* DSL_FIO_EFM_MAC_CONFIG_GET */
-DSL_IOCTL_REGISTER(DSL_FIO_EFM_MAC_CONFIG_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_EfmMacConfigGet,
-                   sizeof(DSL_EFM_MacConfig_t)),
-#endif /* INCLUDE_DSL_CONFIG_GET*/
-/* DSL_FIO_UTOPIA_BUS_WIDTH_CONFIG_SET */
-DSL_IOCTL_REGISTER(DSL_FIO_UTOPIA_BUS_WIDTH_CONFIG_SET, DSL_IOCTL_HELPER_SET,
-                   DSL_FALSE, DSL_DRV_UtopiaBusWidthConfigSet,
-                   sizeof(DSL_UtopiaBusWidthConfig_t)),
-#ifdef INCLUDE_DSL_CONFIG_GET
-/* DSL_FIO_UTOPIA_BUS_WIDTH_CONFIG_GET */
-DSL_IOCTL_REGISTER(DSL_FIO_UTOPIA_BUS_WIDTH_CONFIG_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_UtopiaBusWidthConfigGet,
-                   sizeof(DSL_UtopiaBusWidthConfig_t)),
-#endif /* INCLUDE_DSL_CONFIG_GET*/
-
-/* DSL_FIO_UTOPIA_ADDRESS_CONFIG_SET */
-DSL_IOCTL_REGISTER(DSL_FIO_UTOPIA_ADDRESS_CONFIG_SET, DSL_IOCTL_HELPER_SET,
-                   DSL_FALSE, DSL_DRV_UtopiaAddressConfigSet,
-                   sizeof(DSL_PhyAddressConfig_t)),
-#ifdef INCLUDE_DSL_CONFIG_GET
-/* DSL_FIO_UTOPIA_ADDRESS_CONFIG_GET */
-DSL_IOCTL_REGISTER(DSL_FIO_UTOPIA_ADDRESS_CONFIG_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_UtopiaAddressConfigGet,
-                   sizeof(DSL_PhyAddressConfig_t)),
-#endif /* INCLUDE_DSL_CONFIG_GET*/
-#endif /* INCLUDE_DSL_CPE_API_VINAX*/
 #endif /* (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)*/
-
-#ifdef INCLUDE_DSL_CPE_API_SAR_SUPPORT
-/* DSL_FIO_SAR_CONFIG_SET */
-DSL_IOCTL_REGISTER(DSL_FIO_SAR_CONFIG_SET, DSL_IOCTL_HELPER_SET,
-                   DSL_FALSE, DSL_DRV_SAR_ConfigSet,
-                   sizeof(DSL_SAR_Config_t)),
-#ifdef INCLUDE_DSL_CONFIG_GET
-/* DSL_FIO_SAR_CONFIG_GET */
-DSL_IOCTL_REGISTER(DSL_FIO_SAR_CONFIG_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_SAR_ConfigGet,
-                   sizeof(DSL_SAR_Config_t)),
-#endif /* INCLUDE_DSL_CONFIG_GET*/
-/* DSL_FIO_SAR_SEGMENTATION_TABLE_SET */
-DSL_IOCTL_REGISTER(DSL_FIO_SAR_SEGMENTATION_TABLE_SET, DSL_IOCTL_HELPER_SET,
-                   DSL_FALSE, DSL_DRV_SAR_SegmentationTableSet,
-                   sizeof(DSL_SAR_SegmentationTable_t)),
-/* DSL_FIO_SAR_SEGMENTATION_TABLE_GET */
-DSL_IOCTL_REGISTER(DSL_FIO_SAR_SEGMENTATION_TABLE_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_SAR_SegmentationTableGet,
-                   sizeof(DSL_SAR_SegmentationTable_t)),
-/* DSL_FIO_SAR_REASSEMBLY_TABLE_SET */
-DSL_IOCTL_REGISTER(DSL_FIO_SAR_REASSEMBLY_TABLE_SET, DSL_IOCTL_HELPER_SET,
-                   DSL_FALSE, DSL_DRV_SAR_ReassemblyTableSet,
-                   sizeof(DSL_SAR_ReassemblyTable_t)),
-/* DSL_FIO_SAR_REASSEMBLY_TABLE_GET */
-DSL_IOCTL_REGISTER(DSL_FIO_SAR_REASSEMBLY_TABLE_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_SAR_ReassemblyTableGet,
-                   sizeof(DSL_SAR_ReassemblyTable_t)),
-/* DSL_FIO_SAR_SEGMENTATION_COUNTERS_GET */
-DSL_IOCTL_REGISTER(DSL_FIO_SAR_SEGMENTATION_COUNTERS_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_SAR_SegmentationCountersGet,
-                   sizeof(DSL_SAR_SegmentationCounters_t)),
-/* DSL_FIO_SAR_REASSEMBLY_COUNTERS_GET */
-DSL_IOCTL_REGISTER(DSL_FIO_SAR_REASSEMBLY_COUNTERS_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_SAR_ReassemblyCountersGet,
-                   sizeof(DSL_SAR_ReassemblyCounters_t)),
-#endif /* INCLUDE_DSL_CPE_API_SAR_SUPPORT*/
 
 #ifdef INCLUDE_DSL_RESOURCE_STATISTICS
 /* DSL_FIO_RESOURCE_USAGE_STATISTICS_GET */
@@ -5738,24 +5424,6 @@ DSL_IOCTL_REGISTER(DSL_FIO_REBOOT_CRITERIA_CONFIG_SET, DSL_IOCTL_HELPER_SET,
 DSL_IOCTL_REGISTER(DSL_FIO_REBOOT_CRITERIA_CONFIG_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_RebootCriteriaConfigGet,
                    sizeof(DSL_RebootCriteriaConfig_t)),
-
-#if defined(INCLUDE_DSL_CPE_API_VRX)
-/* DSL_FIO_MULTIMODE_FSM_CONFIG_SET*/
-DSL_IOCTL_REGISTER(DSL_FIO_MULTIMODE_FSM_CONFIG_SET, DSL_IOCTL_HELPER_SET,
-                   DSL_FALSE, DSL_DRV_MultimodeFsmConfigSet,
-                   sizeof(DSL_MultimodeFsmConfig_t)),
-#ifdef INCLUDE_DSL_CONFIG_GET
-/* DSL_FIO_MULTIMODE_FSM_CONFIG_GET*/
-DSL_IOCTL_REGISTER(DSL_FIO_MULTIMODE_FSM_CONFIG_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_MultimodeFsmConfigGet,
-                   sizeof(DSL_MultimodeFsmConfig_t)),
-#endif
-/* DSL_FIO_MULTIMODE_FSM_STATUS_GET*/
-DSL_IOCTL_REGISTER(DSL_FIO_MULTIMODE_FSM_STATUS_GET, DSL_IOCTL_HELPER_GET,
-                   DSL_FALSE, DSL_DRV_MultimodeFsmStatusGet,
-                   sizeof(DSL_MultimodeFsmStatus_t)),
-#endif /* #if defined(INCLUDE_DSL_CPE_API_VRX)*/
-
 /* DSL_FIO_TEST_MODE_CONTROL_SET */
 DSL_IOCTL_REGISTER(DSL_FIO_TEST_MODE_CONTROL_SET, DSL_IOCTL_HELPER_SET,
                    DSL_FALSE, DSL_DRV_TestModeControlSet,
@@ -6572,16 +6240,6 @@ DSL_Error_t DSL_DRV_TestModeControlSet(
       DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bAutobootRestart, DSL_TRUE);
    }
 
-#if defined(INCLUDE_DSL_CPE_API_VRX) && !defined(INCLUDE_DSL_CPE_API_VRX_FULL_MSG)
-   if (nErrCode >= DSL_SUCCESS)
-   {
-      if (pData->data.nTestMode == DSL_TESTMODE_SLEEP || pData->data.nTestMode == DSL_TESTMODE_QUIET)
-      {
-         nErrCode = DSL_ERR_NOT_SUPPORTED_BY_FIRMWARE;
-      }
-   }
-#endif
-
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_TestModeControlSet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
@@ -6710,7 +6368,7 @@ DSL_Error_t DSL_DRV_FwDownload(
    nErrCode = DSL_DRV_DEV_FwDownload(pContext,
          pFw1, nSize1, pFw2, nSize2, pLoff, pCurrentOff, bLastChunk);
 
-   if (nErrCode != DSL_SUCCESS)
+   if (nErrCode < DSL_SUCCESS)
    {
       DSL_DEBUG( DSL_DBG_ERR,
          (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - firmware download has failed "
@@ -6858,11 +6516,12 @@ DSL_Error_t DSL_DRV_CtxDataUpdate(
 
          /* Reset actual data rate values*/
          DSL_CTX_WRITE_SCALAR(pContext, nErrCode, nChannelActualDataRate[nDir][i], 0);
+         DSL_CTX_WRITE_SCALAR(pContext, nErrCode, nChannelActualNetDataRate[nDir][i], 0);
 
-         DSL_CTX_WRITE_SCALAR(pContext, nErrCode, ActualInterleaveDelayUs[i], 0);
-         DSL_CTX_WRITE_SCALAR(pContext, nErrCode, ActualInterleaveDelayDs[i], 0);
-         DSL_CTX_WRITE_SCALAR(pContext, nErrCode, ActualImpulseNoiseProtectionUs[i], 0);
-         DSL_CTX_WRITE_SCALAR(pContext, nErrCode, ActualImpulseNoiseProtectionDs[i], 0);
+         DSL_CTX_WRITE_SCALAR(pContext, nErrCode, ActualInterleaveDelay[nDir][i], 0);
+         DSL_CTX_WRITE_SCALAR(pContext, nErrCode, ActualImpulseNoiseProtection[nDir][i], 0);
+         DSL_CTX_WRITE_SCALAR(pContext, nErrCode, ActualImpulseNoiseProtectionRein[nDir][i], 0);
+         DSL_CTX_WRITE_SCALAR(pContext, nErrCode, ActualImpulseNoiseProtectionNoErasure[nDir][i], 0);
       }
    }
 
@@ -7250,6 +6909,21 @@ _DSL_CHECK_CHANNEL_RANGE(
 }
 
 DSL_Error_t
+_DSL_CHECK_DSLMODE(
+      DSL_Context_t *pContext,
+      DSL_DslModeSelection_t nDslMode)
+{
+   if ((nDslMode < 0) || (nDslMode >= DSL_MODE_LAST))
+   {
+      DSL_DEBUG(DSL_DBG_ERR,
+         (pContext, SYS_DBG_ERR"DSL: invalid DSL mode!" DSL_DRV_CRLF));
+      return DSL_ERR_DSLMODE;
+   }
+
+   return DSL_SUCCESS;
+}
+
+DSL_Error_t
 _DSL_CHECK_ATU_DIRECTION(
    DSL_Context_t *pContext,
    DSL_XTUDir_t nDirection)
@@ -7277,6 +6951,22 @@ _DSL_CHECK_DIRECTION(
    }
 
    return DSL_SUCCESS;
+}
+
+DSL_Error_t
+_DSL_SET_ERROR_CODE(
+   DSL_Error_t nRetCode,
+   DSL_Error_t nErrCode)
+{
+   if ((nErrCode >= 0) && (nRetCode >= 0))
+   {
+      nErrCode = (nRetCode > nErrCode) ? nRetCode : nErrCode;
+   }
+   else
+   {
+      nErrCode = (nRetCode < nErrCode) ? nRetCode : nErrCode;
+   }
+   return nErrCode;
 }
 
 DSL_Error_t
@@ -7389,8 +7079,6 @@ _DSL_CTX_ASSIGN_32(
 
 #endif /*#ifndef DRV_DSL_CPE_FORCE_MACROS*/
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
-
 #ifdef INCLUDE_DSL_FILTER_DETECTION
 DSL_Error_t DSL_DRV_FilterDetectionInit(DSL_Context_t *pContext)
 {
@@ -7489,7 +7177,40 @@ DSL_Error_t DSL_DRV_HybridContextInit(DSL_Context_t *pContext)
 
    return nErrCode;
 }
-#endif /* INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_VRX */
+
+#ifdef INCLUDE_DSL_DELT
+/*
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_DELT_SNR_GET
+*/
+DSL_Error_t DSL_DRV_DeltSNRGet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_G997_DeltSnr_t *pData)
+{
+   DSL_Error_t nErrCode = DSL_SUCCESS;
+
+   DSL_CHECK_POINTER(pContext, pData);
+   DSL_CHECK_ERR_CODE();
+
+   DSL_CHECK_DIRECTION(pData->nDirection);
+   DSL_CHECK_ERR_CODE();
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_DeltSNRGet"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   /* Call device specific implementation*/
+   nErrCode = DSL_DRV_DEV_DeltSNRGet(
+                 pContext, pData->nDirection,
+                 pData->nDeltDataType, &(pData->data));
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_DeltSNRGet, retCode=%d"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
+
+   return nErrCode;
+}
+#endif /* INCLUDE_DSL_DELT */
 
 #ifdef __cplusplus
 }

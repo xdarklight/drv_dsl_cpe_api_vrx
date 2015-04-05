@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2012
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -55,6 +55,22 @@ typedef struct CMD_CounterControlSet CMD_CounterControlSet_t;
    Acknowledgement for message CMD_CounterControlSet.
 */
 typedef struct ACK_CounterControlSet ACK_CounterControlSet_t;
+
+/** Message ID for CMD_PM_OptionsSet */
+#define CMD_PM_OPTIONSSET 0x1662
+
+/**
+   Configures options for performance monitoring functions.
+*/
+typedef struct CMD_PM_OptionsSet CMD_PM_OptionsSet_t;
+
+/** Message ID for ACK_PM_OptionsSet */
+#define ACK_PM_OPTIONSSET 0x1662
+
+/**
+   Acknowledgement for message ACK_PM_OptionsSet.
+*/
+typedef struct ACK_PM_OptionsSet ACK_PM_OptionsSet_t;
 
 /** Message ID for ALM_LineFailureNE_Get */
 #define ALM_LINEFAILURENE_GET 0x0007
@@ -301,7 +317,7 @@ typedef struct ACK_LinePerfCountNE_Set ACK_LinePerfCountNE_Set_t;
 typedef struct CMD_CRC_StatsNE_Set CMD_CRC_StatsNE_Set_t;
 
 /** Message ID for ACK_CRC_StatsNE_Set */
-#define ACK_CRC_STATSNE_SET 0x094A
+#define ACK_CRC_STATSNE_SET 0x084A
 
 /**
    Acknowledgement for the message CMD_CRC_StatsNE_Set.
@@ -411,6 +427,52 @@ struct CMD_CounterControlSet
    Acknowledgement for message CMD_CounterControlSet.
 */
 struct ACK_CounterControlSet
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Configures options for performance monitoring functions.
+*/
+struct CMD_PM_OptionsSet
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** Reserved */
+   DSL_uint16_t Res0 : 15;
+   /** Supress CRC/FEC Counter-Writeback (ADSL only) */
+   DSL_uint16_t CrcFecWrProtect : 1;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** Supress CRC/FEC Counter-Writeback (ADSL only) */
+   DSL_uint16_t CrcFecWrProtect : 1;
+   /** Reserved */
+   DSL_uint16_t Res0 : 15;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Acknowledgement for message ACK_PM_OptionsSet.
+*/
+struct ACK_PM_OptionsSet
 {
 #if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
    /** Index */

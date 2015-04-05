@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2012
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of

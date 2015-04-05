@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -178,8 +177,7 @@ typedef struct
    (bFePollingOff = DSL_FALSE).
    The value ranges from  1 to 20 with 1 steps.
    The default configuration value is 10 which leads to 10s cycle in case of
-   nBasicUpdateCycle=1s.
-   Configuration parameter not used for the Vinax device*/
+   nBasicUpdateCycle=1s. */
    DSL_IN_OUT DSL_uint8_t nFeUpdateCycleFactorL2;
 } DSL_PM_ConfigData_t;
 
@@ -838,7 +836,7 @@ typedef struct
    \endif
 
    \note This structure is used within ADSL MIB interface only.
-         Thus it is only used for Danube Family.
+         Thus it is only used for ADSL only capable platforms.
 */
 typedef struct
 {
@@ -1239,8 +1237,6 @@ typedef struct
 
    \attention Please note the following conditions and/or requirements has to
       be taken into account for usage of retransmission functionality.
-      - ReTx support is ONLY available for Danube and ARX100 firmware (not for
-        Amazon-SE)
       - minimum version of ADSL PHY firmware to be used is R5
 */
 typedef struct

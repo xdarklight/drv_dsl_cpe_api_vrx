@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2012
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -98,9 +97,9 @@ DSL_Error_t DSL_DRV_PM_DEV_Restart(DSL_Context_t *pContext)
 
    /* Allow counters polling if the current FW binary mode equals to the
       Last Showtime mode*/
-   if( ((DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2)) &&
+   if( ((DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2)) &&
         (DSL_DRV_PM_CONTEXT(pContext)->nLastShowtime == DSL_PM_FWMODE_VDSL)) ||
-       ((DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL)) &&
+       ((DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL)) &&
         (DSL_DRV_PM_CONTEXT(pContext)->nLastShowtime == DSL_PM_FWMODE_ADSL)) )
    {
       /* Set bPmDataValid flag*/
@@ -135,11 +134,11 @@ DSL_Error_t DSL_DRV_PM_DEV_OnEapsTimeout(DSL_Context_t *pContext)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
 
-   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2))
+   if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2))
    {
       DSL_DRV_PM_CONTEXT(pContext)->nCurrShowtime = DSL_PM_FWMODE_VDSL;
    }
-   else if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   else if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL))
    {
       DSL_DRV_PM_CONTEXT(pContext)->nCurrShowtime = DSL_PM_FWMODE_ADSL;
    }
@@ -292,145 +291,78 @@ DSL_Error_t DSL_DRV_PM_DEV_ChannelCountersGet(
       ACK_FEC_StatsFE_Get_t FecStatsFE;
    } sAck;
 
-   DSL_PM_ChannelData_t *pCurrCounters = DSL_NULL;
-
    DSL_CHECK_POINTER(pContext, pCounters);
    DSL_CHECK_ATU_DIRECTION(nDirection);
    DSL_CHECK_ERR_CODE();
 
-   DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_DEV_ChannelCountersCurrentGet, (nDirection=%s, nChannel=%d)"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nDirection==DSL_NEAR_END ? "NE":"FE", nChannel));
+   DSL_DEBUG( DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+      "DSL[%02d]: IN - DSL_DRV_PM_DEV_ChannelCountersCurrentGet, "
+      "(nDirection=%s, nChannel=%d)"DSL_DRV_CRLF,
+      DSL_DEV_NUM(pContext), nDirection==DSL_NEAR_END ? "NE":"FE", nChannel));
 
    /* Reset the output structure*/
    memset(pCounters, 0x0, sizeof(DSL_PM_ChannelData_t));
 
-   if( DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2) )
-   {
-   /*... VDSL only mode*/
-      memset(&(sAck.CrcStatsNE), 0x0, sizeof(sAck.CrcStatsNE));
-
-      sCmd.CrcStatsFE.Index  = sCmd.CrcStatsNE.Index  = 0x0;
-      sCmd.CrcStatsFE.Length = sCmd.CrcStatsNE.Length = 4;
-
-      /* Get Code Violations*/
-      nErrCode = DSL_DRV_VRX_SendMessage(
-         pContext,
-         nDirection == DSL_NEAR_END ? CMD_CRC_STATSNE_GET: CMD_CRC_STATSFE_GET,
-         sizeof(sCmd.CrcStatsNE), (DSL_uint8_t*)&(sCmd.CrcStatsNE),
-         sizeof(sAck.CrcStatsNE), (DSL_uint8_t*)&(sAck.CrcStatsNE));
-
-      /* Check nErrCode and return on error*/
-      if( nErrCode < 0 )
-      {
-         DSL_DEBUG( DSL_DBG_ERR,
-            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Code Violations statistics"
-             " Get failed!"DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-         return nErrCode;
-      }
-
-      /* ACKs for the CMD_CRC_STATSNE_GET and CMD_CRC_STATSFE_GET have the
-          same strucrure, so we can use any*/
-      pCounters->nCodeViolations = (DSL_uint32_t)sAck.CrcStatsNE.cntCVI_LSW |
-                            (((DSL_uint32_t)sAck.CrcStatsNE.cntCVI_MSW) << 16);
-
-      memset(&(sAck.FecStatsNE), 0x0, sizeof(sAck.FecStatsNE));
-
-      sCmd.FecStatsFE.Index  = sCmd.FecStatsNE.Index  = 0x0;
-      sCmd.FecStatsFE.Length = sCmd.FecStatsNE.Length = 12;
-
-      /* Get Forward Error Corrections*/
-      nErrCode = DSL_DRV_VRX_SendMessage(
-         pContext,
-         nDirection == DSL_NEAR_END ? CMD_FEC_STATSNE_GET: CMD_FEC_STATSFE_GET,
-         sizeof(sCmd.FecStatsNE), (DSL_uint8_t*)&(sCmd.FecStatsNE),
-         sizeof(sAck.FecStatsNE), (DSL_uint8_t*)&(sAck.FecStatsNE));
-
-      /* Check nErrCode and return on error*/
-      if( nErrCode < 0 )
-      {
-         DSL_DEBUG( DSL_DBG_ERR,
-            (pContext,SYS_DBG_ERR"DSL[%02d]: ERROR - Forward Error Corrections"
-            " statistics Get failed!" DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-         return nErrCode;
-      }
-
-      /* ACKs for the CMD_FEC_STATSNE_GET and CMD_FEC_STATSFE_GET have the
-          same strucrure, so we can use any*/
-      pCounters->nFEC = (DSL_uint32_t)sAck.FecStatsNE.cntECI_LSW |
-                      (((DSL_uint32_t)sAck.FecStatsNE.cntECI_MSW) << 16);
-   }
-   else if(DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
-   {
    /*... ADSL only mode*/
-      memset(&(sAck.CrcStatsNE), 0x0, sizeof(sAck.CrcStatsNE));
+   memset(&(sAck.CrcStatsNE), 0x0, sizeof(sAck.CrcStatsNE));
 
-      sCmd.CrcStatsNE.Index  = 0x0;
-      sCmd.CrcStatsNE.Length = 4;
+   sCmd.CrcStatsFE.Index  = sCmd.CrcStatsNE.Index  = 0x0;
+   sCmd.CrcStatsFE.Length = sCmd.CrcStatsNE.Length = 4;
 
-      /* Get Code Violations*/
-      nErrCode = DSL_DRV_VRX_SendMessage(
-         pContext,
-         nDirection == DSL_NEAR_END ? CMD_CRC_STATSNE_GET : CMD_CRC_STATSFE_GET,
-         sizeof(sCmd.CrcStatsNE), (DSL_uint8_t*)&(sCmd.CrcStatsNE),
-         sizeof(sAck.CrcStatsNE), (DSL_uint8_t*)&(sAck.CrcStatsNE));
+   /* Get Code Violations*/
+   nErrCode = DSL_DRV_VRX_SendMessage(
+      pContext,
+      nDirection == DSL_NEAR_END ? CMD_CRC_STATSNE_GET : CMD_CRC_STATSFE_GET,
+      sizeof(sCmd.CrcStatsNE), (DSL_uint8_t*)&(sCmd.CrcStatsNE),
+      sizeof(sAck.CrcStatsNE), (DSL_uint8_t*)&(sAck.CrcStatsNE));
 
-      /* Check nErrCode and return on error*/
-      if( nErrCode < 0 )
-      {
-         DSL_DEBUG( DSL_DBG_ERR,
-           (pContext,SYS_DBG_ERR"DSL[%02d]: ERROR - Code Violations statistics"
-               " get failed!" DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-         return nErrCode;
-      }
-
-      /* ACKs for the CMD_CRC_STATSNE_GET and CMD_CRC_STATSFE_GET have the
-          same strucrure, so we can use any*/
-      pCounters->nCodeViolations = (DSL_uint32_t)sAck.CrcStatsNE.cntCVI_LSW |
-                            (((DSL_uint32_t)sAck.CrcStatsNE.cntCVI_MSW) << 16);
-
-      pCounters->nCodeViolations += (DSL_uint32_t)sAck.CrcStatsNE.cntCVF_LSW |
-                            (((DSL_uint32_t)sAck.CrcStatsNE.cntCVF_MSW) << 16);
-
-      memset(&(sAck.FecStatsNE), 0x0, sizeof(sAck.FecStatsNE));
-
-      sCmd.FecStatsNE.Index  = 0x0;
-      sCmd.FecStatsNE.Length = 12;
-
-      /* Get Forward Error Corrections*/
-      nErrCode = DSL_DRV_VRX_SendMessage(
-         pContext,
-         nDirection == DSL_NEAR_END ? CMD_FEC_STATSNE_GET : CMD_FEC_STATSFE_GET,
-         sizeof(sCmd.FecStatsNE), (DSL_uint8_t*)&(sCmd.FecStatsNE),
-         sizeof(sAck.FecStatsNE), (DSL_uint8_t*)&(sAck.FecStatsNE));
-
-      /* Check nErrCode and return on error*/
-      if( nErrCode < 0 )
-      {
-         DSL_DEBUG( DSL_DBG_ERR,
-            (pContext,SYS_DBG_ERR"DSL[%02d]: ERROR - Forward Error Corrections"
-               " statistics get failed!" DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-         return nErrCode;
-      }
-
-      /* ACKs for the CMD_FEC_STATSNE_GET and CMD_FEC_STATSFE_GET have the
-          same strucrure, so we can use any*/
-      pCounters->nFEC = (DSL_uint32_t)sAck.FecStatsNE.cntECI_LSW |
-                      (((DSL_uint32_t)sAck.FecStatsNE.cntECI_MSW) << 16);
-
-      pCounters->nFEC += (DSL_uint32_t)sAck.FecStatsNE.cntECF_CW_LSW |
-                       (((DSL_uint32_t)sAck.FecStatsNE.cntECF_CW_MSW) << 16);
-   }
-   else
+   /* Check nErrCode and return on error*/
+   if( nErrCode < 0 )
    {
-     DSL_DEBUG( DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Unknown operation mode!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+      DSL_DEBUG( DSL_DBG_ERR,
+        (pContext,SYS_DBG_ERR"DSL[%02d]: ERROR - Code Violations statistics"
+            " get failed!" DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+      return nErrCode;
    }
+
+   /* ACKs for the CMD_CRC_STATSNE_GET and CMD_CRC_STATSFE_GET have the
+       same strucrure, so we can use any*/
+   pCounters->nCodeViolations = (DSL_uint32_t)sAck.CrcStatsNE.cntCVI_LSW |
+                         (((DSL_uint32_t)sAck.CrcStatsNE.cntCVI_MSW) << 16);
+
+   pCounters->nCodeViolations += (DSL_uint32_t)sAck.CrcStatsNE.cntCVF_LSW |
+                         (((DSL_uint32_t)sAck.CrcStatsNE.cntCVF_MSW) << 16);
+
+   memset(&(sAck.FecStatsNE), 0x0, sizeof(sAck.FecStatsNE));
+
+   sCmd.FecStatsFE.Index  = sCmd.FecStatsNE.Index  = 0x0;
+   sCmd.FecStatsFE.Length = sCmd.FecStatsNE.Length = 12;
+
+   /* Get Forward Error Corrections*/
+   nErrCode = DSL_DRV_VRX_SendMessage(
+      pContext,
+      nDirection == DSL_NEAR_END ? CMD_FEC_STATSNE_GET : CMD_FEC_STATSFE_GET,
+      sizeof(sCmd.FecStatsNE), (DSL_uint8_t*)&(sCmd.FecStatsNE),
+      sizeof(sAck.FecStatsNE), (DSL_uint8_t*)&(sAck.FecStatsNE));
+
+   /* Check nErrCode and return on error*/
+   if( nErrCode < 0 )
+   {
+      DSL_DEBUG( DSL_DBG_ERR,
+         (pContext,SYS_DBG_ERR"DSL[%02d]: ERROR - Forward Error Corrections"
+            " statistics get failed!" DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+      return nErrCode;
+   }
+
+   /* ACKs for the CMD_FEC_STATSNE_GET and CMD_FEC_STATSFE_GET have the
+       same strucrure, so we can use any*/
+   pCounters->nFEC = (DSL_uint32_t)sAck.FecStatsNE.cntECI_LSW |
+                   (((DSL_uint32_t)sAck.FecStatsNE.cntECI_MSW) << 16);
+
+   pCounters->nFEC += (DSL_uint32_t)sAck.FecStatsNE.cntECF_CW_LSW |
+                    (((DSL_uint32_t)sAck.FecStatsNE.cntECF_CW_MSW) << 16);
 
    DSL_DEBUG( DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_PM_DEV_ChannelCountersCurrentGet"
@@ -481,12 +413,12 @@ DSL_Error_t DSL_DRV_PM_DEV_ChannelCountersSet(
 
    /* Restore counters only if the last showtime FW mode equals to the
       current loaded FW binary*/
-   if( ((DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2)) &&
+   if( ((DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2)) &&
         (DSL_DRV_PM_CONTEXT(pContext)->nLastShowtime == DSL_PM_FWMODE_VDSL)) ||
-       ((DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL)) &&
+       ((DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL)) &&
         (DSL_DRV_PM_CONTEXT(pContext)->nLastShowtime == DSL_PM_FWMODE_ADSL)) )
    {
-      if( DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2) )
+      if( DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2) )
       {
          memset(&(sCmd.CrcStatsNE), 0x0, sizeof(sCmd.CrcStatsNE));
 
@@ -494,10 +426,10 @@ DSL_Error_t DSL_DRV_PM_DEV_ChannelCountersSet(
          sCmd.CrcStatsNE.Length = 4;
 
          /* Fill the LSW of the nCodeViolations counter*/
-         sCmd.CrcStatsNE.cntCVI_LSW = 
+         sCmd.CrcStatsNE.cntCVI_LSW =
                            (DSL_uint16_t)(pCounters->nCodeViolations & 0xFFFF);
          /* Fill the MSW of the nCodeViolations counter*/
-         sCmd.CrcStatsNE.cntCVI_MSW = 
+         sCmd.CrcStatsNE.cntCVI_MSW =
                    (DSL_uint16_t)((pCounters->nCodeViolations >> 16) & 0xFFFF);
 
          /* Set Code Violations*/
@@ -521,10 +453,10 @@ DSL_Error_t DSL_DRV_PM_DEV_ChannelCountersSet(
          sCmd.FecStatsNE.Length = 12;
 
          /* Fill the LSW of the nFEC counter*/
-         sCmd.FecStatsNE.cntECI_LSW = 
+         sCmd.FecStatsNE.cntECI_LSW =
                                       (DSL_uint16_t)(pCounters->nFEC & 0xFFFF);
          /* Fill the MSW of the nFEC counter*/
-         sCmd.FecStatsNE.cntECI_MSW = 
+         sCmd.FecStatsNE.cntECI_MSW =
                               (DSL_uint16_t)((pCounters->nFEC >> 16) & 0xFFFF);
 
          /* Set FEC*/
@@ -550,10 +482,10 @@ DSL_Error_t DSL_DRV_PM_DEV_ChannelCountersSet(
          sCmd.CrcStatsNE.Length = 4;
 
          /* Fill the LSW of the nCodeViolations counter*/
-         sCmd.CrcStatsNE.cntCVI_LSW = 
+         sCmd.CrcStatsNE.cntCVI_LSW =
                            (DSL_uint16_t)(pCounters->nCodeViolations & 0xFFFF);
          /* Fill the MSW of the nCodeViolations counter*/
-         sCmd.CrcStatsNE.cntCVI_MSW = 
+         sCmd.CrcStatsNE.cntCVI_MSW =
                    (DSL_uint16_t)((pCounters->nCodeViolations >> 16) & 0xFFFF);
 
          /* Set Code Violations*/
@@ -577,10 +509,10 @@ DSL_Error_t DSL_DRV_PM_DEV_ChannelCountersSet(
          sCmd.FecStatsNE.Length = 12;
 
          /* Fill the LSW of the nFEC counter*/
-         sCmd.FecStatsNE.cntECI_LSW = 
+         sCmd.FecStatsNE.cntECI_LSW =
                                       (DSL_uint16_t)(pCounters->nFEC & 0xFFFF);
          /* Fill the MSW of the nFEC counter*/
-         sCmd.FecStatsNE.cntECI_MSW = 
+         sCmd.FecStatsNE.cntECI_MSW =
                               (DSL_uint16_t)((pCounters->nFEC >> 16) & 0xFFFF);
 
          /* Set FEC*/
@@ -655,8 +587,9 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersGet(
    /* Clear the output structure*/
    memset(pCounters, 0x0, sizeof(DSL_PM_DataPathData_t));
 
-   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2)
-       || DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   /* not for ADSL-only mode */
+   if ((DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2))
+      || (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL)))
    {
       if( nDirection == DSL_NEAR_END )
       {
@@ -747,8 +680,8 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersGet(
       }
       else
       {
-         DSL_DEBUG( DSL_DBG_WRN,
-            (pContext, SYS_DBG_WRN"DSL[%02d]: WARNING - Data Path counters are not supported for the FE!"
+         DSL_DEBUG( DSL_DBG_WRN, (pContext, SYS_DBG_WRN
+            "DSL[%02d]: WARNING - Data Path counters are not supported for the FE!"
             DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
       }
    }
@@ -777,7 +710,6 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersSet(
    DSL_PM_DataPathData_t *pCounters)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
-
    union
    {
       CMD_PTM_BC0_StatsNE_Set_t   PTM;
@@ -800,11 +732,12 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersSet(
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_DEV_DataPathCountersSet, (nDirection=%s, nChannel=%d)"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nDirection==DSL_NEAR_END ? "NE":"FE",nChannel));
 
-   /* Restore counters for ADSL and VDSL firmware*/
+   /* Restore counters only if the last showtime FW mode equals to the
+      current loaded FW binary*/
    if ((DSL_DRV_PM_CONTEXT(pContext)->nLastShowtime == DSL_PM_FWMODE_VDSL)
-       || (DSL_DRV_PM_CONTEXT(pContext)->nLastShowtime == DSL_PM_FWMODE_ADSL))
+      ||(DSL_DRV_PM_CONTEXT(pContext)->nLastShowtime == DSL_PM_FWMODE_ADSL))
    {
-      if( nDirection == DSL_NEAR_END )
+      if (nDirection == DSL_NEAR_END)
       {
          /* PTM counters */
          memset(&(sCmd.PTM), 0x0, sizeof(sCmd.PTM));
@@ -818,6 +751,7 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersSet(
          sCmd.PTM.cntCV_MSW   = (pCounters->nCV_P >> 16) & 0xFFFF;
          sCmd.PTM.cntCVP_LSW  = pCounters->nCVP_P & 0xFFFF;
          sCmd.PTM.cntCVP_MSW  = (pCounters->nCVP_P >> 16) & 0xFFFF;
+
 
          /* Set PTM statistics*/
          nErrCode = DSL_DRV_VRX_SendMessage(
@@ -851,12 +785,10 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersSet(
          sCmd.ATM.ibep_LSW = pCounters->nIBE & 0xFFFF;
          sCmd.ATM.ibep_MSW = (pCounters->nIBE >> 16) & 0xFFFF;
 
-         /* Ignore last 8 parameters (sizeof(sCmd.ATM) - 8 * sizeof(DSL_uint16_t))*/
-
          /* Set ATM statistics*/
          nErrCode = DSL_DRV_VRX_SendMessage(
             pContext, CMD_ATM_BC0_STATSNE_SET,
-            sizeof(sCmd.ATM) - 8 * sizeof(DSL_uint16_t), (DSL_uint8_t*)&(sCmd.ATM),
+            sizeof(sCmd.ATM), (DSL_uint8_t*)&(sCmd.ATM),
             sizeof(sAck.ATM), (DSL_uint8_t*)&(sAck.ATM));
 
          if( nErrCode != DSL_SUCCESS )
@@ -898,8 +830,8 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersSet(
       }
       else
       {
-         DSL_DEBUG( DSL_DBG_WRN,
-            (pContext, SYS_DBG_WRN"DSL[%02d]: WARNING - Data Path counters are not supported for the FE!"
+         DSL_DEBUG( DSL_DBG_WRN, (pContext, SYS_DBG_WRN
+            "DSL[%02d]: WARNING - Data Path counters are not supported for the FE!"
             DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
       }
    }
@@ -1011,7 +943,7 @@ DSL_Error_t DSL_DRV_PM_DEV_LineSecCountersGet(
    memset(&(sAck), 0, sizeof(sAck));
 
    /* For VDSL only mode*/
-   if( DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2) )
+   if( DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2) )
    {
       sCmd.NE.Length = 10;
 
@@ -1035,7 +967,7 @@ DSL_Error_t DSL_DRV_PM_DEV_LineSecCountersGet(
          pCounters->nLOFS = 0;
       }
    }
-   else if(DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   else if(DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL))
    {
       sCmd.NE.Length = 10;
 
@@ -1099,7 +1031,7 @@ DSL_Error_t DSL_DRV_PM_DEV_LineSecCountersSet(
 
    DSL_DEBUG( DSL_DBG_MSG,
       (pContext,SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_DEV_LineSecCountersSet,"
-      " (nDirection=%s)"DSL_DRV_CRLF, DSL_DEV_NUM(pContext), 
+      " (nDirection=%s)"DSL_DRV_CRLF, DSL_DEV_NUM(pContext),
        nDirection==DSL_NEAR_END ? "NE":"FE"));
 
    if (nDirection == DSL_FAR_END)
@@ -1113,13 +1045,13 @@ DSL_Error_t DSL_DRV_PM_DEV_LineSecCountersSet(
 
    /* Restore counters only if the last showtime FW mode equals to the
       current loaded FW binary*/
-   if( ((DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2)) &&
+   if( ((DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2)) &&
         (DSL_DRV_PM_CONTEXT(pContext)->nLastShowtime == DSL_PM_FWMODE_VDSL)) ||
-       ((DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL)) &&
+       ((DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL)) &&
         (DSL_DRV_PM_CONTEXT(pContext)->nLastShowtime == DSL_PM_FWMODE_ADSL)) )
    {
       /* Only applicable for ADSL mode*/
-      if( DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2) )
+      if( DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2) )
       {
          memset(&(sCmd.LinePerfNE), 0x0, sizeof(sCmd.LinePerfNE));
 
@@ -1400,6 +1332,9 @@ DSL_Error_t DSL_DRV_PM_DEV_ReTxCountersGet(
    DSL_PM_ReTxData_t *pCounters)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
+   ACK_RTX_PM_DS_Get_t retxPm;
+   DSL_uint32_t nEftrMin;
+   DSL_DEV_VersionCheck_t nVerCheck = DSL_VERSION_ERROR;
 
    DSL_DEBUG( DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_DEV_ReTxCountersGet"
@@ -1409,7 +1344,58 @@ DSL_Error_t DSL_DRV_PM_DEV_ReTxCountersGet(
    DSL_CHECK_ATU_DIRECTION(nDirection);
    DSL_CHECK_ERR_CODE();
 
-   memset(pCounters, 0x0, sizeof(DSL_PM_ReTxData_t));
+   if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2))
+   {
+      /* Get FW information */
+      nErrCode = DSL_DRV_VRX_FirmwareVersionCheck(pContext,
+                  DSL_MIN_FW_VERSION_RETX_VDSL, &nVerCheck);
+      if (nErrCode != DSL_SUCCESS)
+      {
+         DSL_DEBUG(DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         return nErrCode;
+      }
+   }
+   else if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL))
+   {
+      /* Get FW information */
+      nErrCode = DSL_DRV_VRX_FirmwareVersionCheck(pContext,
+                  DSL_MIN_FW_VERSION_RETX_ADSL, &nVerCheck);
+      if (nErrCode != DSL_SUCCESS)
+      {
+         DSL_DEBUG(DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         return nErrCode;
+      }
+   }
+
+   if (nVerCheck >= DSL_VERSION_EQUAL)
+   {
+      nErrCode = DSL_DRV_VRX_SendMsgRtxPmDsGet(pContext, (DSL_uint8_t *)&retxPm);
+      if (nErrCode != DSL_SUCCESS)
+      {
+         DSL_DEBUG(DSL_DBG_ERR, (pContext,
+            SYS_DBG_ERR"DSL[%02d]: ERROR - ReTx PM counters read failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         return nErrCode;
+      }
+
+      nEftrMin = ((DSL_uint32_t)(retxPm.EFTR_MSW << 16)) | retxPm.EFTR_LSW;
+
+      /* ignore zero value*/
+      if (nEftrMin)
+      {
+         /* Fw Format:  kBit/s */
+         /* API format: bit/s */
+         pCounters->nEftrMin = nEftrMin*1000;
+      }
+   }
+   else
+   {
+      memset(pCounters, 0x0, sizeof(DSL_PM_ReTxData_t));
+   }
 
    DSL_DEBUG( DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_PM_DEV_ReTxCountersGet (retCode=%d)"

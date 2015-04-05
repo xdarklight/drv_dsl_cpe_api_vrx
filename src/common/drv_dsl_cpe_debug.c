@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -49,7 +48,7 @@ DSL_debugLevelEntry_t DSL_g_dbgLvl[DSL_DBG_MAX_ENTRIES] =
    { DSL_DBG_ERR,    "DSL_DBG_CALLBACK"            },   /* 11 */
    { DSL_DBG_NONE,   "DSL_DBG_MESSAGE_DUMP"        },   /* 12 */
    { DSL_DBG_ERR,    "DSL_DBG_LOW_LEVEL_DRIVER"    },   /* 13 */
-   { DSL_DBG_NONE,   "not used"                    },   /* 14 */
+   { DSL_DBG_NONE,   "DSL_DBG_MULTIMODE"           },   /* 14 */
    { DSL_DBG_NONE,   "not used"                    },   /* 15 */
 };
 
@@ -103,7 +102,10 @@ const DSL_char_t* DSL_DBG_PRN_AUTOBOOT_STATE[] =
    "Restart",
    "ConfigWriteWait",
    "LinkActivateWait",
-   "RestartWait"
+   "RestartWait",
+   "ShutDownRequest",
+   "ShutDownWait",
+   "ShutDownReached"
 };
 
 

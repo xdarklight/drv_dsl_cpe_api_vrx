@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -34,8 +33,51 @@ typedef enum
    /* *********************************************************************** */
 
    /* *********************************************************************** */
+   /* *** Error Codes for bonding functionality                           *** */
+   /* *********************************************************************** */
+   /** Command/feature can not be performed because only one line can be in
+       showtime in case of disabled bonding on the CO side. This line has been
+       disabled because the other line has reached a line state that is equal
+       or bigger than \ref DSL_LINESTATE_FULL_INIT.
+       To activate this line again please do one of the following actions
+       - in case of *on-chip* bonding scenario, use command
+         \ref DSL_FIO_AUTOBOOT_CONTROL_SET with nCommand equals
+         \ref DSL_AUTOBOOT_CTRL_RESTART_FULL on any line (CLI: "acs [x] 6").
+         This will start both lines.
+       - use command \ref DSL_FIO_AUTOBOOT_CONTROL_SET with nCommand equals
+         \ref DSL_AUTOBOOT_CTRL_DISABLE on the other line (that is not
+         disabled, CLI: "acs [x] 4").
+         Afterwards both lines are disabled and can be enabled again
+         1) individually by using command \ref DSL_FIO_AUTOBOOT_CONTROL_SET with
+         nCommand equals \ref DSL_AUTOBOOT_CTRL_ENABLE or
+         \ref DSL_AUTOBOOT_CTRL_RESTART (CLI: "acs [x] 5" or "acs [x] 2")
+         2) all togther by using command \ref DSL_FIO_AUTOBOOT_CONTROL_SET with
+         nCommand equals \ref DSL_AUTOBOOT_CTRL_RESTART_FULL on any line
+         (CLI: "acs [x] 6"), only in case of *on-chip* bonding.
+       \note The value [x] includes the optional line/device parameter that is
+             used only in case of bonding. */
+   DSL_ERR_BND_REMOTE_PAF_DISABLED = -502,
+   /** Command/feature is only supported if bonding functionality is enabled.
+       Please use the command \ref DSL_FIO_BND_CONFIG_SET with bPafEnable
+       equals DSL_TRUE to enable bonding functionality. */
+   DSL_ERR_BND_ONLY_SUPPORTED_WITH_BONDING_ENABLED = -501,
+   /** Command/feature can not be performed because the firmware does not
+       support bonding functionality. */
+   DSL_ERR_BND_NOT_SUPPORTED_BY_FIRMWARE = -500,
+
+   /* *********************************************************************** */
    /* *** Error Codes for configuration parameter consistency check       *** */
    /* *********************************************************************** */
+   /** The configuration of the TC-Layer does not fit to the bonding
+       configuration. Due to the fact that PAF bonding is only supported within
+       PTM/EFM TC-Layer please note that it is not allowed to select only the
+       \ref DSL_TC_ATM TC-Layer in case of bonding is enabled
+       (CLI: "BND_ConfigSet"/"bndcs").
+       This error will occur in case of bonding is enabled and user
+       configuration of \ref DSL_TC_ATM is applied or vice versa. The
+       configuration is rejected, means that the original configuration will
+       be kept. */
+   DSL_ERR_CONFIG_BND_VS_TCLAYER = -401,
    /** parameter out of range */
    DSL_ERR_PARAM_RANGE = -400,
 
@@ -54,6 +96,9 @@ typedef enum
    /* *********************************************************************** */
    /* *** Error Codes for Autoboot handler                                *** */
    /* *********************************************************************** */
+   /** Autoboot handling has been disabled.
+       \note Also refer to description of \ref DSL_LINESTATE_DISABLED */
+   DSL_ERR_AUTOBOOT_DISABLED = -103,
    /** Autoboot thread is not started yet */
    DSL_ERR_AUTOBOOT_NOT_STARTED = -102,
    /** Autoboot thread is busy */
@@ -71,6 +116,10 @@ typedef enum
    /* *********************************************************************** */
    /* *** Common Error Codes                                              *** */
    /* *********************************************************************** */
+   /** data not available at the moment, updating */
+   DSL_ERR_DATA_UPDATE_IN_PROGRESS = -42,
+   /** invalid DSL mode */
+   DSL_ERR_DSLMODE = -41,
    /** The requested values are not supported in the current VDSL mode */
    DSL_ERR_NOT_SUPPORTED_IN_CURRENT_VDSL_MODE = -40,
    /** Real time trace unavailable */
@@ -262,17 +311,39 @@ typedef enum
        SNMP (0x814C) */
    DSL_WRN_EOC_UNSUPPORTED_PROTOCOLL_ID = 201,
 
-   /** This is a Vinax specific warning that indicates an incompatibility in case
-        of using older firmware versions as follows.
-       Due to some firmware related changes that are relevant from FS10 firmware
-       it was also necessary to re-defined the hybrid selection values of the
-       DSL CPE API. This version of the API uses MsgCat from FS10 and therefore
-       it is not backward compatible with firmware FS9 or smaller at this point.
-       To avoid any inconsistencies with this older firmware versions the
-       hybrid selection will be set to its default value (0)
-       DSL_DEV_HYBRID_AD1_138_17_CPE_R2 automatically.
-       To avoid this warning please use firmware FS10 or higher. */
-   DSL_WRN_CHECK_HYBRID_CONFIGURATION = 300,
+   /* *********************************************************************** */
+   /* *** Warning Codes for configuration parameter consistency check     *** */
+   /* *********************************************************************** */
+   /** This warning code is not used anymore. */
+   DSL_WRN_CONFIG_BND_VS_RETX = 400,
+   /** The configuration of the TC-Layer does not fit to the bonding
+       configuration. Due to the fact that PAF bonding is only supported
+       within PTM/EFM TC-Layer please note that in case of enabled bonding
+       support (CLI: "BND_ConfigSet"/"bndcs") the TC-Layer configuration (of the
+       DSL Firmware) will be set to fixed PTM/EFM operation.
+       This warning will occur in case of bonding is enabled and user
+       configuration of \ref DSL_TC_AUTO is applied or vice versa. The
+       configuration is accepted but during link configuration only PTM/EFM
+       is enabled. */
+   DSL_WRN_CONFIG_BND_VS_TCLAYER = 401,
+   /* *********************************************************************** */
+   /* *** Bonding functionality related warning codes                     *** */
+   /* *********************************************************************** */
+   /** The DSL PHY Firmware does not support bonding but bonding is required
+       from DSL CPE API compilation and configuration point of view.
+       In this case the DSL CPE API is compiled for bonding and one of the
+       following cases apply
+       - bonding is enabled while changing the firmware binary which does not
+         support bonding (related CLI command: "alf")
+       - a firmware is running that does not support bonding and a
+         configuration change to enable bonding will be done (related CLI
+         command: "bndcs")
+       In both above cases bonding is *not* activated within firmware
+       configuration handling. This means that the bonding enable configuration
+       is ignored.
+       In case of on-chip bonding the firmware is started in single port mode
+       and only line 0 is accessible. */
+   DSL_WRN_BND_NOT_SUPPORTED_BY_FIRMWARE = 500,
 
    /* Last warning code marker */
    DSL_WRN_LAST

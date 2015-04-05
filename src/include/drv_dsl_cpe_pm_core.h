@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -1418,9 +1417,9 @@ typedef struct
 #endif /* INCLUDE_DSL_CPE_API_DANUBE*/
 
 /**
-   Structure for the PM Vinax Device specific data
+   Structure for the PM VRX Device specific data
 */
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
 typedef struct
 {
    DSL_uint8_t dummy;

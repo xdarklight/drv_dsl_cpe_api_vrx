@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -17,7 +16,6 @@
 #endif
 
 #include <asm/ioctl.h>
-#include <linux/autoconf.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
@@ -25,10 +23,18 @@
 #include <linux/version.h>
 #include <linux/spinlock.h>
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
+   #include <linux/autoconf.h>
+#endif
+
 #include <linux/sched.h>
 
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17))
-   #include <linux/utsrelease.h>
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
+   #if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,17))
+      #include <linux/utsrelease.h>
+   #endif
+#else
+  #include <generated/utsrelease.h>
 #endif
 
 #include <linux/types.h>
@@ -72,11 +78,11 @@
 
 /* The major number of a CPE API device
       Typically it is a Voodoo 3dfx device (107) for Danube, Amazon-SE, ARX100
-      and logical volume manager (109) for VINAX.
+      and logical volume manager (109) for VRX.
 */
 #if defined (INCLUDE_DSL_CPE_API_DANUBE)
    #define DRV_DSL_CPE_API_DEV_MAJOR 107
-#elif defined (INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#elif defined(INCLUDE_DSL_CPE_API_VRX)
    #define DRV_DSL_CPE_API_DEV_MAJOR 109
 #else
    #error "Device is not defined!"
@@ -151,8 +157,7 @@ DSL_uint32_t DSL_DRV_SysTimeGet(DSL_uint32_t nOffset);
 #ifndef INCLUDE_DSL_CPE_API_IFXOS_SUPPORT
 DSL_uint32_t DSL_DRV_ElapsedTimeMSecGet(DSL_uint32_t refTime_ms);
 
-#if (defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)) && \
-     defined(INCLUDE_DSL_BONDING)
+#if defined(INCLUDE_DSL_CPE_API_VRX) && defined(INCLUDE_DSL_BONDING)
 DSL_int32_t DSL_DRV_Phy2VirtMap(
                DSL_uint32_t    physicalAddr,
                DSL_uint32_t    addrRangeSize_byte,

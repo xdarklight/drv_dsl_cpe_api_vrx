@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2012
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -41,6 +41,8 @@
 #define ACK_TC_StatusGet_UNKNOWN_TC 0x0
 #define ACK_TC_StatusGet_EFM_TC 0x1
 #define ACK_TC_StatusGet_ATM_TC 0x2
+#define CMD_TC_FW_InfoSet_EFM_TC 0x1
+#define CMD_TC_FW_InfoSet_ATM_TC 0x2
 #define ACK_VersionInfoGet_HW_VER11 0x1
 #define ACK_VersionInfoGet_VRX 0x05
 #define ACK_VersionInfoGet_RELEASE 0
@@ -57,8 +59,9 @@
 #define CMD_TC_STATUSGET 0x0E22
 
 /**
-   The message reads the used TC.VDSL is always operated with EFM-TC in VRX.
-   ADSL options are ATM-TC or EFM-TC.
+   The message reads the used TC.In ADSL the TC type is selected during G.HS and
+   thus known when entering FULL_INIT. In VDSL it is selected later, during
+   FULL_INIT. Before this point the FW will report the TC as "unknown".
 */
 typedef struct CMD_TC_StatusGet CMD_TC_StatusGet_t;
 
@@ -69,6 +72,41 @@ typedef struct CMD_TC_StatusGet CMD_TC_StatusGet_t;
    Reporting of the used TC mode.
 */
 typedef struct ACK_TC_StatusGet ACK_TC_StatusGet_t;
+
+/** Message ID for CMD_TC_FW_InfoSet */
+#define CMD_TC_FW_INFOSET 0x1762
+
+/**
+   The message informs the DSL-FW about the currently loaded TC FW driver.
+*/
+typedef struct CMD_TC_FW_InfoSet CMD_TC_FW_InfoSet_t;
+
+/** Message ID for ACK_TC_FW_InfoSet */
+#define ACK_TC_FW_INFOSET 0x1762
+
+/**
+   Acknowledgement to CMD_TC_FW_InfoSet.
+*/
+typedef struct ACK_TC_FW_InfoSet ACK_TC_FW_InfoSet_t;
+
+/** Message ID for CMD_MAC_FrameConfigure */
+#define CMD_MAC_FRAMECONFIGURE 0x5348
+
+/**
+   The message configures Ethernet properties, currently the MAC address of the
+   device only.The MAC address is needed in the FW as "MAC source address"for
+   PDUs not built by the host, like e.g. for the Ethernet encapsulated
+   Backchannel Data ERB in Vectoring.
+*/
+typedef struct CMD_MAC_FrameConfigure CMD_MAC_FrameConfigure_t;
+
+/** Message ID for ACK_MAC_FrameConfigure */
+#define ACK_MAC_FRAMECONFIGURE 0x5348
+
+/**
+   Acknowledgement to CMD_MAC_FrameConfigure.
+*/
+typedef struct ACK_MAC_FrameConfigure ACK_MAC_FrameConfigure_t;
 
 /** Message ID for CMD_DataPathFailuresAlarmConfigure */
 #define CMD_DATAPATHFAILURESALARMCONFIGURE 0x1249
@@ -241,7 +279,7 @@ typedef struct ACK_ATM_BC0_TxStatsNE_Get ACK_ATM_BC0_TxStatsNE_Get_t;
 
 /**
    Writes the transmit data-path counters for BC0 of an ATM-TC link.For "Why
-   writing performance counters" see Page 578.
+   writing performance counters" see Page 628.
 */
 typedef struct CMD_ATM_BC0_TxStatsNE_Set CMD_ATM_BC0_TxStatsNE_Set_t;
 
@@ -266,7 +304,7 @@ typedef struct CMD_VersionInfoGet CMD_VersionInfoGet_t;
 
 /**
    Provides version information about hardware and firmware. The FW version
-   numbering scheme has a long and a short form (Table 320).
+   numbering scheme has a long and a short form (Table 339).
 */
 typedef struct ACK_VersionInfoGet ACK_VersionInfoGet_t;
 
@@ -391,8 +429,9 @@ typedef struct CMD_PAF_HS_Continue CMD_PAF_HS_Continue_t;
 typedef struct ACK_PAF_HS_Continue ACK_PAF_HS_Continue_t;
 
 /**
-   The message reads the used TC.VDSL is always operated with EFM-TC in VRX.
-   ADSL options are ATM-TC or EFM-TC.
+   The message reads the used TC.In ADSL the TC type is selected during G.HS and
+   thus known when entering FULL_INIT. In VDSL it is selected later, during
+   FULL_INIT. Before this point the FW will report the TC as "unknown".
 */
 struct CMD_TC_StatusGet
 {
@@ -429,6 +468,101 @@ struct ACK_TC_StatusGet
    DSL_uint16_t Length;
    /** TC Used */
    DSL_uint16_t TC;
+#endif
+} __PACKED__ ;
+
+
+/**
+   The message informs the DSL-FW about the currently loaded TC FW driver.
+*/
+struct CMD_TC_FW_InfoSet
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** TC Loaded */
+   DSL_uint16_t loadedTC;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** TC Loaded */
+   DSL_uint16_t loadedTC;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Acknowledgement to CMD_TC_FW_InfoSet.
+*/
+struct ACK_TC_FW_InfoSet
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   The message configures Ethernet properties, currently the MAC address of the
+   device only.The MAC address is needed in the FW as "MAC source address"for
+   PDUs not built by the host, like e.g. for the Ethernet encapsulated
+   Backchannel Data ERB in Vectoring.
+*/
+struct CMD_MAC_FrameConfigure
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** Source MAC Address Octets 0 to 1 */
+   DSL_uint16_t SrcMacAddrB0_1;
+   /** Source MAC Address Octets 2 to 3 */
+   DSL_uint16_t SrcMacAddrB2_3;
+   /** Source MAC Address Octets 4 to 5 */
+   DSL_uint16_t SrcMacAddrB4_5;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** Source MAC Address Octets 2 to 3 */
+   DSL_uint16_t SrcMacAddrB2_3;
+   /** Source MAC Address Octets 0 to 1 */
+   DSL_uint16_t SrcMacAddrB0_1;
+   /** Source MAC Address Octets 4 to 5 */
+   DSL_uint16_t SrcMacAddrB4_5;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Acknowledgement to CMD_MAC_FrameConfigure.
+*/
+struct ACK_MAC_FrameConfigure
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
 #endif
 } __PACKED__ ;
 
@@ -979,7 +1113,7 @@ struct ACK_ATM_BC0_StatsFE_Get
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** NE HEC Violation Count (HEC-P), LSW */
+   /** FE HEC Violation Count (HEC-PFE), LSW */
    DSL_uint16_t hecpfe_LSW;
    /** FE HEC Violation Count (HEC-PFE), MSW */
    DSL_uint16_t hecpfe_MSW;
@@ -1002,7 +1136,7 @@ struct ACK_ATM_BC0_StatsFE_Get
    DSL_uint16_t Length;
    /** FE HEC Violation Count (HEC-PFE), MSW */
    DSL_uint16_t hecpfe_MSW;
-   /** NE HEC Violation Count (HEC-P), LSW */
+   /** FE HEC Violation Count (HEC-PFE), LSW */
    DSL_uint16_t hecpfe_LSW;
    /** FE Delineated Total Cell Count (CD-PFE), MSW */
    DSL_uint16_t cdpfe_MSW;
@@ -1053,22 +1187,6 @@ struct CMD_ATM_BC0_StatsNE_Set
    DSL_uint16_t ibep_LSW;
    /** NE Idle Cell Bit Error Count (IBE-P), MSW */
    DSL_uint16_t ibep_MSW;
-   /** FE HEC Violation Count (HEC-PFE), LSW */
-   DSL_uint16_t hecpfe_LSW;
-   /** FE HEC Violation Count (HEC-PFE), MSW */
-   DSL_uint16_t hecpfe_MSW;
-   /** FE Delineated Total Cell Count (CD-PFE), LSW */
-   DSL_uint16_t cdpfe_LSW;
-   /** FE Delineated Total Cell Count (CD-PFE), MSW */
-   DSL_uint16_t cdpfe_MSW;
-   /** FE User Total Cell Count (CU-PFE), LSW */
-   DSL_uint16_t cupfe_LSW;
-   /** FE User Total Cell Count (CU-PFE), MSW */
-   DSL_uint16_t cupfe_MSW;
-   /** FE Idle Cell Bit Error Count (IBE-PFE), LSW */
-   DSL_uint16_t ibepfe_LSW;
-   /** FE Idle Cell Bit Error Count (IBE-PFE), MSW */
-   DSL_uint16_t ibepfe_MSW;
 #else
    /** Index */
    DSL_uint16_t Index;
@@ -1090,22 +1208,6 @@ struct CMD_ATM_BC0_StatsNE_Set
    DSL_uint16_t ibep_MSW;
    /** NE Idle Cell Bit Error Count (IBE-P), LSW */
    DSL_uint16_t ibep_LSW;
-   /** FE HEC Violation Count (HEC-PFE), MSW */
-   DSL_uint16_t hecpfe_MSW;
-   /** FE HEC Violation Count (HEC-PFE), LSW */
-   DSL_uint16_t hecpfe_LSW;
-   /** FE Delineated Total Cell Count (CD-PFE), MSW */
-   DSL_uint16_t cdpfe_MSW;
-   /** FE Delineated Total Cell Count (CD-PFE), LSW */
-   DSL_uint16_t cdpfe_LSW;
-   /** FE User Total Cell Count (CU-PFE), MSW */
-   DSL_uint16_t cupfe_MSW;
-   /** FE User Total Cell Count (CU-PFE), LSW */
-   DSL_uint16_t cupfe_LSW;
-   /** FE Idle Cell Bit Error Count (IBE-PFE), MSW */
-   DSL_uint16_t ibepfe_MSW;
-   /** FE Idle Cell Bit Error Count (IBE-PFE), LSW */
-   DSL_uint16_t ibepfe_LSW;
 #endif
 } __PACKED__ ;
 
@@ -1188,7 +1290,7 @@ struct ACK_ATM_BC0_TxStatsNE_Get
 
 /**
    Writes the transmit data-path counters for BC0 of an ATM-TC link.For "Why
-   writing performance counters" see Page 578.
+   writing performance counters" see Page 628.
 */
 struct CMD_ATM_BC0_TxStatsNE_Set
 {
@@ -1262,7 +1364,7 @@ struct CMD_VersionInfoGet
 
 /**
    Provides version information about hardware and firmware. The FW version
-   numbering scheme has a long and a short form (Table 320).
+   numbering scheme has a long and a short form (Table 339).
 */
 struct ACK_VersionInfoGet
 {
@@ -1323,9 +1425,9 @@ struct ACK_ADSL_FeatureMapGet
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Feature-Bit15 of Word 0: ATM Off-chip Bonding (ADSL only) */
+   /** Feature-Bit15 of Word 0: ATM Off-chip Bonding */
    DSL_uint32_t W0F15 : 1;
-   /** Feature-Bit14 of Word 0: ATM On-chip Bonding (ADSL only) */
+   /** Feature-Bit14 of Word 0: ATM On-chip Bonding */
    DSL_uint32_t W0F14 : 1;
    /** Feature-Bit13 of Word 0: PTM Off-chip Bonding BACP */
    DSL_uint32_t W0F13 : 1;
@@ -1335,7 +1437,7 @@ struct ACK_ADSL_FeatureMapGet
    DSL_uint32_t W0F11 : 1;
    /** Feature-Bit10 of Word 0: PTM On-chip bonding (GHS-based) */
    DSL_uint32_t W0F10 : 1;
-   /** Feature-Bit9 of Word 0: Not used in VDSL */
+   /** Feature-Bit9 of Word 0: Not used in ADSL */
    DSL_uint32_t W0F09 : 1;
    /** Feature-Bit8 of Word 0: PTM-TC for ADSL2x  */
    DSL_uint32_t W0F08 : 1;
@@ -1351,7 +1453,7 @@ struct ACK_ADSL_FeatureMapGet
    DSL_uint32_t W0F03 : 1;
    /** Feature-Bit2 of Word 0: Annex B (ADSL only) */
    DSL_uint32_t W0F02 : 1;
-   /** Feature-Bit1 of Word 0: T1.413  */
+   /** Feature-Bit1 of Word 0: T1.413 (ADSL only) */
    DSL_uint32_t W0F01 : 1;
    /** Feature-Bit0 of Word 0: Annex A (incl. Annex L) (ADSL only) */
    DSL_uint32_t W0F00 : 1;
@@ -1359,13 +1461,13 @@ struct ACK_ADSL_FeatureMapGet
    DSL_uint32_t W1F15 : 1;
    /** Feature-Bit14 of Word 1: CIPolicy */
    DSL_uint32_t W1F14 : 1;
-   /** Feature-Bit10 of Word 1: Pre-emption & Short Packets  */
+   /** Feature-Bit13 of Word 1: Pre-emption & Short Packets  */
    DSL_uint32_t W1F13 : 1;
-   /** Feature-Bit13 of Word 1: DELT */
+   /** Feature-Bit12 of Word 1: DELT */
    DSL_uint32_t W1F12 : 1;
-   /** Feature-Bit12 of Word 1: Dual Latency */
+   /** Feature-Bit11 of Word 1: Dual Latency */
    DSL_uint32_t W1F11 : 1;
-   /** Feature-Bit11 of Word 1: Short init (ADSL only) */
+   /** Feature-Bit10 of Word 1: Short init (ADSL only) */
    DSL_uint32_t W1F10 : 1;
    /** Feature-Bit9 of Word 1: Virtual Noise */
    DSL_uint32_t W1F09 : 1;
@@ -1426,13 +1528,13 @@ struct ACK_ADSL_FeatureMapGet
    DSL_uint32_t W1F08 : 1;
    /** Feature-Bit9 of Word 1: Virtual Noise */
    DSL_uint32_t W1F09 : 1;
-   /** Feature-Bit11 of Word 1: Short init (ADSL only) */
+   /** Feature-Bit10 of Word 1: Short init (ADSL only) */
    DSL_uint32_t W1F10 : 1;
-   /** Feature-Bit12 of Word 1: Dual Latency */
+   /** Feature-Bit11 of Word 1: Dual Latency */
    DSL_uint32_t W1F11 : 1;
-   /** Feature-Bit13 of Word 1: DELT */
+   /** Feature-Bit12 of Word 1: DELT */
    DSL_uint32_t W1F12 : 1;
-   /** Feature-Bit10 of Word 1: Pre-emption & Short Packets  */
+   /** Feature-Bit13 of Word 1: Pre-emption & Short Packets  */
    DSL_uint32_t W1F13 : 1;
    /** Feature-Bit14 of Word 1: CIPolicy */
    DSL_uint32_t W1F14 : 1;
@@ -1440,7 +1542,7 @@ struct ACK_ADSL_FeatureMapGet
    DSL_uint32_t W1F15 : 1;
    /** Feature-Bit0 of Word 0: Annex A (incl. Annex L) (ADSL only) */
    DSL_uint32_t W0F00 : 1;
-   /** Feature-Bit1 of Word 0: T1.413  */
+   /** Feature-Bit1 of Word 0: T1.413 (ADSL only) */
    DSL_uint32_t W0F01 : 1;
    /** Feature-Bit2 of Word 0: Annex B (ADSL only) */
    DSL_uint32_t W0F02 : 1;
@@ -1456,7 +1558,7 @@ struct ACK_ADSL_FeatureMapGet
    DSL_uint32_t W0F07 : 1;
    /** Feature-Bit8 of Word 0: PTM-TC for ADSL2x  */
    DSL_uint32_t W0F08 : 1;
-   /** Feature-Bit9 of Word 0: Not used in VDSL */
+   /** Feature-Bit9 of Word 0: Not used in ADSL */
    DSL_uint32_t W0F09 : 1;
    /** Feature-Bit10 of Word 0: PTM On-chip bonding (GHS-based) */
    DSL_uint32_t W0F10 : 1;
@@ -1466,9 +1568,9 @@ struct ACK_ADSL_FeatureMapGet
    DSL_uint32_t W0F12 : 1;
    /** Feature-Bit13 of Word 0: PTM Off-chip Bonding BACP */
    DSL_uint32_t W0F13 : 1;
-   /** Feature-Bit14 of Word 0: ATM On-chip Bonding (ADSL only) */
+   /** Feature-Bit14 of Word 0: ATM On-chip Bonding */
    DSL_uint32_t W0F14 : 1;
-   /** Feature-Bit15 of Word 0: ATM Off-chip Bonding (ADSL only) */
+   /** Feature-Bit15 of Word 0: ATM Off-chip Bonding */
    DSL_uint32_t W0F15 : 1;
    /** Reserved */
    DSL_uint32_t Res1 : 16;
@@ -1519,8 +1621,10 @@ struct ACK_VDSL_FeatureMapGet
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Feature-Bits15:14 of Word 0: Not used in VDSL */
-   DSL_uint32_t Res0 : 2;
+   /** Feature-Bit15 of Word 0: ATM Off-chip Bonding */
+   DSL_uint32_t W0F15 : 1;
+   /** Feature-Bit14 of Word 0: ATM On-chip Bonding */
+   DSL_uint32_t W0F14 : 1;
    /** Feature-Bit13 of Word 0: PTM Off-chip Bonding BACP */
    DSL_uint32_t W0F13 : 1;
    /** Feature-Bit12 of Word 0: PTM On-chip Bonding BACP */
@@ -1532,7 +1636,7 @@ struct ACK_VDSL_FeatureMapGet
    /** Feature-Bit9 of Word 0: Profile 30  (VDSL only) */
    DSL_uint32_t W0F09 : 1;
    /** Feature-Bits 8:0 of Word 0: Not used in VDSL */
-   DSL_uint32_t Res1 : 9;
+   DSL_uint32_t Res0 : 9;
    /** Feature-Bit15 of Word 1: NTR */
    DSL_uint32_t W1F15 : 1;
    /** Feature-Bit14 of Word 1: CIPolicy */
@@ -1544,13 +1648,13 @@ struct ACK_VDSL_FeatureMapGet
    /** Feature-Bit11 of Word 1: Dual Latency */
    DSL_uint32_t W1F11 : 1;
    /** Feature-Bit10 of Word 1: Not used in VDSL */
-   DSL_uint32_t Res2 : 1;
+   DSL_uint32_t Res1 : 1;
    /** Feature-Bit9 of Word 1: Virtual Noise */
    DSL_uint32_t W1F09 : 1;
    /** Feature-Bit8 of Word 1: Erasure Decoding /FORCEINP */
    DSL_uint32_t W1F08 : 1;
    /** Feature-Bit7 of Word 1: Not used in VDSL */
-   DSL_uint32_t Res3 : 1;
+   DSL_uint32_t Res2 : 1;
    /** Feature-Bit6 of Word 1: G.INP Retransmission US + DS + SRA */
    DSL_uint32_t W1F06 : 1;
    /** Feature-Bit5 of Word 1: G.INP Retransmission DS + SRA */
@@ -1566,7 +1670,7 @@ struct ACK_VDSL_FeatureMapGet
    /** Feature-Bit0 of Word 1: Bitswap */
    DSL_uint32_t W1F00 : 1;
    /** Reserved */
-   DSL_uint32_t Res4 : 12;
+   DSL_uint32_t Res3 : 12;
    /** Feature-Bit3 of Word 2: AEC/2nd DAC */
    DSL_uint32_t W2F03 : 1;
    /** Feature-Bit2 of Word 2: Microfilter Detection and Hybrid Data */
@@ -1576,13 +1680,13 @@ struct ACK_VDSL_FeatureMapGet
    /** Feature-Bit0 of Word 2: Clear EOC */
    DSL_uint32_t W2F00 : 1;
    /** Reserved */
-   DSL_uint32_t Res5 : 15;
+   DSL_uint32_t Res4 : 15;
    /** Feature-Bit0 of Word 3: Vectoring (fully standard compliant) */
    DSL_uint32_t W3F00 : 1;
    /** Reserved */
-   DSL_uint32_t Res6 : 16;
+   DSL_uint32_t Res5 : 16;
    /** Reserved */
-   DSL_uint32_t Res7 : 16;
+   DSL_uint32_t Res6 : 16;
 #else
    /** Index */
    DSL_uint16_t Index;
@@ -1603,13 +1707,13 @@ struct ACK_VDSL_FeatureMapGet
    /** Feature-Bit6 of Word 1: G.INP Retransmission US + DS + SRA */
    DSL_uint32_t W1F06 : 1;
    /** Feature-Bit7 of Word 1: Not used in VDSL */
-   DSL_uint32_t Res3 : 1;
+   DSL_uint32_t Res2 : 1;
    /** Feature-Bit8 of Word 1: Erasure Decoding /FORCEINP */
    DSL_uint32_t W1F08 : 1;
    /** Feature-Bit9 of Word 1: Virtual Noise */
    DSL_uint32_t W1F09 : 1;
    /** Feature-Bit10 of Word 1: Not used in VDSL */
-   DSL_uint32_t Res2 : 1;
+   DSL_uint32_t Res1 : 1;
    /** Feature-Bit11 of Word 1: Dual Latency */
    DSL_uint32_t W1F11 : 1;
    /** Feature-Bit12 of Word 1: DELT */
@@ -1621,7 +1725,7 @@ struct ACK_VDSL_FeatureMapGet
    /** Feature-Bit15 of Word 1: NTR */
    DSL_uint32_t W1F15 : 1;
    /** Feature-Bits 8:0 of Word 0: Not used in VDSL */
-   DSL_uint32_t Res1 : 9;
+   DSL_uint32_t Res0 : 9;
    /** Feature-Bit9 of Word 0: Profile 30  (VDSL only) */
    DSL_uint32_t W0F09 : 1;
    /** Feature-Bit10 of Word 0: PTM On-chip bonding (GHS-based) */
@@ -1632,12 +1736,14 @@ struct ACK_VDSL_FeatureMapGet
    DSL_uint32_t W0F12 : 1;
    /** Feature-Bit13 of Word 0: PTM Off-chip Bonding BACP */
    DSL_uint32_t W0F13 : 1;
-   /** Feature-Bits15:14 of Word 0: Not used in VDSL */
-   DSL_uint32_t Res0 : 2;
+   /** Feature-Bit14 of Word 0: ATM On-chip Bonding */
+   DSL_uint32_t W0F14 : 1;
+   /** Feature-Bit15 of Word 0: ATM Off-chip Bonding */
+   DSL_uint32_t W0F15 : 1;
    /** Feature-Bit0 of Word 3: Vectoring (fully standard compliant) */
    DSL_uint32_t W3F00 : 1;
    /** Reserved */
-   DSL_uint32_t Res5 : 15;
+   DSL_uint32_t Res4 : 15;
    /** Feature-Bit0 of Word 2: Clear EOC */
    DSL_uint32_t W2F00 : 1;
    /** Feature-Bit1 of Word 2: Real Time Trace (RTT) */
@@ -1647,11 +1753,11 @@ struct ACK_VDSL_FeatureMapGet
    /** Feature-Bit3 of Word 2: AEC/2nd DAC */
    DSL_uint32_t W2F03 : 1;
    /** Reserved */
-   DSL_uint32_t Res4 : 12;
-   /** Reserved */
-   DSL_uint32_t Res7 : 16;
+   DSL_uint32_t Res3 : 12;
    /** Reserved */
    DSL_uint32_t Res6 : 16;
+   /** Reserved */
+   DSL_uint32_t Res5 : 16;
 #endif
 } __PACKED__ ;
 
