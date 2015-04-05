@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-AUTOMAKE_OPTIONS = foreign 1.9 dist-zip nostdinc
+AUTOMAKE_OPTIONS = foreign 1.9 nostdinc
 
 SUBDIRS = src
 
@@ -40,6 +40,13 @@ dist-hook:
 			cp -p $$specfile $(distdir); \
 		fi \
 	done
+
+# Check for correct line ends
+distcheck-hook:
+	chmod a+w $(distdir)
+	echo "Checking line ends ...!!!"; \
+	find $(distdir) -type f -exec file {} \; | grep -e "CRLF" -e "Non-ISO" && exit 1; \
+	echo "Checking line ends ... done."
 
 generate-doc-danube:
 	( cd @srcdir@/doc;  \

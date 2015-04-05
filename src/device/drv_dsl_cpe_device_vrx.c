@@ -59,6 +59,11 @@ static DSL_Error_t DSL_DRV_VRX_ReTxCountersGet(
    DSL_Context_t *pContext,
    DSL_ReTxCounters_t *pCounters);
 
+#ifdef INCLUDE_DSL_SYSTEM_INTERFACE
+static DSL_Error_t DSL_DRV_VRX_SystemInterfaceStatusGet(
+   DSL_Context_t *pContext);
+#endif /* INCLUDE_DSL_SYSTEM_INTERFACE */
+
 #undef DSL_DBG_BLOCK
 #define DSL_DBG_BLOCK DSL_DBG_MULTIMODE
 /*CAM*/
@@ -259,6 +264,14 @@ DSL_Error_t DSL_DRV_VXX_CamExceptionHandle(
          DSL_DEBUG(DSL_DBG_MSG,
             (pContext, SYS_DBG_MSG"DSL[%02d]: CAM - status nNextMode=%u"
             DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nCamOpt.nNextMode));
+
+         if( (nCamReinits >= DSL_CAM_MAX_REINITS || nCamFwReinits >= DSL_CAM_MAX_FW_REINITS) &&
+             (lineInitStatus.nLineInitSubStatus == LINIT_SUB_NO_COMMON_MODE) )
+         {
+            /* Update the current activation mode value */
+            DSL_CTX_WRITE_SCALAR(pContext, nErrCode,
+               pDevCtx->data.nActivationCfg.nActivationMode, DSL_ACT_MODE_ANSI_T1413);
+         }
 
          nErrCode = DSL_DRV_VXX_CamFsmStateSet(pContext, DSL_CAM_INIT);
          if( nErrCode != DSL_SUCCESS )
@@ -518,9 +531,6 @@ DSL_Error_t DSL_DRV_VXX_CamFsmUpdate(
          case DSL_FW_TYPE_VDSL:
             /* Try again in VDSL mode*/
             nCamStateNew = DSL_CAM_VDSL_FORCED;
-            /* Set Activation mode to GHS*/
-            DSL_CTX_WRITE_SCALAR(pContext, nErrCode,
-               pDevCtx->data.nActivationCfg.nActivationMode, DSL_ACT_MODE_GHS);
 
             /* Reset hybrid,looplength,mfd context */
             /* hybrid,looplength,mfd is not supported by VDSL firmware */
@@ -1354,6 +1364,10 @@ DSL_Error_t DSL_DRV_VXX_FailReasonGet(
 #ifdef INCLUDE_DEVICE_EXCEPTION_CODES
    DSL_DBG_LastExceptionCodesData_t LastExceptionCodes;
 #endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
+#ifdef INCLUDE_DSL_SYSTEM_INTERFACE
+   DSL_SystemInterfaceConfigData_t stsData =
+      {DSL_TC_UNKNOWN, DSL_EMF_TC_CLEANED, DSL_EMF_TC_CLEANED, DSL_SYSTEMIF_UNKNOWN};
+#endif /* INCLUDE_DSL_SYSTEM_INTERFACE */
 
    nErrCode = DSL_DRV_VXX_SendMsgModemFSMFailReasonGet(
                   pContext,(DSL_uint8_t*)&sAck);
@@ -1412,6 +1426,40 @@ DSL_Error_t DSL_DRV_VXX_FailReasonGet(
    case ALM_ModemFSM_FailReasonGet_S_FW_HYBRID:
       lineInitSubStatus = LINIT_SUB_FW_HYBRID;
       break;
+
+   case ALM_ModemFSM_FailReasonGet_S_PP_DRIVER:
+      lineInitSubStatus = LINIT_SUB_S_PP_DRIVER;
+#ifdef INCLUDE_DSL_SYSTEM_INTERFACE
+      /* Read actually selected TC-Layer */
+      nErrCode = DSL_DRV_VRX_SystemInterfaceStatusGet(pContext);
+      if(nErrCode != DSL_SUCCESS)
+      {
+         DSL_DEBUG( DSL_DBG_ERR, (pContext,
+            SYS_DBG_ERR"DSL[%02d]: ERROR - System interface status update failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+            return nErrCode;
+      }
+
+      DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.sysCIFSts, stsData);
+
+      nErrCode = DSL_DRV_EventGenerate(
+                    pContext, 0, DSL_ACCESSDIR_NA, DSL_XTUDIR_NA,
+                    DSL_EVENT_S_SYSTEM_INTERFACE_STATUS,
+                    (DSL_EventData_Union_t*)&stsData,
+                    sizeof(DSL_SystemInterfaceConfigData_t));
+
+      if( nErrCode < DSL_SUCCESS )
+      {
+         DSL_DEBUG( DSL_DBG_ERR, (pContext,
+            SYS_DBG_ERR"DSL[%02d]: ERROR - Event(%d) generate failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext),
+            DSL_EVENT_S_SYSTEM_INTERFACE_STATUS));
+         return nErrCode;
+      }
+#endif /* INCLUDE_DSL_SYSTEM_INTERFACE */
+      break;
+
    case ALM_ModemFSM_FailReasonGet_S_OK:
       lineInitSubStatus = LINIT_SUB_NONE;
 
@@ -2062,8 +2110,6 @@ static DSL_Error_t DSL_DRV_VRX_AdslChStatusGet(
 #if !defined(INCLUDE_DSL_CPE_API_VRX_FULL_MSG)
    DSL_Error_t nRet = DSL_SUCCESS;
 #endif
-   DSL_boolean_t bAdsl1 = DSL_FALSE;
-   DSL_uint8_t nAdsl1Mode = 0;
    DSL_uint32_t ActINP = 0;
    ACK_ADSL_FrameDataDS_LP0Get_t sAck;
    DSL_uint32_t newDataRate = 0;
@@ -2077,8 +2123,10 @@ static DSL_Error_t DSL_DRV_VRX_AdslChStatusGet(
    } sAckBch;
 
    nErrCode = DSL_DRV_VRX_SendMsgAdslFrameDataGet(pContext, nDir, (DSL_uint8_t*)&sAck);
-   if(nErrCode < 0)
+   if (nErrCode < 0)
+   {
       return nErrCode;
+   }
 
 #if !defined(INCLUDE_DSL_CPE_API_VRX_FULL_MSG)
    if (nErrCode == DSL_WRN_NOT_SUPPORTED_IN_CURRENT_ADSL_MODE_OR_ANNEX)
@@ -2094,65 +2142,23 @@ static DSL_Error_t DSL_DRV_VRX_AdslChStatusGet(
    }
 
    nErrCode = DSL_DRV_VRX_SendMsgBearerChannelStatusGet(pContext, nDir, (DSL_uint8_t*)&(sAckBch.DS));
-   if(nErrCode < 0)
+   if (nErrCode < 0)
+   {
       return nErrCode;
-
-   DSL_CTX_READ_SCALAR(pContext, nErrCode, xtseCurr[0], nAdsl1Mode);
-
-   /* Check for the ADSL1 mode*/
-   if ( (nAdsl1Mode & XTSE_1_03_A_1_NO) || (nAdsl1Mode & XTSE_1_05_B_1_NO) ||
-        (nAdsl1Mode & XTSE_1_01_A_T1_413))
-   {
-      bAdsl1 = DSL_TRUE;
    }
 
-   /* Calculate Interleave Delay parameter*/
-   if (bAdsl1)
-   {
-      /*
-      delay = Sp*Dp/4 [ms],
-      and in multiple of 1/100 ms:
-      delay = 100*Sp*Dp/4,
-      */
-      ActualInterleaveDelay = (sAck.Sp == 0x8000) ?
-                              (100 * sAck.Dp)/8 :
-                              (100 * sAck.Sp * sAck.Dp)/4;
-   }
-   else
-   {
-      /*
-      delay = Sp*Dp/4 [ms];
-      Sp = 8*Nfec/Lp;
-      Nfec = Mp*Kp+Rp
-      and in multiple of 1/100 ms:
-      delay = 100*Sp*Dp/4,
-      */
+   ActualInterleaveDelay = nDir == DSL_UPSTREAM ?
+                        /* Use fw interleaver delay values*/
+                        sAckBch.US.delay_usLP0 + sAckBch.US.delay_usLP1 :
+                        sAckBch.DS.delay_dsLP0 + sAckBch.DS.delay_dsLP1;
 
-      if (sAck.Lp)
-      {
-         ActualInterleaveDelay = (200 * (sAck.Mp * sAck.Kp + sAck.Rp) * sAck.Dp) / sAck.Lp;
-      }
-      else
-      {
-         ActualInterleaveDelay = 0;
-      }
-   }
-
-   /* ...convert Interleave Delay parameter to the nearest 0.25ms step value.*/
-   if (ActualInterleaveDelay)
-   {
-      ActualInterleaveDelay = (ActualInterleaveDelay % 25) ?
-                              (ActualInterleaveDelay - (ActualInterleaveDelay % 25)) + 25 :
-                              ActualInterleaveDelay;
-   }
+   /* Convert to the API interface relevant scaling (1/100ms) */
+   /* FW value is in multiple of 1 ms */
+   ActualInterleaveDelay *= 100;
 
    if (nDir == DSL_UPSTREAM)
    {
-      /* check whether fast path information has to be used */
-      if (bAdsl1)
-      {
-         newDataRate = (sAckBch.US.DRusLP1_LSW | (sAckBch.US.DRusLP1_MSW << 16));
-      }
+      newDataRate = (sAckBch.US.DRusLP1_LSW | (sAckBch.US.DRusLP1_MSW << 16));
 
       /* check whether fast path information has to be used
          FW does not indicate directly wether fast (LP1 parameters) or
@@ -2180,11 +2186,7 @@ static DSL_Error_t DSL_DRV_VRX_AdslChStatusGet(
    }
    else
    {
-      /* check whether fast path information has to be used */
-      if (bAdsl1)
-      {
-         newDataRate = (sAckBch.DS.DRdsLP1_LSW | (sAckBch.DS.DRdsLP1_MSW << 16));
-      }
+      newDataRate = (sAckBch.DS.DRdsLP1_LSW | (sAckBch.DS.DRdsLP1_MSW << 16));
 
       /* check whether fast path information has to be used
          FW does not indicate directly wether fast (LP1 parameters) or
@@ -2232,6 +2234,9 @@ static DSL_Error_t DSL_DRV_VRX_ChannelStatusUpdate(
    DSL_uint32_t newDataRate = 0;
    DSL_boolean_t bTrellisEnable = DSL_FALSE, bBitswapEnable = DSL_FALSE,
                  bVirtualNoiseEnable = DSL_FALSE;
+#ifdef INCLUDE_DSL_SYSTEM_INTERFACE
+   DSL_TcLayerSelection_t nTcLayer;
+#endif /* INCLUDE_DSL_SYSTEM_INTERFACE */
 
    union
    {
@@ -2254,6 +2259,21 @@ static DSL_Error_t DSL_DRV_VRX_ChannelStatusUpdate(
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_VXX_ChannelStatusGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   /* Update ReTx status information*/
+   if (nDirection == DSL_DOWNSTREAM)
+   {
+      nErrCode = DSL_DRV_VRX_ReTxStatusGet(pContext);
+
+      if (nErrCode != DSL_SUCCESS)
+      {
+         DSL_DEBUG( DSL_DBG_ERR, (pContext,
+            SYS_DBG_ERR"DSL[%02d]: ERROR - ReTx status get failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+         return nErrCode;
+      }
+   }
 
    if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2))
    {
@@ -2280,20 +2300,26 @@ static DSL_Error_t DSL_DRV_VRX_ChannelStatusUpdate(
          pContext, nErrCode, lineFeatureDataSts[nDirection].bVirtualNoiseSupport,
          bVirtualNoiseEnable);
 
-      /* Update ReTx status information*/
-      if (nDirection == DSL_DOWNSTREAM)
-           {
-         nErrCode = DSL_DRV_VRX_ReTxStatusGet(pContext);
+#ifdef INCLUDE_DSL_SYSTEM_INTERFACE
+      /* Read actually selected TC-Layer */
+      nErrCode = DSL_DRV_VRX_SystemInterfaceStatusGet(pContext);
 
-         if (nErrCode != DSL_SUCCESS)
-         {
-            DSL_DEBUG( DSL_DBG_ERR, (pContext,
-               SYS_DBG_ERR"DSL[%02d]: ERROR - ReTx status get failed!"
-               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+      if(nErrCode != DSL_SUCCESS)
+      {
+         DSL_DEBUG( DSL_DBG_ERR, (pContext,
+            SYS_DBG_ERR"DSL[%02d]: ERROR - System interface status update failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
             return nErrCode;
-         }
       }
+
+      DSL_CTX_READ_SCALAR(pContext, nErrCode, pDevCtx->data.sysCIFSts.nTcLayer, nTcLayer);
+      if ((nTcLayer == DSL_TC_EFM) || (nTcLayer == DSL_TC_ATM))
+      {
+         /* Now status is available for VDSL */
+         DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.bSystemIfStatusValid, DSL_TRUE);
+      }
+#endif /* INCLUDE_DSL_SYSTEM_INTERFACE */
    }
 
    nErrCode = DSL_DRV_VRX_SendMsgOlrStatusGet(pContext, nDirection, (DSL_uint8_t*)&sAckOlr.US);
@@ -2364,44 +2390,59 @@ static DSL_Error_t DSL_DRV_VRX_ReTxStatusGet(
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
    DSL_boolean_t bReTxEnable = DSL_FALSE;
-   DSL_DEV_VersionCheck_t nVerCheck;
+   DSL_DEV_VersionCheck_t nVerCheck = DSL_VERSION_ERROR;
 
-   ACK_VDSL_RTX_StatusGet_t RtxDsEnSt;
+   ACK_RTX_StatusGet_t RtxDsEnSt;
 
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_VRX_ReTxStatusGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-   /* Get FW information*/
-   nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
-                  DSL_MIN_FW_VERSION_RETX, &nVerCheck);
-   if (nErrCode != DSL_SUCCESS)
+   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2))
    {
-      DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-   }
-   else
-   {
-      if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2) && nVerCheck >= DSL_VERSION_EQUAL)
+      /* Get FW information */
+      nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
+                  DSL_MIN_FW_VERSION_RETX_VDSL, &nVerCheck);
+      if (nErrCode != DSL_SUCCESS)
       {
-         /* Get line status*/
-         nErrCode = DSL_DRV_VRX_SendMsgRtxDsEnableStatusGet(pContext, (DSL_uint8_t *)&RtxDsEnSt);
-         if(nErrCode < 0)
-            return nErrCode;
-
-         DSL_DEBUG(DSL_DBG_MSG,
-            (pContext, SYS_DBG_MSG"DSL[%02d]: DSL_DRV_VRX_ReTxStatusGet: RtxDsStatus = %hu"
-            DSL_DRV_CRLF, DSL_DEV_NUM(pContext), RtxDsEnSt.RtxUsed));
-
-         bReTxEnable = (RtxDsEnSt.RtxUsed == 0) ? DSL_TRUE : DSL_FALSE;
+         DSL_DEBUG(DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         return nErrCode;
       }
-
-      /* Update ReTx Status */
-      DSL_CTX_WRITE_SCALAR(
-         pContext, nErrCode, lineFeatureDataSts[DSL_DOWNSTREAM].bReTxEnable,
-         bReTxEnable);
    }
+   else if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   {
+      /* Get FW information */
+      nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
+                  DSL_MIN_FW_VERSION_RETX_ADSL, &nVerCheck);
+      if (nErrCode != DSL_SUCCESS)
+      {
+         DSL_DEBUG(DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         return nErrCode;
+      }
+   }
+
+   if (nVerCheck >= DSL_VERSION_EQUAL)
+   {
+      /* Get line status*/
+      nErrCode = DSL_DRV_VRX_SendMsgRtxDsEnableStatusGet(pContext, (DSL_uint8_t *)&RtxDsEnSt);
+      if(nErrCode < 0)
+         return nErrCode;
+
+      DSL_DEBUG(DSL_DBG_MSG,
+         (pContext, SYS_DBG_MSG"DSL[%02d]: DSL_DRV_VRX_ReTxStatusGet: RtxDsStatus = %hu"
+         DSL_DRV_CRLF, DSL_DEV_NUM(pContext), RtxDsEnSt.RtxUsed));
+
+         bReTxEnable = (DSL_boolean_t) RtxDsEnSt.RtxUsed;
+   }
+
+   /* Update ReTx Status */
+   DSL_CTX_WRITE_SCALAR(
+      pContext, nErrCode, lineFeatureDataSts[DSL_DOWNSTREAM].bReTxEnable,
+      bReTxEnable);
 
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_VRX_ReTxStatusGet"
@@ -3173,20 +3214,36 @@ static DSL_Error_t DSL_DRV_VRX_ReTxCountersGet(
    DSL_ReTxCounters_t retxCounters;
    ACK_RTX_DS_StatsGet_t retxStats;
    ACK_RTX_PMwoThreshDS_Get_t retxPmwoThresh;
-   DSL_DEV_VersionCheck_t nVerCheck;
+   DSL_DEV_VersionCheck_t nVerCheck = DSL_VERSION_ERROR;
 
-   /* Get FW information*/
-   nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
-               DSL_MIN_FW_VERSION_RETX, &nVerCheck);
-   if (nErrCode != DSL_SUCCESS)
+   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2))
    {
-      DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-      return nErrCode;
+      /* Get FW information */
+      nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
+                  DSL_MIN_FW_VERSION_RETX_VDSL, &nVerCheck);
+      if (nErrCode != DSL_SUCCESS)
+      {
+         DSL_DEBUG(DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         return nErrCode;
+      }
+   }
+   else if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   {
+      /* Get FW information */
+      nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
+                  DSL_MIN_FW_VERSION_RETX_ADSL, &nVerCheck);
+      if (nErrCode != DSL_SUCCESS)
+      {
+         DSL_DEBUG(DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         return nErrCode;
+      }
    }
 
-   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2) && nVerCheck >= DSL_VERSION_EQUAL)
+   if (nVerCheck >= DSL_VERSION_EQUAL)
    {
       /* Get first part of ReTx counters from the FW*/
       nErrCode = DSL_DRV_VRX_SendMsgRtxDsStatsGet(pContext, (DSL_uint8_t *)&retxStats);
@@ -3258,7 +3315,7 @@ DSL_Error_t DSL_DRV_DEV_TrainingTimeoutSet(
          case DSL_CAM_VDSL_FORCED:
             nTimeout = DSL_AUTOBOOT_TRAINING_TIMEOUT_V_GHS;
             break;
-      
+
          case DSL_CAM_MULTI:
             if (nActivationCfg.nActivationSequence == DSL_ACT_SEQ_NON_STD)
             {
@@ -3301,7 +3358,7 @@ DSL_Error_t DSL_DRV_DEV_RetxStatisticsGet(
    DSL_Error_t nErrCode = DSL_SUCCESS;
 
    DSL_boolean_t bReTxEnable = DSL_FALSE;
-   DSL_DEV_VersionCheck_t nVerCheck;
+   DSL_DEV_VersionCheck_t nVerCheck = DSL_VERSION_ERROR;
 
    DSL_ReTxCounters_t retxCounters;
 
@@ -3320,18 +3377,34 @@ DSL_Error_t DSL_DRV_DEV_RetxStatisticsGet(
    }
    else
    {
-      /* Get FW information*/
-      nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
-                  DSL_MIN_FW_VERSION_RETX, &nVerCheck);
-      if (nErrCode != DSL_SUCCESS)
+      if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2))
       {
-         DSL_DEBUG(DSL_DBG_ERR,
-            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
-            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-         return nErrCode;
+         /* Get FW information */
+         nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
+                     DSL_MIN_FW_VERSION_RETX_VDSL, &nVerCheck);
+         if (nErrCode != DSL_SUCCESS)
+         {
+            DSL_DEBUG(DSL_DBG_ERR,
+               (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+            return nErrCode;
+         }
+      }
+      else if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+      {
+         /* Get FW information */
+         nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
+                     DSL_MIN_FW_VERSION_RETX_ADSL, &nVerCheck);
+         if (nErrCode != DSL_SUCCESS)
+         {
+            DSL_DEBUG(DSL_DBG_ERR,
+               (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+            return nErrCode;
+         }
       }
 
-      if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2) && nVerCheck >= DSL_VERSION_EQUAL)
+      if (nVerCheck >= DSL_VERSION_EQUAL)
       {
          if (bReTxEnable == DSL_FALSE)
          {
@@ -3743,21 +3816,18 @@ DSL_Error_t DSL_DRV_DEV_ModemWriteConfig(
       return nErrCode;
    }
 
-   /* Send retransmission settings if it is possible */
-   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2) && nVerCheck >= DSL_VERSION_EQUAL)
-   {
-      /* Get ReTx control configuration */
-      DSL_CTX_READ_SCALAR(pContext, nErrCode, lineFeatureDataCfg[DSL_DOWNSTREAM].bReTxEnable,
+   /* Get ReTx control configuration */
+   DSL_CTX_READ_SCALAR(pContext, nErrCode, lineFeatureDataCfg[DSL_DOWNSTREAM].bReTxEnable,
          bReTxEnable);
 
-      nErrCode = DSL_DRV_VRX_SendMsgRtxDsConfigure(pContext, bReTxEnable);
-      if (nErrCode != DSL_SUCCESS)
-      {
-         DSL_DEBUG(DSL_DBG_ERR,
-           (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - ReTx parameters set failed!" DSL_DRV_CRLF,
-         DSL_DEV_NUM(pContext)));
-         return nErrCode;
-      }
+   /* Send retransmission settings */
+   nErrCode = DSL_DRV_VRX_SendMsgRtxDsConfigure(pContext, bReTxEnable);
+   if (nErrCode != DSL_SUCCESS)
+   {
+      DSL_DEBUG(DSL_DBG_ERR,
+         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - ReTx parameters set failed!" DSL_DRV_CRLF,
+      DSL_DEV_NUM(pContext)));
+      return nErrCode;
    }
 
    /* Get configuration for the Noise Margin Delta parameter*/
@@ -3821,6 +3891,48 @@ DSL_Error_t DSL_DRV_DEV_ModemWriteConfig(
       {
          DSL_DEBUG( DSL_DBG_ERR,
             (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Misc config set failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+         return nErrCode;
+      }
+   }
+
+   /* check for virtual noise firmware support */
+   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2))
+   {
+      /* Get FW information*/
+      nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
+                  DSL_MIN_FW_VERSION_VIRT_NOISE_VDSL, &nVerCheck);
+      if (nErrCode != DSL_SUCCESS)
+      {
+         DSL_DEBUG(DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         return nErrCode;
+      }
+   }
+   else if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   {
+      /* Get FW information*/
+      nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
+                  DSL_MIN_FW_VERSION_VIRT_NOISE_ADSL, &nVerCheck);
+      if (nErrCode != DSL_SUCCESS)
+      {
+         DSL_DEBUG(DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         return nErrCode;
+      }
+   }
+
+   /* if virtual noise supported - set default configuration for virtual noise */
+   if (nVerCheck >= DSL_VERSION_EQUAL)
+   {
+      nErrCode = DSL_DRV_VRX_SendMsgModemFsmOptions2Set(pContext);
+      if( nErrCode < DSL_SUCCESS)
+      {
+         DSL_DEBUG( DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Fsm options2 set failed!"
             DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
          return nErrCode;
@@ -4973,6 +5085,11 @@ static DSL_Error_t DSL_DRV_VRX_SystemInterfaceStatusGet(
    DSL_Error_t nErrCode = DSL_SUCCESS;
    ACK_TC_StatusGet_t sAck;
 
+   /* Temporarily it is assumed that this configuration cannot be changed */
+   DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.sysCIFSts.nEfmTcConfigUs, DSL_EMF_TC_CLEANED);
+   DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.sysCIFSts.nEfmTcConfigDs, DSL_EMF_TC_CLEANED);
+   DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.sysCIFSts.nSystemIf, DSL_SYSTEMIF_MII);
+
    nErrCode = DSL_DRV_VRX_SendMsgTcStatusGet(pContext, (DSL_uint8_t*)&sAck);
    if( nErrCode < DSL_SUCCESS )
    {
@@ -4981,19 +5098,22 @@ static DSL_Error_t DSL_DRV_VRX_SystemInterfaceStatusGet(
 
    switch (sAck.TC)
    {
-   case ACK_TC_StatusGet_EFM_TC:
-      DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.sysCIFSts.nTcLayer, DSL_TC_EFM);
-      break;
-   case ACK_TC_StatusGet_ATM_TC:
-      DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.sysCIFSts.nTcLayer, DSL_TC_ATM);
-      break;
-   default:
-      nErrCode = DSL_ERROR;
-      DSL_DEBUG( DSL_DBG_ERR, (pContext,
-         SYS_DBG_ERR"DSL[%02d]: ERROR - System interface status unknown!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-      return nErrCode;
+      /* Undefined in MCAT value */
+      case ACK_TC_StatusGet_UNKNOWN_TC:
+         DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.sysCIFSts.nTcLayer, DSL_TC_UNKNOWN);
+         break;
+      case ACK_TC_StatusGet_EFM_TC:
+         DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.sysCIFSts.nTcLayer, DSL_TC_EFM);
+         break;
+      case ACK_TC_StatusGet_ATM_TC:
+         DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.sysCIFSts.nTcLayer, DSL_TC_ATM);
+         break;
+      default:
+         nErrCode = DSL_ERROR;
+         DSL_DEBUG( DSL_DBG_ERR, (pContext,
+            SYS_DBG_ERR"DSL[%02d]: ERROR - System interface status undefined!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         return nErrCode;
    }
 
    return nErrCode;
@@ -5011,21 +5131,16 @@ DSL_Error_t DSL_DRV_VRX_SystemInterfaceStatusUpdate(
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_VRX_SystemInterfaceStatusUpdate"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-   /* Get FW info*/
-   DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.fwFeatures, sFwVersion);
+   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   {
+      /* Get FW info*/
+      DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.fwFeatures, sFwVersion);
 
-   /* Update system interface status */
-   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2))
-   {
-      DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.sysCIFSts.nTcLayer, DSL_TC_EFM);
-      DSL_CHECK_ERR_CODE();
-   }
-   else
-   {
+      /* Update system interface status */
       /* System interface configuration support */
       if ((sFwVersion.nPlatform == 5) && (sFwVersion.nFeatureSet >= 4)
-         && (sFwVersion.nMajor >= 0)
-         && (sFwVersion.nMinor >= 8 || sFwVersion.nMajor >= 1))
+            && (sFwVersion.nMajor >= 0)
+            && (sFwVersion.nMinor >= 8 || sFwVersion.nMajor >= 1))
       {
          nErrCode = DSL_DRV_VRX_SystemInterfaceStatusGet(pContext);
          if(nErrCode != DSL_SUCCESS)
@@ -5034,7 +5149,7 @@ DSL_Error_t DSL_DRV_VRX_SystemInterfaceStatusUpdate(
                SYS_DBG_ERR"DSL[%02d]: ERROR - System interface status update failed!"
                DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-            return nErrCode;
+               return nErrCode;
          }
       }
       else
@@ -5042,36 +5157,31 @@ DSL_Error_t DSL_DRV_VRX_SystemInterfaceStatusUpdate(
          DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.sysCIFSts.nTcLayer, DSL_TC_ATM);
          DSL_CHECK_ERR_CODE();
       }
+
+      /* Now Statis is available for ASDL */
+      DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.bSystemIfStatusValid, DSL_TRUE);
+
+      DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.sysCIFSts, stsData);
+
+      nErrCode = DSL_DRV_EventGenerate(
+                    pContext, 0, DSL_ACCESSDIR_NA, DSL_XTUDIR_NA,
+                    DSL_EVENT_S_SYSTEM_INTERFACE_STATUS,
+                    (DSL_EventData_Union_t*)&stsData,
+                    sizeof(DSL_SystemInterfaceConfigData_t));
+
+      if( nErrCode < DSL_SUCCESS )
+      {
+         DSL_DEBUG( DSL_DBG_ERR, (pContext,
+            SYS_DBG_ERR"DSL[%02d]: ERROR - Event(%d) generate failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext),
+            DSL_EVENT_S_SYSTEM_INTERFACE_STATUS));
+         return nErrCode;
+      }
    }
 
-   DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.bSystemIfStatusValid, DSL_TRUE);
-
-   /* NDv: Temporarily it is assumed that this configuration cannot be changed */
-   DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.sysCIFSts.nEfmTcConfigUs, DSL_EMF_TC_CLEANED);
-   DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.sysCIFSts.nEfmTcConfigDs, DSL_EMF_TC_CLEANED);
-   DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.sysCIFSts.nSystemIf, DSL_SYSTEMIF_MII);
-
-   DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.sysCIFSts, stsData);
-
-   nErrCode = DSL_DRV_EventGenerate(
-                 pContext, 0, DSL_ACCESSDIR_NA, DSL_XTUDIR_NA,
-                 DSL_EVENT_S_SYSTEM_INTERFACE_STATUS,
-                 (DSL_EventData_Union_t*)&stsData,
-                 sizeof(DSL_SystemInterfaceConfigData_t));
-
-   if( nErrCode < DSL_SUCCESS )
-   {
-      DSL_DEBUG( DSL_DBG_ERR, (pContext,
-         SYS_DBG_ERR"DSL[%02d]: ERROR - Event(%d) generate failed!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext),
-         DSL_EVENT_S_SYSTEM_INTERFACE_STATUS));
-      return nErrCode;
-   }
-
-   DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_VRX_SystemInterfaceStatusUpdate, retCode=%d"
+   DSL_DEBUG( DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+      "DSL[%02d]: OUT - DSL_DRV_VRX_SystemInterfaceStatusUpdate, retCode=%d"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
-
    return (nErrCode);
 }
 #endif /* INCLUDE_DSL_SYSTEM_INTERFACE */
@@ -5120,7 +5230,7 @@ DSL_Error_t DSL_DRV_DEV_LoopLengthStatusGet(
       }
 
       /* Read looplength from fw*/
-      nErrCode = DSL_DRV_VRX_SendMsgLoopLengthGet(pContext, 
+      nErrCode = DSL_DRV_VRX_SendMsgLoopLengthGet(pContext,
                                                           (DSL_uint8_t*)&sAck);
       if (nErrCode != DSL_SUCCESS)
       {
@@ -5131,17 +5241,17 @@ DSL_Error_t DSL_DRV_DEV_LoopLengthStatusGet(
       loopLengthStatusData.nLength_Awg26 = (DSL_uint32_t)(sAck.Awg26Length);
       loopLengthStatusData.nLength_Awg24 = (DSL_uint32_t)(sAck.Awg24Length);
 
-      DSL_CTX_WRITE(pContext, nErrCode, 
+      DSL_CTX_WRITE(pContext, nErrCode,
                showtimeMeasurement.loopLengthStatusData, loopLengthStatusData);
 
       bLoopLengthValid = DSL_TRUE;
 
    } while (0);
 
-   DSL_CTX_WRITE_SCALAR(pContext, nErrCode, 
+   DSL_CTX_WRITE_SCALAR(pContext, nErrCode,
                        showtimeMeasurement.bLoopLengthValid, bLoopLengthValid);
 
-   DSL_CTX_WRITE_SCALAR(pContext, nErrCode, 
+   DSL_CTX_WRITE_SCALAR(pContext, nErrCode,
                    showtimeMeasurement.nLoopLengthErrCode, nLoopLengthErrCode);
 
    return nErrCode;
@@ -5197,7 +5307,7 @@ DSL_Error_t DSL_DRV_VRX_ShowtimeMeasurementUpdate(
       return DSL_SUCCESS;
    }
 
-   DSL_CTX_READ(pContext, nErrCode, 
+   DSL_CTX_READ(pContext, nErrCode,
                  showtimeMeasurement.hybridSelectionData, hybridSelectionData);
 
    if ((bForceUpdate == DSL_TRUE) ||
@@ -5207,12 +5317,12 @@ DSL_Error_t DSL_DRV_VRX_ShowtimeMeasurementUpdate(
       bHybridNeeded = DSL_TRUE;
    }
 
-   DSL_CTX_READ_SCALAR(pContext, nErrCode, 
+   DSL_CTX_READ_SCALAR(pContext, nErrCode,
                        showtimeMeasurement.bLoopLengthValid, bLoopLengthValid);
    bLoopLengthNeeded = !bLoopLengthValid;
 
 #ifdef INCLUDE_DSL_FILTER_DETECTION
-   DSL_CTX_READ(pContext, nErrCode, 
+   DSL_CTX_READ(pContext, nErrCode,
                  showtimeMeasurement.filterDetectionData, filterDetectionData);
 
    if ((bForceUpdate == DSL_TRUE) ||
@@ -5232,7 +5342,7 @@ DSL_Error_t DSL_DRV_VRX_ShowtimeMeasurementUpdate(
    }
 
    /* Read mfd, hybrid, looplength ready bits from firmware */
-   nErrCode = DSL_DRV_VRX_SendMsgMfdResultsGet(pContext, 
+   nErrCode = DSL_DRV_VRX_SendMsgMfdResultsGet(pContext,
                                                    (DSL_uint8_t*)&sResultsAck);
    if (nErrCode != DSL_SUCCESS)
    {
@@ -5248,7 +5358,7 @@ DSL_Error_t DSL_DRV_VRX_ShowtimeMeasurementUpdate(
    if ((bHybridNeeded == DSL_TRUE) && (bHybridReady == DSL_TRUE))
    {
       /* Read hybrid info from fw */
-      nErrCode = DSL_DRV_VRX_SendMsgHybridInfoGet(pContext, 
+      nErrCode = DSL_DRV_VRX_SendMsgHybridInfoGet(pContext,
                                                 (DSL_uint8_t*)&sHybridInfoAck);
 
       if (nErrCode != DSL_SUCCESS)
@@ -5257,16 +5367,16 @@ DSL_Error_t DSL_DRV_VRX_ShowtimeMeasurementUpdate(
       }
 
       /* Only modify the training/showtime related hybrid results (rd/mod/wr)*/
-      hybridSelectionData.actualSelection.nHybridIndex = 
+      hybridSelectionData.actualSelection.nHybridIndex =
                                  (DSL_int16_t)(sHybridInfoAck.HybridMaxIndex);
-      hybridSelectionData.actualSelection.nHybridMetric = 
+      hybridSelectionData.actualSelection.nHybridMetric =
                                (DSL_uint16_t)(sHybridInfoAck.HybridMaxMetric);
-      hybridSelectionData.secondBestSelection.nHybridIndex = 
+      hybridSelectionData.secondBestSelection.nHybridIndex =
                              (DSL_int16_t)(sHybridInfoAck.Hybrid2ndBestIndex);
-      hybridSelectionData.secondBestSelection.nHybridMetric = 
+      hybridSelectionData.secondBestSelection.nHybridMetric =
                            (DSL_uint16_t)(sHybridInfoAck.Hybrid2ndBestMetric);
 
-      DSL_CTX_WRITE(pContext, nErrCode, 
+      DSL_CTX_WRITE(pContext, nErrCode,
                 showtimeMeasurement.hybridSelectionData, hybridSelectionData);
    }
 
@@ -5279,16 +5389,16 @@ DSL_Error_t DSL_DRV_VRX_ShowtimeMeasurementUpdate(
    if ((bMetric2Needed == DSL_TRUE) &&( bMetric2Ready == DSL_TRUE))
    {
       /* Read mfd metric2 from fw */
-      nErrCode = DSL_DRV_VRX_SendMsgMfdResultsGet(pContext, 
+      nErrCode = DSL_DRV_VRX_SendMsgMfdResultsGet(pContext,
                                                    (DSL_uint8_t*)&sResultsAck);
       if (nErrCode != DSL_SUCCESS)
       {
          return nErrCode;
       }
 
-      filterDetectionData.nNonLinearEchoMetric2 = 
+      filterDetectionData.nNonLinearEchoMetric2 =
                                            (DSL_int16_t)(sResultsAck.M2Metric);
-      DSL_CTX_WRITE(pContext, nErrCode, 
+      DSL_CTX_WRITE(pContext, nErrCode,
                  showtimeMeasurement.filterDetectionData, filterDetectionData);
 
    }
@@ -5301,7 +5411,7 @@ DSL_Error_t DSL_DRV_VRX_ShowtimeMeasurementUpdate(
 DSL_Error_t DSL_DRV_VRX_ShowtimeMeasurementCompleted(DSL_Context_t *pContext)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
-   DSL_LineStateValue_t nLineState = 
+   DSL_LineStateValue_t nLineState =
                                    DSL_LINESTATE_TEST_FILTERDETECTION_COMPLETE;
    DSL_FilterDetectionData_t filterDetectionData;
    DSL_HybridSelectionData_t hybridSelectionData;
@@ -5343,7 +5453,7 @@ DSL_Error_t DSL_DRV_VRX_ShowtimeMeasurementCompleted(DSL_Context_t *pContext)
 
       /* --------------------- Filter Detection handling --------------------*/
       /* Read mfd statistic, hybrid ready bit from fw */
-      nErrCode = DSL_DRV_VRX_SendMsgMfdResultsGet(pContext, 
+      nErrCode = DSL_DRV_VRX_SendMsgMfdResultsGet(pContext,
                                                    (DSL_uint8_t*)&sResultsAck);
 
       if (nErrCode != DSL_SUCCESS)
@@ -5352,11 +5462,11 @@ DSL_Error_t DSL_DRV_VRX_ShowtimeMeasurementCompleted(DSL_Context_t *pContext)
       }
 
       filterDetectionData.nNoiseLevel = (DSL_uint8_t)(sResultsAck.M1QlnLevel);
-      filterDetectionData.nBridgeTapFlag = 
+      filterDetectionData.nBridgeTapFlag =
                             (DSL_BridgeTapFlag_t)(sResultsAck.BTRange);
-      filterDetectionData.bNoConfidence = 
+      filterDetectionData.bNoConfidence =
                                    (DSL_boolean_t)(sResultsAck.M1NoConfidence);
-      filterDetectionData.nNonLinearEchoMetric1 = 
+      filterDetectionData.nNonLinearEchoMetric1 =
                                            (DSL_int16_t)(sResultsAck.M1metric);
 
       if (sResultsAck.M1metric & (1 << 11))
@@ -5367,40 +5477,40 @@ DSL_Error_t DSL_DRV_VRX_ShowtimeMeasurementCompleted(DSL_Context_t *pContext)
          special value here to avoid inconsistent metric 1/2 relations. */
       filterDetectionData.nNonLinearEchoMetric2 = 128;
 
-      DSL_CTX_WRITE(pContext, nErrCode, 
+      DSL_CTX_WRITE(pContext, nErrCode,
                  showtimeMeasurement.filterDetectionData, filterDetectionData);
 
-      DSL_CTX_WRITE_SCALAR(pContext, nErrCode, 
+      DSL_CTX_WRITE_SCALAR(pContext, nErrCode,
                       showtimeMeasurement.bFilterDetectionCompleted, DSL_TRUE);
-      DSL_CTX_WRITE_SCALAR(pContext, nErrCode, 
+      DSL_CTX_WRITE_SCALAR(pContext, nErrCode,
                         showtimeMeasurement.bFilterDetectionActive, DSL_FALSE);
 
       /* --------------------- Hybrid Selection handling --------------------*/
       if (sResultsAck.TrainingHybridInfoReady)
-      { 
+      {
          /* Read hybrid info from fw */
-         nErrCode = DSL_DRV_VRX_SendMsgHybridInfoGet(pContext, 
+         nErrCode = DSL_DRV_VRX_SendMsgHybridInfoGet(pContext,
                                                 (DSL_uint8_t*)&sHybridInfoAck);
          if (nErrCode != DSL_SUCCESS)
          {
             break;
          }
-   
+
          /* Only modify the filter detection related
                                                 hybrid results (rd/mod/wr) */
-         DSL_CTX_READ(pContext, nErrCode, 
+         DSL_CTX_READ(pContext, nErrCode,
                  showtimeMeasurement.hybridSelectionData, hybridSelectionData);
-   
-         hybridSelectionData.fdActualSelection.nHybridIndex = 
+
+         hybridSelectionData.fdActualSelection.nHybridIndex =
                                   (DSL_int16_t)(sHybridInfoAck.HybridMaxIndex);
-         hybridSelectionData.fdActualSelection.nHybridMetric = 
+         hybridSelectionData.fdActualSelection.nHybridMetric =
                                 (DSL_uint16_t)(sHybridInfoAck.HybridMaxMetric);
-         hybridSelectionData.fdSecondBestSelection.nHybridIndex = 
+         hybridSelectionData.fdSecondBestSelection.nHybridIndex =
                               (DSL_int16_t)(sHybridInfoAck.Hybrid2ndBestIndex);
-         hybridSelectionData.fdSecondBestSelection.nHybridMetric = 
+         hybridSelectionData.fdSecondBestSelection.nHybridMetric =
                             (DSL_uint16_t)(sHybridInfoAck.Hybrid2ndBestMetric);
-   
-         DSL_CTX_WRITE(pContext, nErrCode, 
+
+         DSL_CTX_WRITE(pContext, nErrCode,
                  showtimeMeasurement.hybridSelectionData, hybridSelectionData);
       }
    } while (0);
@@ -5434,10 +5544,11 @@ DSL_Error_t DSL_DRV_DEV_SystemInterfaceConfigSet(
    /* Get FW info*/
    DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.fwFeatures, sFwVersion);
 
-   if ((sFwVersion.nPlatform == 5) && (sFwVersion.nFeatureSet >= 4)
+   if (((sFwVersion.nPlatform == 5) && (sFwVersion.nFeatureSet >= 4)
       && (sFwVersion.nMajor >= 0)
       && (sFwVersion.nMinor >= 8 || sFwVersion.nMajor >= 1)
       && DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+      || DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2))
    {
       /* Copy System Configuration data to internal VRx device context*/
       DSL_CTX_WRITE(pContext, nErrCode, pDevCtx->data.deviceCfg.sysCIF, pData->data);
@@ -5526,19 +5637,41 @@ DSL_Error_t DSL_DRV_DEV_SystemInterfaceStatusGet(
    DSL_IN_OUT DSL_SystemInterfaceStatus_t *pData)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
+   DSL_LineStateValue_t nCurrentState = DSL_LINESTATE_UNKNOWN;
 
    DSL_DEBUG( DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_DEV_SystemInterfaceStatusGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-   if (pContext->pDevCtx->data.bSystemIfStatusValid == DSL_TRUE)
+   /* For VDSL status available only in showtime */
+   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2))
    {
-      /* Get System Configuration from the internal VRx device context. */
-      DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.sysCIFSts, pData->data);
+      /* Get current line state*/
+      DSL_CTX_READ_SCALAR(pContext, nErrCode, nLineState, nCurrentState);
+
+      /* Only proceed if the line is in SHOWTIME state.*/
+      if ( (nCurrentState != DSL_LINESTATE_SHOWTIME_TC_SYNC) &&
+           (nCurrentState != DSL_LINESTATE_SHOWTIME_NO_SYNC) )
+      {
+         DSL_DEBUG(DSL_DBG_ERR, (pContext, SYS_DBG_ERR
+            "DSL[%02d]: ERROR - Function is only available in the SHOWTIME!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+         nErrCode = DSL_ERR_ONLY_AVAILABLE_IN_SHOWTIME;
+      }
    }
-   else
+
+   if (nErrCode == DSL_SUCCESS)
    {
-      nErrCode = DSL_ERR_DEVICE_NO_DATA;
+      if (pContext->pDevCtx->data.bSystemIfStatusValid == DSL_TRUE)
+      {
+         /* Get System Configuration from the internal VRx device context. */
+         DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.sysCIFSts, pData->data);
+      }
+      else
+      {
+         nErrCode = DSL_ERR_DEVICE_NO_DATA;
+      }
    }
 
    DSL_DEBUG( DSL_DBG_MSG,

@@ -105,6 +105,7 @@ static DSL_int_t DSL_DRV_LED_Poll(
    DSL_Error_t nErrCode = DSL_SUCCESS;
    DSL_Context_t *pContext = (DSL_Context_t *)param->nArg1;
    DSL_LineStateValue_t nCurrentState = DSL_LINESTATE_UNKNOWN;
+   DSL_boolean_t signal_pending_flag = DSL_FALSE;
 
    /* begin polling ... */
    stop_led_module = 0;
@@ -113,8 +114,18 @@ static DSL_int_t DSL_DRV_LED_Poll(
    {
       /* Wake up every 10s */
       while (!(stop_led_module || pContext->bLedNeedToFlash) &&
-         !(DSL_DRV_WAIT_EVENT_TIMEOUT(pContext->ledPollingEvent, 10000)));
-      /* -ERESTARTSYS or condition evaluates to true */
+         !(DSL_DRV_WAIT_EVENT_TIMEOUT(pContext->ledPollingEvent, 10000)))
+         /* -ERESTARTSYS or condition evaluates to true */
+      {
+         if (DSL_DRV_SIGNAL_PENDING)
+         {
+            signal_pending_flag = DSL_TRUE;
+            break;
+         }
+      }
+
+      if (signal_pending_flag)
+         break;
 
       /* Only proceed if the specified line is in SHOWTIME state*/
       DSL_CTX_READ_SCALAR(pContext, nErrCode, nLineState, nCurrentState);

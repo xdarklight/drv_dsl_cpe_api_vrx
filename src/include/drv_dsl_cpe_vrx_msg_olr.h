@@ -2,7 +2,6 @@
 
                               Copyright (c) 2012
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -597,7 +596,7 @@ typedef struct EVT_ClearEOCStatusGet EVT_ClearEOCStatusGet_t;
    The message is used to reset the transmit or receive status of the clear eoc
    data transmission to IDLE (for defined states see also
    CMD_ClearEOCStatusGet). See the description on the Clear EOC handling on Page
-   483 for when it has to be applied. Transmit and receive status are
+   491 for when it has to be applied. Transmit and receive status are
    distinguished by the Index parameter.
 */
 typedef struct CMD_ClearEOCStatusSet CMD_ClearEOCStatusSet_t;
@@ -855,21 +854,21 @@ typedef struct CMD_RTX_DS_StatsGet CMD_RTX_DS_StatsGet_t;
 */
 typedef struct ACK_RTX_DS_StatsGet ACK_RTX_DS_StatsGet_t;
 
-/** Message ID for CMD_VDSL_RTX_StatusGet */
-#define CMD_VDSL_RTX_STATUSGET 0xE503
+/** Message ID for CMD_RTX_StatusGet */
+#define CMD_RTX_STATUSGET 0xE503
 
 /**
    Requests the actually used G.INP retransmission status.
 */
-typedef struct CMD_VDSL_RTX_StatusGet CMD_VDSL_RTX_StatusGet_t;
+typedef struct CMD_RTX_StatusGet CMD_RTX_StatusGet_t;
 
-/** Message ID for ACK_VDSL_RTX_StatusGet */
-#define ACK_VDSL_RTX_STATUSGET 0xE503
+/** Message ID for ACK_RTX_StatusGet */
+#define ACK_RTX_STATUSGET 0xE503
 
 /**
    Provides the actually used G.INP retransmission status.
 */
-typedef struct ACK_VDSL_RTX_StatusGet ACK_VDSL_RTX_StatusGet_t;
+typedef struct ACK_RTX_StatusGet ACK_RTX_StatusGet_t;
 
 /**
    Requests information about the bit-allocation per subcarrier in VDSL mode.
@@ -2227,7 +2226,7 @@ struct EVT_ClearEOCStatusGet
    The message is used to reset the transmit or receive status of the clear eoc
    data transmission to IDLE (for defined states see also
    CMD_ClearEOCStatusGet). See the description on the Clear EOC handling on Page
-   483 for when it has to be applied. Transmit and receive status are
+   491 for when it has to be applied. Transmit and receive status are
    distinguished by the Index parameter.
 */
 struct CMD_ClearEOCStatusSet
@@ -3157,7 +3156,7 @@ struct ACK_RTX_DS_StatsGet
 /**
    Requests the actually used G.INP retransmission status.
 */
-struct CMD_VDSL_RTX_StatusGet
+struct CMD_RTX_StatusGet
 {
 #if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
    /** Index */
@@ -3176,7 +3175,7 @@ struct CMD_VDSL_RTX_StatusGet
 /**
    Provides the actually used G.INP retransmission status.
 */
-struct ACK_VDSL_RTX_StatusGet
+struct ACK_RTX_StatusGet
 {
 #if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
    /** Index */

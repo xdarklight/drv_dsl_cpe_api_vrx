@@ -2395,6 +2395,7 @@ DSL_Error_t DSL_DRV_PM_DataPathCounters15MinGet(
    nErrCode = DSL_DRV_PM_DataPathCountersHistoryIntervalGet(
                  pContext, DSL_PM_HISTORY_INTERVAL_15MIN, pCounters);
 
+#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
    /* Temporary check for fw supporting FE counters in ADSL mode*/
    if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
    {
@@ -2410,6 +2411,7 @@ DSL_Error_t DSL_DRV_PM_DataPathCounters15MinGet(
             }
          }
    }
+#endif
 
    DSL_DEBUG( DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_PM_DataPathCounters15MinGet, retCode=%d"
@@ -2439,6 +2441,7 @@ DSL_Error_t DSL_DRV_PM_DataPathCounters1DayGet(
    nErrCode = DSL_DRV_PM_DataPathCountersHistoryIntervalGet(
                  pContext, DSL_PM_HISTORY_INTERVAL_1DAY, pCounters);
 
+#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
    /* Temporary check for fw supporting FE counters in ADSL mode*/
    if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
    {
@@ -2454,6 +2457,7 @@ DSL_Error_t DSL_DRV_PM_DataPathCounters1DayGet(
             }
          }
    }
+#endif
 
    DSL_DEBUG( DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_PM_DataPathCounters1DayGet, retCode=%d"
@@ -2511,6 +2515,7 @@ DSL_Error_t DSL_DRV_PM_DataPathCountersTotalGet(
       nErrCode = DSL_WRN_INCOMPLETE_RETURN_VALUES;
    }
 
+#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
    /* Temporary check for fw supporting FE counters in ADSL mode*/
    if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
    {
@@ -2526,6 +2531,7 @@ DSL_Error_t DSL_DRV_PM_DataPathCountersTotalGet(
             }
          }
    }
+#endif
 
    DSL_DEBUG( DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_PM_DataPathCountersTotalGet, retCode=%d"
@@ -3007,6 +3013,7 @@ DSL_Error_t DSL_DRV_PM_DataPathCountersShowtimeGet(
       nErrCode = DSL_WRN_INCOMPLETE_RETURN_VALUES;
    }
 
+#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
    /* Temporary check for fw supporting FE counters in ADSL mode*/
    if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
    {
@@ -3022,6 +3029,7 @@ DSL_Error_t DSL_DRV_PM_DataPathCountersShowtimeGet(
             }
          }
    }
+#endif
 
    DSL_DEBUG( DSL_DBG_MSG, (pContext,
       SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_PM_DataPathCountersShowtimeGet, retCode=%d"

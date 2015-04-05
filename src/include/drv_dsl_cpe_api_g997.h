@@ -1597,7 +1597,10 @@ typedef enum
    nLineInitStatus equals
    "LINIT_CONFIG_ERROR" (0x1).
    Please use a different hybrid or a different firmware binary.*/
-   LINIT_SUB_FW_HYBRID = 5
+   LINIT_SUB_FW_HYBRID = 5,
+   /**
+   Wrong TC layer */
+   LINIT_SUB_S_PP_DRIVER = 6
 } DSL_G997_LineInitSubStatus_t;
 
 /**

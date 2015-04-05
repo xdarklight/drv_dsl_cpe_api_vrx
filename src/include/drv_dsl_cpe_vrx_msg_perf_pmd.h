@@ -2,7 +2,6 @@
 
                               Copyright (c) 2012
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -310,7 +309,7 @@ typedef struct CMD_CRC_StatsNE_Set CMD_CRC_StatsNE_Set_t;
 typedef struct ACK_CRC_StatsNE_Set ACK_CRC_StatsNE_Set_t;
 
 /** Message ID for CMD_FEC_StatsNE_Set */
-#define CMD_FEC_STATSNE_SET 0x0B4A
+#define CMD_FEC_STATSNE_SET 0x0A4A
 
 /**
    Writes near-end FEC counter values. (Section 7.2.2.1.2 of G997.1)The
@@ -320,7 +319,7 @@ typedef struct ACK_CRC_StatsNE_Set ACK_CRC_StatsNE_Set_t;
 typedef struct CMD_FEC_StatsNE_Set CMD_FEC_StatsNE_Set_t;
 
 /** Message ID for ACK_FEC_StatsNE_Set */
-#define ACK_FEC_STATSNE_SET 0x0B4A
+#define ACK_FEC_STATSNE_SET 0x0A4A
 
 /**
    Acknowledgement for the message CMD_FEC_StatsNE_Set.

@@ -55,11 +55,15 @@
 
    In case of using '-1' value the according firmware version part is don't care.
 */
-#define DSL_MIN_FW_VERSION_RETX      4, 4, 6, -1, 6
+#define DSL_MIN_FW_VERSION_RETX_ADSL  5, 0, 0xF, -1, -1
+#define DSL_MIN_FW_VERSION_RETX_VDSL  4, 4, 6, -1, 6
+#define DSL_MIN_FW_VERSION_RETX      4, 4, 6, -1, -1
 #define DSL_MIN_FW_VERSION_NTR       4, 5, 0xF, -1, 6
 #define DSL_MIN_FW_VERSION_MFD       4, 2, 7, -1, -1
 #define DSL_MIN_FW_VERSION_MISC_CFG_ADSL  4, 2, 9, -1, 1
-
+#define DSL_MIN_FW_VERSION_VIRT_NOISE_ADSL 5, 0, 0xE, -1, 1
+#define DSL_MIN_FW_VERSION_VIRT_NOISE_VDSL 5, 0, 5, -1, 6
+#define DSL_MIN_FW_VERSION_SRA_VDSL  5, 0, 4, 1, 6
 
 /*
    Internal device dependent configuration options

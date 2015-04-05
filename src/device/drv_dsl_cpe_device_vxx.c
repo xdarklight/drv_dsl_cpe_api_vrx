@@ -168,6 +168,10 @@ DSL_Error_t DSL_DRV_VXX_ChannelStatusGet(
    DSL_G997_ChannelStatusData_t *pData)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+   DSL_boolean_t bReTxEnable = DSL_FALSE;
+   ACK_BearerChsDS_RTX_Get_t sAck;
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX) */
 
    DSL_CHECK_ATU_DIRECTION(nDirection);
    DSL_CHECK_ERR_CODE();
@@ -195,6 +199,29 @@ DSL_Error_t DSL_DRV_VXX_ChannelStatusGet(
    DSL_CTX_READ_SCALAR(pContext, nErrCode,
       nChannelPreviousDataRate[nDirection][nChannel], pData->PreviousDataRate);
 
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+   pData->ActualNetDataRate = pData->ActualDataRate;
+
+   DSL_CTX_READ_SCALAR(
+      pContext, nErrCode, lineFeatureDataSts[DSL_DOWNSTREAM].bReTxEnable,
+      bReTxEnable);
+
+   /* retransmission is not supported for up stream */
+   if ((bReTxEnable) && (nDirection == DSL_DOWNSTREAM))
+   {
+      nErrCode = DSL_DRV_VRX_SendMsgBearerChsDsRtxGet(pContext, &sAck);
+
+      if (nErrCode < DSL_SUCCESS)
+      {
+         return nErrCode;
+      }
+
+      /* Update parameters for Retransmission enable */
+      pData->ActualDataRate = (DSL_uint32_t)sAck.ETR_LSW |
+                                          (((DSL_uint32_t)sAck.ETR_MSW) << 16);
+      pData->ActualInterleaveDelay = sAck.ActDelay;
+   }
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX) */
 
    return nErrCode;
 }
@@ -1501,18 +1528,6 @@ DSL_Error_t DSL_DRV_DEV_AutobootHandleTraining(
                DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
          }
 
-#ifdef INCLUDE_DSL_PM
-         /* Handle PM module showtime entry*/
-         nErrCode = DSL_DRV_PM_DEV_ShowtimeReachedHandle(pContext);
-         if( nErrCode != DSL_SUCCESS )
-         {
-            DSL_DEBUG(DSL_DBG_ERR,
-               (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - PM showtime handle failed!"
-               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-            break;
-         }
-#endif /* INCLUDE_DSL_PM*/
-
          /* Move to the next Autoboot state*/
          nErrCode = DSL_DRV_AutobootStateSet(
                        pContext,
@@ -1528,7 +1543,7 @@ DSL_Error_t DSL_DRV_DEV_AutobootHandleTraining(
          if (nErrCode != DSL_SUCCESS)
          {
             DSL_DEBUG( DSL_DBG_WRN, (pContext, "DSL[%02d]: WARNING - Could not"
-                  " update hybrid/filter/looplength!"DSL_DRV_CRLF, 
+                  " update hybrid/filter/looplength!"DSL_DRV_CRLF,
                   DSL_DEV_NUM(pContext)));
          }
 #endif /* INCLUDE_DSL_FILTER_DETECTION && INCLUDE_DSL_CPE_API_VRX */
@@ -1675,8 +1690,8 @@ DSL_Error_t DSL_DRV_DEV_AutobootHandleTraining(
                "TEST_FILTERDETECTION_COMPLETE state reached" DSL_DRV_CRLF,
                DSL_DEV_NUM(pContext)));
 
-            DSL_CTX_READ(pContext, nErrCode, 
-                         showtimeMeasurement.bFilterDetectionActive, 
+            DSL_CTX_READ(pContext, nErrCode,
+                         showtimeMeasurement.bFilterDetectionActive,
                          bFilterDetectionActive);
 
             if (bFilterDetectionActive)

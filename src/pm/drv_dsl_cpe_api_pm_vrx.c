@@ -127,55 +127,6 @@ DSL_Error_t DSL_DRV_PM_DEV_Suspend(DSL_Context_t *pContext)
    return nErrCode;
 }
 
-DSL_Error_t DSL_DRV_PM_DEV_ShowtimeReachedHandle(DSL_Context_t *pContext)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-#ifdef INCLUDE_DSL_CPE_PM_CHANNEL_COUNTERS
-   CMD_InteropConfigGet_t sCmd;
-   ACK_InteropConfigGet_t sAck;
-
-   if ( DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2))
-   {
-      /* Check for the Channel counters reset not need*/
-      return DSL_SUCCESS;
-   }
-
-   memset(&sCmd, 0x0, sizeof(sCmd));
-
-   sCmd.Index  = 0x1;
-   sCmd.Length = 0x1;
-
-   /* Get Interop status*/
-   nErrCode = DSL_DRV_VRX_SendMessage(
-                 pContext,
-                 CMD_INTEROPCONFIGGET,
-                 sizeof(sCmd), (DSL_uint8_t*)&(sCmd),
-                 sizeof(sAck), (DSL_uint8_t*)&(sAck));
-
-   if (nErrCode != DSL_SUCCESS)
-   {
-      DSL_DEBUG( DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Interop Status get failed!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-      return nErrCode;
-   }
-
-   /* Check for the Channel counters FW autonomous reset*/
-   if ( sAck.cntRestore == VRX_DISABLE )
-   {
-      /* Set bNeChannelCntReset flag. Flag will be cleared on the 1st
-         Channel Counters FW access*/
-      DSL_DRV_PM_CONTEXT(pContext)->bNeChannelCntReset = DSL_TRUE;
-
-      DSL_DEBUG( DSL_DBG_MSG,
-         (pContext, SYS_DBG_MSG"DSL[%02d]: FW channel counters autonomous reset is enabled"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-   }
-#endif /* INCLUDE_DSL_CPE_PM_CHANNEL_COUNTERS*/
-
-   return nErrCode;
-}
-
 /*
    For a detailed description of the function, its arguments and return value
    please refer to the description in the header file 'drv_dsl_cpe_device_pm.h'
@@ -473,31 +424,6 @@ DSL_Error_t DSL_DRV_PM_DEV_ChannelCountersGet(
 
       pCounters->nFEC += (DSL_uint32_t)sAck.FecStatsNE.cntECF_CW_LSW |
                        (((DSL_uint32_t)sAck.FecStatsNE.cntECF_CW_MSW) << 16);
-
-      /* Check for the NE counters FW autonomous reset*/
-      if ((DSL_DRV_PM_CONTEXT(pContext)->bNeChannelCntReset == DSL_TRUE) &&
-          (nDirection == DSL_NEAR_END))
-      {
-         /* Reset bNeChannelCntReset flag*/
-         DSL_DRV_PM_CONTEXT(pContext)->bNeChannelCntReset = DSL_FALSE;
-
-         /* Get pointer to the current channel counters*/
-         pCurrCounters = DSL_DRV_PM_PTR_CHANNEL_COUNTERS_CURR(nChannel,nDirection);
-         if (pCurrCounters == DSL_NULL)
-         {
-            nErrCode = DSL_ERR_INTERNAL;
-         }
-         else
-         {
-            DSL_DEBUG( DSL_DBG_MSG,
-               (pContext, SYS_DBG_MSG"DSL[%02d]: Channel reference counters reset due to the enabled"
-               " FW autonomous reset" DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-            /* Reset current (reference) values*/
-            pCurrCounters->nFEC = 0;
-            pCurrCounters->nCodeViolations = 0;
-         }
-      }
    }
    else
    {
@@ -729,11 +655,12 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersGet(
    /* Clear the output structure*/
    memset(pCounters, 0x0, sizeof(DSL_PM_DataPathData_t));
 
-   /* not for ADSL-only mode */
-   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2))
+   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2)
+       || DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
    {
       if( nDirection == DSL_NEAR_END )
       {
+         /* PTM counters */
          memset(&(sAck.ackPtmStatsGet), 0x0, sizeof(sAck.ackPtmStatsGet));
 
          sCmd.cmdPtmStatsGet.Index  = 0x0;
@@ -761,19 +688,8 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersGet(
 
          pCounters->nCRC_P  = (sAck.ackPtmStatsGet.cntCRC_MSW << 16) | sAck.ackPtmStatsGet.cntCRC_LSW;
          pCounters->nCV_P   = (sAck.ackPtmStatsGet.cntCV_MSW << 16) | sAck.ackPtmStatsGet.cntCV_LSW;
-      }
-      else
-      {
-         DSL_DEBUG( DSL_DBG_WRN,
-            (pContext, SYS_DBG_WRN"DSL[%02d]: WARNING - Data Path counters are not supported for the VDSL FE!"
-            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-      }
-   }
-   else if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
-   {
-   /*... not for VDSL-only mode */
-      if( nDirection == DSL_NEAR_END )
-      {
+
+         /* ATM counters */
          memset(&(sAck.ackAtmStatsGet), 0x0, sizeof(sAck.ackAtmStatsGet));
 
          sCmd.cmdAtmStatsGet.Index  = 0x0;
@@ -832,9 +748,8 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersGet(
       else
       {
          DSL_DEBUG( DSL_DBG_WRN,
-            (pContext, SYS_DBG_WRN"DSL[%02d]: WARNING - Data Path Counters are not supported "
-            "for the ADSL FE!" DSL_DRV_CRLF,
-            DSL_DEV_NUM(pContext)));
+            (pContext, SYS_DBG_WRN"DSL[%02d]: WARNING - Data Path counters are not supported for the FE!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
       }
    }
    else
@@ -862,6 +777,7 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersSet(
    DSL_PM_DataPathData_t *pCounters)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
+
    union
    {
       CMD_PTM_BC0_StatsNE_Set_t   PTM;
@@ -884,15 +800,13 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersSet(
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_DEV_DataPathCountersSet, (nDirection=%s, nChannel=%d)"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nDirection==DSL_NEAR_END ? "NE":"FE",nChannel));
 
-   /* Restore counters only if the last showtime FW mode equals to the
-      current loaded FW binary*/
-   if( ((DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2)) &&
-        (DSL_DRV_PM_CONTEXT(pContext)->nLastShowtime == DSL_PM_FWMODE_VDSL)) ||
-       ((DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL)) &&
-        (DSL_DRV_PM_CONTEXT(pContext)->nLastShowtime == DSL_PM_FWMODE_ADSL)) )
+   /* Restore counters for ADSL and VDSL firmware*/
+   if ((DSL_DRV_PM_CONTEXT(pContext)->nLastShowtime == DSL_PM_FWMODE_VDSL)
+       || (DSL_DRV_PM_CONTEXT(pContext)->nLastShowtime == DSL_PM_FWMODE_ADSL))
    {
-      if( DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2) )
+      if( nDirection == DSL_NEAR_END )
       {
+         /* PTM counters */
          memset(&(sCmd.PTM), 0x0, sizeof(sCmd.PTM));
          sCmd.PTM.Length = 8;
 
@@ -905,7 +819,6 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersSet(
          sCmd.PTM.cntCVP_LSW  = pCounters->nCVP_P & 0xFFFF;
          sCmd.PTM.cntCVP_MSW  = (pCounters->nCVP_P >> 16) & 0xFFFF;
 
-
          /* Set PTM statistics*/
          nErrCode = DSL_DRV_VRX_SendMessage(
             pContext, CMD_PTM_BC0_STATSNE_SET,
@@ -915,14 +828,13 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersSet(
          if( nErrCode != DSL_SUCCESS )
          {
             DSL_DEBUG( DSL_DBG_ERR,
-               (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - ATM statistics Set failed!"
+               (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - PTM statistics Set failed!"
                DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
             return nErrCode;
          }
-      }
-      else
-      {
+
+         /* ATM counters */
          memset(&(sCmd.ATM), 0x0, sizeof(sCmd.ATM));
          sCmd.ATM.Length = 8;
 
@@ -984,11 +896,17 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersSet(
             return nErrCode;
          }
       }
+      else
+      {
+         DSL_DEBUG( DSL_DBG_WRN,
+            (pContext, SYS_DBG_WRN"DSL[%02d]: WARNING - Data Path counters are not supported for the FE!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+      }
    }
    else
    {
       DSL_DEBUG( DSL_DBG_MSG,
-         (pContext, SYS_DBG_MSG"DSL[%02d]: FW mode switch detected, PM data path counters restore skipped..."
+         (pContext, SYS_DBG_MSG"DSL[%02d]: no PTM/ATM counters need to restore"
          DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
    }
 

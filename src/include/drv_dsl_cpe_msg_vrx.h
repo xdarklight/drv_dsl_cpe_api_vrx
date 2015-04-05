@@ -927,6 +927,20 @@ DSL_Error_t DSL_DRV_VXX_SendMsgModemFsmOptionsSet(
    const DSL_boolean_t bDiagMode);
 
 /*
+   This function sends the VRX firmware message CMD_ModemFSM_Options2Set
+   to configure some chip hardware related issues.
+
+   \param pContext - Pointer to DSL CPE library context structure, [I]
+
+   \return
+   Return values are defined within the DSL_Error_t definition
+   - DSL_SUCCESS in case of success
+   - DSL_ERROR if operation failed
+*/
+DSL_Error_t DSL_DRV_VRX_SendMsgModemFsmOptions2Set(
+   DSL_Context_t *pContext);
+
+/*
    This function sends the firmware message "CMD_HS_ToneGroupSet".
    It configures the hand shake tone set according to the given config.
 

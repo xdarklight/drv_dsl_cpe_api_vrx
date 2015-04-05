@@ -120,7 +120,7 @@ am__relativize = \
     dir1=`echo "$$dir1" | sed -e "$$sed_rest"`; \
   done; \
   reldir="$$dir2"
-DIST_ARCHIVES = $(distdir).tar.gz $(distdir).zip
+DIST_ARCHIVES = $(distdir).tar.gz
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
@@ -269,7 +269,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AUTOMAKE_OPTIONS = foreign 1.9 dist-zip nostdinc
+AUTOMAKE_OPTIONS = foreign 1.9 nostdinc
 SUBDIRS = src
 DISTCHECK_CONFIGURE_FLAGS = @CONFIGURE_OPTIONS@
 drv_dsl_cpe_api_docdir = ${prefix}/doc/drv_dsl_cpe_api
@@ -600,6 +600,7 @@ dist-tarZ: distdir
 dist-shar: distdir
 	shar $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).shar.gz
 	$(am__remove_distdir)
+
 dist-zip: distdir
 	-rm -f $(distdir).zip
 	zip -rq $(distdir).zip $(distdir)
@@ -607,8 +608,6 @@ dist-zip: distdir
 
 dist dist-all: distdir
 	tardir=$(distdir) && $(am__tar) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
-	-rm -f $(distdir).zip
-	zip -rq $(distdir).zip $(distdir)
 	$(am__remove_distdir)
 
 # This target untars the dist file and tries a VPATH configuration.  Then
@@ -638,6 +637,7 @@ distcheck: dist
 	test -d $(distdir)/_build || exit 0; \
 	dc_install_base=`$(am__cd) $(distdir)/_inst && pwd | sed -e 's,^[^:\\/]:[\\/],/,'` \
 	  && dc_destdir="$${TMPDIR-/tmp}/am-dc-$$$$/" \
+	  && $(MAKE) $(AM_MAKEFLAGS) distcheck-hook \
 	  && am__cwd=`pwd` \
 	  && $(am__cd) $(distdir)/_build \
 	  && ../configure --srcdir=.. --prefix="$$dc_install_base" \
@@ -816,6 +816,13 @@ dist-hook:
 			cp -p $$specfile $(distdir); \
 		fi \
 	done
+
+# Check for correct line ends
+distcheck-hook:
+	chmod a+w $(distdir)
+	echo "Checking line ends ...!!!"; \
+	find $(distdir) -type f -exec file {} \; | grep -e "CRLF" -e "Non-ISO" && exit 1; \
+	echo "Checking line ends ... done."
 
 generate-doc-danube:
 	( cd @srcdir@/doc;  \

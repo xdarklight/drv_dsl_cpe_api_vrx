@@ -2,7 +2,6 @@
 
                               Copyright (c) 2012
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -94,6 +93,7 @@
 #define ALM_ModemFSM_FailReasonGet_S_LCD0 0x20
 #define ALM_ModemFSM_FailReasonGet_S_NCD0 0x22
 #define ALM_ModemFSM_FailReasonGet_S_CRC_DS 0x24
+#define ALM_ModemFSM_FailReasonGet_S_PP_DRIVER 0x25
 #define ALM_ModemFSM_FailReasonGet_E_OK 0x0
 #define ALM_ModemFSM_FailReasonGet_E_CONFIG 0x1
 #define ALM_ModemFSM_FailReasonGet_E_NOTFEASIBLE 0x2
@@ -124,6 +124,7 @@
 #define ACK_ModemFSM_FailReasonGet_S_LCD0 0x20
 #define ACK_ModemFSM_FailReasonGet_S_NCD0 0x22
 #define ACK_ModemFSM_FailReasonGet_S_CRC_DS 0x24
+#define ACK_ModemFSM_FailReasonGet_S_PP_DRIVER 0x25
 #define ACK_ModemFSM_FailReasonGet_E_OK 0x0
 #define ACK_ModemFSM_FailReasonGet_E_CONFIG 0x1
 #define ACK_ModemFSM_FailReasonGet_E_NOTFEASIBLE 0x2
@@ -704,38 +705,6 @@ typedef struct CMD_OperationOptionsSet CMD_OperationOptionsSet_t;
    This is the acknowledgement for CMD_OperationOptionsSet.
 */
 typedef struct ACK_OperationOptionsSet ACK_OperationOptionsSet_t;
-
-/** Message ID for CMD_InteropConfigSet */
-#define CMD_INTEROPCONFIGSET 0x6743
-
-/**
-   The message configures interoperability settings for ADSL.
-*/
-typedef struct CMD_InteropConfigSet CMD_InteropConfigSet_t;
-
-/** Message ID for ACK_InteropConfigSet */
-#define ACK_INTEROPCONFIGSET 0x6743
-
-/**
-   This is the acknowledgement for CMD_InteropConfigSet.
-*/
-typedef struct ACK_InteropConfigSet ACK_InteropConfigSet_t;
-
-/** Message ID for CMD_InteropConfigGet */
-#define CMD_INTEROPCONFIGGET 0x6703
-
-/**
-   The message requests the interoperability settings.
-*/
-typedef struct CMD_InteropConfigGet CMD_InteropConfigGet_t;
-
-/** Message ID for ACK_InteropConfigGet */
-#define ACK_INTEROPCONFIGGET 0x6703
-
-/**
-   This is the acknowledgement for CMD_InteropConfigGet.
-*/
-typedef struct ACK_InteropConfigGet ACK_InteropConfigGet_t;
 
 /** Message ID for CMD_ClockSet */
 #define CMD_CLOCKSET 0x0F62
@@ -2567,39 +2536,39 @@ struct CMD_AlgorithmControlSet
    DSL_uint16_t Res1 : 1;
    /** Steady-State Algorithm Control, Bit8 */
    DSL_uint16_t SAC8 : 1;
-   /** Steady-State Algorithm Control, Bit7 */
-   DSL_uint16_t SAC7 : 1;
+   /** Reserved */
+   DSL_uint16_t Res2 : 1;
    /** Steady-State Algorithm Control, Bit6 */
    DSL_uint16_t SAC6 : 1;
    /** Reserved */
-   DSL_uint16_t Res2 : 1;
+   DSL_uint16_t Res3 : 1;
    /** Steady-State Algorithm Control, Bit4 */
    DSL_uint16_t SAC4 : 1;
    /** Reserved */
-   DSL_uint16_t Res3 : 2;
+   DSL_uint16_t Res4 : 2;
    /** Steady-State Algorithm Control, Bit1 */
    DSL_uint16_t SAC1 : 1;
    /** Reserved */
-   DSL_uint16_t Res4 : 1;
+   DSL_uint16_t Res5 : 1;
 #else
    /** Index */
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
    /** Reserved */
-   DSL_uint16_t Res4 : 1;
+   DSL_uint16_t Res5 : 1;
    /** Steady-State Algorithm Control, Bit1 */
    DSL_uint16_t SAC1 : 1;
    /** Reserved */
-   DSL_uint16_t Res3 : 2;
+   DSL_uint16_t Res4 : 2;
    /** Steady-State Algorithm Control, Bit4 */
    DSL_uint16_t SAC4 : 1;
    /** Reserved */
-   DSL_uint16_t Res2 : 1;
+   DSL_uint16_t Res3 : 1;
    /** Steady-State Algorithm Control, Bit6 */
    DSL_uint16_t SAC6 : 1;
-   /** Steady-State Algorithm Control, Bit7 */
-   DSL_uint16_t SAC7 : 1;
+   /** Reserved */
+   DSL_uint16_t Res2 : 1;
    /** Steady-State Algorithm Control, Bit8 */
    DSL_uint16_t SAC8 : 1;
    /** Reserved */
@@ -2646,11 +2615,21 @@ struct CMD_Misc_ConfigSet
    /** Length */
    DSL_uint16_t Length;
    /** Reserved */
-   DSL_uint16_t Res0 : 12;
+   DSL_uint16_t Res0 : 7;
+   /** Finegain Control */
+   DSL_uint16_t FgainControl : 1;
+   /** Reserved */
+   DSL_uint16_t Res1 : 1;
+   /** Short CLR for ADSL2+ */
+   DSL_uint16_t ShortClrA2p : 1;
+   /** Short CLR for ADSL2 */
+   DSL_uint16_t ShortClrA2 : 1;
+   /** Short CLR for ADSL1 */
+   DSL_uint16_t ShortClrA1 : 1;
    /** INP Protection Improvement (VDSL only) */
    DSL_uint16_t FrameParams : 1;
    /** Reserved */
-   DSL_uint16_t Res1 : 1;
+   DSL_uint16_t Res2 : 1;
    /** Activation Start Mode (ADSL only) */
    DSL_uint16_t StartMode : 1;
    /** Non-standard GHS-ANSI Activation (ADSL only) */
@@ -2665,11 +2644,21 @@ struct CMD_Misc_ConfigSet
    /** Activation Start Mode (ADSL only) */
    DSL_uint16_t StartMode : 1;
    /** Reserved */
-   DSL_uint16_t Res1 : 1;
+   DSL_uint16_t Res2 : 1;
    /** INP Protection Improvement (VDSL only) */
    DSL_uint16_t FrameParams : 1;
+   /** Short CLR for ADSL1 */
+   DSL_uint16_t ShortClrA1 : 1;
+   /** Short CLR for ADSL2 */
+   DSL_uint16_t ShortClrA2 : 1;
+   /** Short CLR for ADSL2+ */
+   DSL_uint16_t ShortClrA2p : 1;
    /** Reserved */
-   DSL_uint16_t Res0 : 12;
+   DSL_uint16_t Res1 : 1;
+   /** Finegain Control */
+   DSL_uint16_t FgainControl : 1;
+   /** Reserved */
+   DSL_uint16_t Res0 : 7;
 #endif
 } __PACKED__ ;
 
@@ -2743,122 +2732,6 @@ struct ACK_OperationOptionsSet
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-#endif
-} __PACKED__ ;
-
-
-/**
-   The message configures interoperability settings for ADSL.
-*/
-struct CMD_InteropConfigSet
-{
-#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
-   /** Index */
-   DSL_uint16_t Index;
-   /** Length */
-   DSL_uint16_t Length;
-   /** Reserved */
-   DSL_uint16_t Res0 : 10;
-   /** CRC/FEC Counter Restore On Showtime Entry, Bit 5 */
-   DSL_uint16_t cntRestore : 1;
-   /** Reserved */
-   DSL_uint16_t Res1 : 5;
-   /** Reserved */
-   DSL_uint16_t Res2 : 15;
-   /** PCB Level Adjustment, Bit 0 */
-   DSL_uint16_t pcbAdjust : 1;
-#else
-   /** Index */
-   DSL_uint16_t Index;
-   /** Length */
-   DSL_uint16_t Length;
-   /** Reserved */
-   DSL_uint16_t Res1 : 5;
-   /** CRC/FEC Counter Restore On Showtime Entry, Bit 5 */
-   DSL_uint16_t cntRestore : 1;
-   /** Reserved */
-   DSL_uint16_t Res0 : 10;
-   /** PCB Level Adjustment, Bit 0 */
-   DSL_uint16_t pcbAdjust : 1;
-   /** Reserved */
-   DSL_uint16_t Res2 : 15;
-#endif
-} __PACKED__ ;
-
-
-/**
-   This is the acknowledgement for CMD_InteropConfigSet.
-*/
-struct ACK_InteropConfigSet
-{
-#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
-   /** Index */
-   DSL_uint16_t Index;
-   /** Length */
-   DSL_uint16_t Length;
-#else
-   /** Index */
-   DSL_uint16_t Index;
-   /** Length */
-   DSL_uint16_t Length;
-#endif
-} __PACKED__ ;
-
-
-/**
-   The message requests the interoperability settings.
-*/
-struct CMD_InteropConfigGet
-{
-#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
-   /** Index */
-   DSL_uint16_t Index;
-   /** Length */
-   DSL_uint16_t Length;
-#else
-   /** Index */
-   DSL_uint16_t Index;
-   /** Length */
-   DSL_uint16_t Length;
-#endif
-} __PACKED__ ;
-
-
-/**
-   This is the acknowledgement for CMD_InteropConfigGet.
-*/
-struct ACK_InteropConfigGet
-{
-#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
-   /** Index */
-   DSL_uint16_t Index;
-   /** Length */
-   DSL_uint16_t Length;
-   /** Reserved */
-   DSL_uint16_t Res0 : 10;
-   /** CRC/FEC Counter Restore On Showtime Entry, Bit 5 */
-   DSL_uint16_t cntRestore : 1;
-   /** Reserved */
-   DSL_uint16_t Res1 : 5;
-   /** Reserved */
-   DSL_uint16_t Res2 : 15;
-   /** PCB Level Adjustment, Bit 0 */
-   DSL_uint16_t pcbAdjust : 1;
-#else
-   /** Index */
-   DSL_uint16_t Index;
-   /** Length */
-   DSL_uint16_t Length;
-   /** Reserved */
-   DSL_uint16_t Res1 : 5;
-   /** CRC/FEC Counter Restore On Showtime Entry, Bit 5 */
-   DSL_uint16_t cntRestore : 1;
-   /** Reserved */
-   DSL_uint16_t Res0 : 10;
-   /** PCB Level Adjustment, Bit 0 */
-   DSL_uint16_t pcbAdjust : 1;
-   /** Reserved */
-   DSL_uint16_t Res2 : 15;
 #endif
 } __PACKED__ ;
 

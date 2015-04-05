@@ -1039,6 +1039,8 @@ DSL_Error_t DSL_DRV_Init(
    pContext->lineFeatureDataCfg[DSL_DOWNSTREAM].bTrellisEnable = DSL_TRUE;
    pContext->lineFeatureDataCfg[DSL_UPSTREAM].bBitswapEnable = DSL_TRUE;
    pContext->lineFeatureDataCfg[DSL_DOWNSTREAM].bBitswapEnable = DSL_TRUE;
+   pContext->lineFeatureDataCfg[DSL_UPSTREAM].bVirtualNoiseSupport = DSL_FALSE;
+   pContext->lineFeatureDataCfg[DSL_DOWNSTREAM].bVirtualNoiseSupport = DSL_FALSE;
    pContext->powerMgmtStatus.nPowerManagementStatus = DSL_G997_PMS_L3;
 
    pContext->lineFeatureDataCfg[DSL_UPSTREAM].b20BitSupport = DSL_FEATURE_NA;
@@ -2234,18 +2236,9 @@ DSL_Error_t DSL_DRV_LineFeatureConfigSet(
       nRet = DSL_WRN_CONFIG_PARAM_IGNORED;
    }
 
-#if defined(INCLUDE_DSL_CPE_API_VRX)
-   /* Virtual Noise not supported for VRX yet */
-   if (pData->data.bVirtualNoiseSupport == DSL_TRUE)
-   {
-      pData->data.bVirtualNoiseSupport = DSL_FALSE;
-      nRet = DSL_WRN_CONFIG_PARAM_IGNORED;
-   }
-#endif
-
    DSL_CTX_WRITE(pContext, nErrCode, lineFeatureDataCfg[pData->nDirection], pData->data);
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX)
+#if defined(INCLUDE_DSL_CPE_API_VRX) || defined(INCLUDE_DSL_CPE_API_VINAX)
    if (pData->nDirection == DSL_UPSTREAM)
    {
       DSL_CTX_WRITE(
@@ -2260,7 +2253,7 @@ DSL_Error_t DSL_DRV_LineFeatureConfigSet(
          pDevCtx->data.deviceCfg.cfg.bVirtualNoiseSupportDs,
          pData->data.bVirtualNoiseSupport);
    }
-#endif
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX) || defined(INCLUDE_DSL_CPE_API_VINAX) */
 
 #if defined(INCLUDE_DSL_CPE_API_DANUBE)
    if ( (pData->nDirection == DSL_UPSTREAM) &&
@@ -2299,7 +2292,7 @@ DSL_Error_t DSL_DRV_LineFeatureConfigGet(
 
    DSL_CTX_READ(pContext, nErrCode, lineFeatureDataCfg[pData->nDirection], pData->data);
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX)
+#if defined(INCLUDE_DSL_CPE_API_VRX) || defined(INCLUDE_DSL_CPE_API_VINAX)
    if (pData->nDirection == DSL_UPSTREAM)
    {
       DSL_CTX_READ(
@@ -2314,7 +2307,7 @@ DSL_Error_t DSL_DRV_LineFeatureConfigGet(
          pDevCtx->data.deviceCfg.cfg.bVirtualNoiseSupportDs,
          pData->data.bVirtualNoiseSupport);
    }
-#endif
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX) || defined(INCLUDE_DSL_CPE_API_VINAX) */
 
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_LineFeatureConfigGet"
@@ -5775,12 +5768,14 @@ DSL_IOCTL_REGISTER(DSL_FIO_TEST_MODE_STATUS_GET, DSL_IOCTL_HELPER_GET,
 DSL_IOCTL_REGISTER(DSL_FIO_LINE_FEATURE_STATUS_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_LineFeatureStatusGet,
                    sizeof(DSL_LineFeature_t)),
-#if defined(INCLUDE_DSL_CPE_API_DANUBE)
+#ifdef INCLUDE_DSL_CPE_PM_RETX_COUNTERS
+#ifdef INCLUDE_DSL_CPE_PM_RETX_THRESHOLDS
 /* DSL_FIO_LINE_RETX_STATISTICS_GET */
 DSL_IOCTL_REGISTER(DSL_FIO_RETX_STATISTICS_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_RetxStatisticsGet,
                    sizeof(DSL_ReTxStatistics_t)),
-#endif /*#if defined(INCLUDE_DSL_CPE_API_DANUBE)*/
+#endif /* INCLUDE_DSL_CPE_PM_RETX_THRESHOLDS */
+#endif /* INCLUDE_DSL_CPE_PM_RETX_COUNTERS */
 #ifndef DSL_DEBUG_DISABLE
 /* DSL_FIO_DBG_MODULE_LEVEL_SET */
 DSL_IOCTL_REGISTER(DSL_FIO_DBG_MODULE_LEVEL_SET, DSL_IOCTL_HELPER_SET,
@@ -6895,13 +6890,18 @@ DSL_Error_t DSL_DRV_CtxDataUpdate(
 #ifdef INCLUDE_DSL_CPE_API_DANUBE
    /* Clean FE line status data*/
    DSL_DRV_MemSet(&(pContext->lineStatusFe), 0x0, sizeof(DSL_G997_LineStatusBackupData_t));
-   /* Clear System Interface status flag*/
-   DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.bSystemIfStatusValid, DSL_FALSE);
    /* Clear ADSL1 mode indication*/
    DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.bAdsl1, DSL_FALSE);
    /* Clear ADSL2+ mode indication*/
    DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.bAdsl2p, DSL_FALSE);
 #endif /* INCLUDE_DSL_CPE_API_DANUBE*/
+
+#ifdef INCLUDE_DSL_SYSTEM_INTERFACE
+#if defined(INCLUDE_DSL_CPE_API_VRX) || defined(INCLUDE_DSL_CPE_API_DANUBE)
+   /* Clear System Interface status flag*/
+   DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.bSystemIfStatusValid, DSL_FALSE);
+#endif /* INCLUDE_DSL_CPE_API_VRX INCLUDE_DSL_CPE_API_DANUBE */
+#endif /* INCLUDE_DSL_SYSTEM_INTERFACE */
 
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_CtxDataUpdate, retCode=%d"

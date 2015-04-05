@@ -22,7 +22,7 @@ PROJECT_NAME           = "DSL CPE API"
 # This could be handy for archiving the generated documentation or
 # if some version control system is used.
 
-PROJECT_NUMBER         = 4.11.4
+PROJECT_NUMBER         = 4.11.11
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute)
 # base path where the generated documentation will be put.

@@ -124,21 +124,21 @@ static DSL_uint16_t g_VRxMsgWhitelist[] =
    CMD_LINESTATUSPERBANDDS_GET,     /*     +     :      +      :      +       */
    CMD_PILOTTONESGET,               /*     +     :      +      :      +       */
    CMD_XTSE_CONFIGURE,              /*     +     :      +      :      +/-     */
-   CMD_INTEROPCONFIGGET,            /*     +     :      +      :      +       */
    CMD_HYBRIDGET,                   /*     +     :      +      :      +       */
    CMD_BEARERCH0_DS_SET,            /*     +     :      +      :      +       */
    CMD_BEARERCH0_US_SET,            /*     +     :      +      :      +       */
    CMD_TC_STATUSGET,                /*     +     :      +      :      +       */
    CMD_BEARERCHSDS_RTX_GET,         /*     +     :      +      :      +       */
    CMD_RTX_DS_CONFIGURE,            /*     +     :      +      :      +       */
-   CMD_VDSL_RTX_STATUSGET,          /*     +     :      +      :      +       */
+   CMD_RTX_STATUSGET,               /*     +     :      +      :      +       */
    CMD_RTX_DS_STATSGET,             /*     +     :      +      :      +       */
    CMD_RTX_PMWOTHRESHDS_GET,        /*     +     :      +      :      +       */
    CMD_OPERATIONOPTIONSSET,         /*     +     :      +      :      +       */
    CMD_MFD_RESULTSGET,              /*     +     :      +      :      +/-     */
    CMD_MFD_LOOPLENGTHGET,           /*     +     :      +      :      +/-     */
    CMD_MFD_HYBRIDINFOGET,           /*     +     :      +      :      +/-     */
-   CMD_MISC_CONFIGSET,
+   CMD_MISC_CONFIGSET,              /*     +     :      +      :      +       */
+   CMD_MODEMFSM_OPTIONS2SET,        /*     +     :      +      :      +       */
    /* Delimeter only*/
    0xFFFF
 };
@@ -1253,6 +1253,57 @@ DSL_Error_t DSL_DRV_VXX_SendMsgModemFsmOptionsSet(
    sCmd.E2 = (bDiagMode    == DSL_FALSE) ? VRX_DISABLE : VRX_ENABLE;
 
    nErrCode = DSL_DRV_VRX_SendMessage( pContext, CMD_MODEMFSM_OPTIONSSET,
+                  sizeof(sCmd), (DSL_uint8_t*)&sCmd,
+                  sizeof(sAck), (DSL_uint8_t*)&sAck );
+
+   return (nErrCode);
+}
+
+/*
+   For a detailed description of the function, its arguments and return value
+   please refer to the description in the header file 'drv_dsl_cpe_msg_vrx.h'
+*/
+DSL_Error_t DSL_DRV_VRX_SendMsgModemFsmOptions2Set(
+   DSL_Context_t *pContext)
+{
+   DSL_Error_t nErrCode = DSL_SUCCESS;
+   CMD_ModemFSM_Options2Set_t sCmd;
+   ACK_ModemFSM_Options2Set_t sAck;
+   DSL_LineFeatureData_t lineFeatureDataCfg;
+   DSL_boolean_t bVirtualNoiseLowLevelCfg = DSL_TRUE;
+
+   memset(&sCmd, 0, sizeof(sCmd));
+   sCmd.Length = DSL_VNX_16BIT_RD_MSG_LEN_GET(sCmd);
+
+   /* Get Virtual Noise US Line Feature settings */
+   DSL_CTX_READ(pContext, nErrCode, lineFeatureDataCfg[DSL_UPSTREAM],
+         lineFeatureDataCfg);
+
+   /* Get Virtual Noise US Low Level settings */
+   DSL_CTX_READ(
+         pContext, nErrCode,
+         pDevCtx->data.deviceCfg.cfg.bVirtualNoiseSupportUs,
+         bVirtualNoiseLowLevelCfg);
+
+   /* Set US Virtual Noise support */
+   sCmd.enableVN_US = (lineFeatureDataCfg.bVirtualNoiseSupport || bVirtualNoiseLowLevelCfg) ?
+                      VRX_ENABLE  : VRX_DISABLE;
+
+   /* Get Virtual Noise US Line Feature settings */
+   DSL_CTX_READ(pContext, nErrCode, lineFeatureDataCfg[DSL_DOWNSTREAM],
+         lineFeatureDataCfg);
+
+   /* Get Virtual Noise US Low Level settings */
+   DSL_CTX_READ(
+         pContext, nErrCode,
+         pDevCtx->data.deviceCfg.cfg.bVirtualNoiseSupportDs,
+         bVirtualNoiseLowLevelCfg);
+
+   /* Set US Virtual Noise support */
+   sCmd.enableVN_DS = (lineFeatureDataCfg.bVirtualNoiseSupport || bVirtualNoiseLowLevelCfg) ?
+                      VRX_ENABLE  : VRX_DISABLE;
+
+   nErrCode = DSL_DRV_VRX_SendMessage( pContext, CMD_MODEMFSM_OPTIONS2SET,
                   sizeof(sCmd), (DSL_uint8_t*)&sCmd,
                   sizeof(sAck), (DSL_uint8_t*)&sAck );
 
@@ -3457,6 +3508,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgOlrControl(
    CMD_OLR_Control_t sCmd;
    ACK_OLR_Control_t sAck;
    DSL_boolean_t bTmpVal = DSL_FALSE;
+   DSL_DEV_VersionCheck_t nVerCheck = 0;
 
    /* Get FW information*/
    DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.fwFeatures, sFwVersion);
@@ -3466,7 +3518,21 @@ DSL_Error_t DSL_DRV_VRX_SendMsgOlrControl(
 
    sCmd.Length = 0x1;
 
-   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   /* Check firmware version */
+   nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
+               DSL_MIN_FW_VERSION_SRA_VDSL, &nVerCheck);
+
+   if (nErrCode != DSL_SUCCESS)
+   {
+      DSL_DEBUG(DSL_DBG_ERR, (pContext, SYS_DBG_ERR
+         "DSL[%02d]: ERROR - FW version check failed!"
+         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+      return nErrCode;
+   }
+
+   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL) ||
+                 (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2)
+                                   && (nVerCheck >= DSL_VERSION_EQUAL)))
    {
       sCmd.autoSRA_DS = bAutoSRA_DS ? VRX_ENABLE : VRX_DISABLE;
       sCmd.autoSRA_US = bAutoSRA_US ? VRX_ENABLE : VRX_DISABLE;
@@ -3503,26 +3569,41 @@ DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsConfigure(
    DSL_Error_t nErrCode = DSL_SUCCESS;
    CMD_RTX_DS_Configure_t sCmd;
    ACK_RTX_DS_Configure_t sAck;
-   DSL_DEV_VersionCheck_t nVerCheck;
+   DSL_DEV_VersionCheck_t nVerCheck = DSL_VERSION_ERROR;
 
-   /* Get FW information*/
-   nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
-                  DSL_MIN_FW_VERSION_RETX, &nVerCheck);
-   if (nErrCode != DSL_SUCCESS)
+   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2))
    {
-      DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-      return nErrCode;
+      /* Get FW information */
+      nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
+                  DSL_MIN_FW_VERSION_RETX_VDSL, &nVerCheck);
+      if (nErrCode != DSL_SUCCESS)
+      {
+         DSL_DEBUG(DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         return nErrCode;
+      }
+   }
+   else if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   {
+      /* Get FW information */
+      nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
+                  DSL_MIN_FW_VERSION_RETX_ADSL, &nVerCheck);
+      if (nErrCode != DSL_SUCCESS)
+      {
+         DSL_DEBUG(DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         return nErrCode;
+      }
    }
 
-   memset(&sCmd, 0, sizeof(sCmd));
-   memset(&sAck, 0, sizeof(sAck));
-
-   sCmd.Length = 0x1;
-
-   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2) && nVerCheck >= DSL_VERSION_EQUAL)
+   if (nVerCheck >= DSL_VERSION_EQUAL)
    {
+      memset(&sCmd, 0, sizeof(sCmd));
+      memset(&sAck, 0, sizeof(sAck));
+
+      sCmd.Length = 0x1;
       sCmd.RtxMode = bReTxEnable ? VRX_ENABLE : VRX_DISABLE;
 
       nErrCode = DSL_DRV_VRX_SendMessage(
@@ -3533,7 +3614,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsConfigure(
    else
    {
       DSL_DEBUG(DSL_DBG_WRN, (pContext,
-         SYS_DBG_WRN"DSL[%02d]: WARNING - ReTx not supported by the ADSL FW!"
+         SYS_DBG_WRN"DSL[%02d]: WARNING - ReTx not supported by the FW!"
          DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
    }
 
@@ -3784,9 +3865,9 @@ DSL_Error_t DSL_DRV_VRX_SendMsgBearerChSet(
    DSL_Error_t nErrCode = DSL_SUCCESS;
    DSL_uint16_t nRate32 = 0, tmpVal_16 = 0, nRateMin = 0, nRateMax = 0;
    DSL_int_t nRateEst = 0;
-   DSL_uint8_t nRate4_8 = 0, nVdslMode = 0,
-               tmpVal_8 = 0, xtse6 = 0, xtse7 = 0;
+   DSL_uint8_t nRate4_8 = 0, tmpVal_8 = 0, xtse6 = 0, xtse7 = 0;
    DSL_uint32_t tmpVal_32 = 0;
+   DSL_TcLayerSelection_t nTcMode = DSL_TC_UNKNOWN;
 
    union
    {
@@ -3804,22 +3885,35 @@ DSL_Error_t DSL_DRV_VRX_SendMsgBearerChSet(
      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_VRX_SendMsgBearerChSet()"
      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-   /* use the xTSE bits to select between
-      ADSL = ATM Control block and
-      VDSL = PTM Control block */
-   DSL_CTX_READ_SCALAR(pContext, nErrCode, xtseCfg[7], nVdslMode);
-   nVdslMode = nVdslMode ? 1 : 0;
-
    /* Programm downstream configuration */
+
+   /* Get System Interface Configuration*/
+   DSL_CTX_READ_SCALAR( pContext, nErrCode,
+      pDevCtx->data.deviceCfg.sysCIF.nTcLayer,
+      nTcMode);
 
    /* Common Bearer Channel configuration parameter
       for upstream/downstream. */
    memset(&sCmd, 0, sizeof(sCmd));
    sCmd.DsCfg.Length = DSL_VNX_16BIT_RD_MSG_LEN_GET(sCmd.DsCfg);
 
-   /* Select to set ATM or packet parameters */
-   sCmd.DsCfg.ATMControl = nVdslMode ? 0 : 1;
-   sCmd.DsCfg.PTMControl = nVdslMode ? 1 : 0;
+   switch (nTcMode)
+   {
+      case DSL_TC_EFM:
+         sCmd.DsCfg.ATMControl = 0;
+         sCmd.DsCfg.PTMControl = 1;
+         break;
+      case DSL_TC_ATM:
+         sCmd.DsCfg.ATMControl = 1;
+         sCmd.DsCfg.PTMControl = 0;
+         break;
+      case DSL_TC_AUTO:
+         sCmd.DsCfg.ATMControl = 1;
+         sCmd.DsCfg.PTMControl = 1;
+         break;
+      default:
+         return DSL_ERROR;
+   }
 
    DSL_CTX_READ_SCALAR(pContext, nErrCode,
       pDevCtx->data.deviceCfg.ChannelConfigData[DSL_DOWNSTREAM].MaxIntDelay,
@@ -3933,9 +4027,24 @@ DSL_Error_t DSL_DRV_VRX_SendMsgBearerChSet(
    memset(&sCmd, 0, sizeof(sCmd));
    sCmd.UsCfg.Length = DSL_VNX_16BIT_RD_MSG_LEN_GET(sCmd.UsCfg);
 
-   /* Select to set ATM or packet parameters */
-   sCmd.UsCfg.ATMControl = nVdslMode ? 0 : 1;
-   sCmd.UsCfg.PTMControl = nVdslMode ? 1 : 0;
+   /* Select to set ATM or Packet parameters */
+   switch (nTcMode)
+   {
+      case DSL_TC_EFM:
+         sCmd.UsCfg.ATMControl = 0;
+         sCmd.UsCfg.PTMControl = 1;
+         break;
+      case DSL_TC_ATM:
+         sCmd.UsCfg.ATMControl = 1;
+         sCmd.UsCfg.PTMControl = 0;
+         break;
+      case DSL_TC_AUTO:
+         sCmd.UsCfg.ATMControl = 1;
+         sCmd.UsCfg.PTMControl = 1;
+         break;
+      default:
+         return DSL_ERROR;
+   }
 
    DSL_CTX_READ_SCALAR(pContext, nErrCode,
       pDevCtx->data.deviceCfg.ChannelConfigData[DSL_UPSTREAM].MaxIntDelay,
@@ -4404,21 +4513,58 @@ DSL_Error_t DSL_DRV_VRX_SendMsgBearerChsDsRtxGet(
    DSL_uint32_t   nMsgId;
    CMD_BearerChsDS_RTX_Get_t sCmd;
    ACK_BearerChsDS_RTX_Get_t sAck;
+   DSL_DEV_VersionCheck_t nVerCheck = DSL_VERSION_ERROR;
 
-   /* fill up the message to be sent */
-   memset(&sCmd, 0, sizeof(sCmd));
-
-   nMsgId = CMD_BEARERCHSDS_RTX_GET;
-   sCmd.Length = 5;
-
-   nErrCode = DSL_DRV_VRX_SendMessage( pContext, nMsgId,
-      sizeof(CMD_BearerChsDS_RTX_Get_t), (DSL_uint8_t*)&sCmd,
-      sizeof(ACK_BearerChsDS_RTX_Get_t), (DSL_uint8_t*)&sAck );
-
-   /* Copy data only if successful */
-   if (nErrCode >= DSL_SUCCESS)
+   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2))
    {
-      memcpy(pAck,&sAck, sizeof(ACK_BearerChsDS_RTX_Get_t));
+      /* Get FW information */
+      nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
+                  DSL_MIN_FW_VERSION_RETX_VDSL, &nVerCheck);
+      if (nErrCode != DSL_SUCCESS)
+      {
+         DSL_DEBUG(DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         return nErrCode;
+      }
+   }
+   else if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   {
+      /* Get FW information */
+      nErrCode = DSL_DRV_VXX_FirmwareVersionCheck(pContext,
+                  DSL_MIN_FW_VERSION_RETX_ADSL, &nVerCheck);
+      if (nErrCode != DSL_SUCCESS)
+      {
+         DSL_DEBUG(DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         return nErrCode;
+      }
+   }
+
+   if (nVerCheck >= DSL_VERSION_EQUAL)
+   {
+      /* fill up the message to be sent */
+      memset(&sCmd, 0, sizeof(sCmd));
+
+      nMsgId = CMD_BEARERCHSDS_RTX_GET;
+      sCmd.Length = 5;
+
+      nErrCode = DSL_DRV_VRX_SendMessage( pContext, nMsgId,
+         sizeof(CMD_BearerChsDS_RTX_Get_t), (DSL_uint8_t*)&sCmd,
+         sizeof(ACK_BearerChsDS_RTX_Get_t), (DSL_uint8_t*)&sAck );
+
+      /* Copy data only if successful */
+      if (nErrCode >= DSL_SUCCESS)
+      {
+         memcpy(pAck,&sAck, sizeof(ACK_BearerChsDS_RTX_Get_t));
+      }
+   }
+   else
+   {
+      DSL_DEBUG(DSL_DBG_WRN, (pContext,
+         SYS_DBG_WRN"DSL[%02d]: WARNING - ReTx not supported by the FW!"
+         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
    }
 
    return (nErrCode);
@@ -4434,24 +4580,24 @@ DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsEnableStatusGet(
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
    DSL_uint32_t   nMsgId;
-   CMD_VDSL_RTX_StatusGet_t sCmd;
-   ACK_VDSL_RTX_StatusGet_t sAck;
+   CMD_RTX_StatusGet_t sCmd;
+   ACK_RTX_StatusGet_t sAck;
 
    /* fill up the message to be sent */
    memset(&sCmd, 0, sizeof(sCmd));
 
-   nMsgId = CMD_VDSL_RTX_STATUSGET;
-   sCmd.Index = 0xE;
+   nMsgId = CMD_RTX_STATUSGET;
+   sCmd.Index = 0x0;
    sCmd.Length = 1;
 
    nErrCode = DSL_DRV_VRX_SendMessage( pContext, nMsgId,
-      sizeof(CMD_VDSL_RTX_StatusGet_t), (DSL_uint8_t*)&sCmd,
-      sizeof(ACK_VDSL_RTX_StatusGet_t), (DSL_uint8_t*)&sAck );
+      sizeof(CMD_RTX_StatusGet_t), (DSL_uint8_t*)&sCmd,
+      sizeof(ACK_RTX_StatusGet_t), (DSL_uint8_t*)&sAck );
 
    /* Copy data only if successful */
    if (nErrCode >= DSL_SUCCESS)
    {
-      memcpy(pAck,&sAck, sizeof(ACK_VDSL_RTX_StatusGet_t));
+      memcpy(pAck,&sAck, sizeof(ACK_RTX_StatusGet_t));
    }
 
    return (nErrCode);
@@ -4812,7 +4958,6 @@ DSL_Error_t DSL_DRV_VRX_SendMsgAlgorithmControl(
    DSL_Error_t nErrCode = DSL_SUCCESS;
    CMD_AlgorithmControlSet_t sCmd;
    ACK_AlgorithmControlSet_t sAck;
-   DSL_TestModeControlSet_t nTestModeControl = DSL_TESTMODE_DISABLE;
    DSL_boolean_t bTmpVal = DSL_FALSE;
 
    /* in this message the bits are negated: enable = 0
@@ -4837,14 +4982,6 @@ DSL_Error_t DSL_DRV_VRX_SendMsgAlgorithmControl(
       lineFeatureDataCfg[DSL_UPSTREAM].bTrellisEnable,
       bTmpVal);
    sCmd.SAC1 = bTmpVal ? VRX_ENABLE_N : VRX_DISABLE_N;
-
-   /* Test mode control*/
-   DSL_CTX_READ_SCALAR(pContext, nErrCode, nTestModeControl, nTestModeControl);
-
-   sCmd.SAC7 = (nTestModeControl == DSL_TESTMODE_SHOWTIME_LOCK
-               || nTestModeControl == DSL_TESTMODE_TRAINING_LOCK) ?
-               VRX_DISABLE_N : VRX_ENABLE_N;
-
 
    nErrCode = DSL_DRV_VRX_SendMessage( pContext, CMD_ALGORITHMCONTROLSET,
                   sizeof(CMD_AlgorithmControlSet_t), (DSL_uint8_t *)&sCmd,
@@ -5316,6 +5453,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgMiscConfigSet(
    ACK_Misc_ConfigSet_t sAck;
    DSL_ActivationFsmConfigData_t nActivationCfg;
    DSL_boolean_t bT1_413;
+   DSL_TestModeControlSet_t nTestModeControl = DSL_TESTMODE_DISABLE;
 
    memset(&sCmd, 0, sizeof(sCmd));
    memset(&sAck, 0, sizeof(sAck));
@@ -5334,6 +5472,13 @@ DSL_Error_t DSL_DRV_VRX_SendMsgMiscConfigSet(
             nActivationCfg.nActivationMode == DSL_ACT_MODE_ANSI_T1413 ? 1 : 0;
       }
    }
+
+   /* Test mode control*/
+   DSL_CTX_READ_SCALAR(pContext, nErrCode, nTestModeControl, nTestModeControl);
+
+   sCmd.FgainControl = (nTestModeControl == DSL_TESTMODE_SHOWTIME_LOCK
+                       || nTestModeControl == DSL_TESTMODE_TRAINING_LOCK) ?
+                       VRX_ENABLE : VRX_DISABLE;
 
    nErrCode = DSL_DRV_VRX_SendMessage(
                  pContext, CMD_MISC_CONFIGSET,

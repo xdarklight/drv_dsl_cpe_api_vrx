@@ -2,7 +2,6 @@
 
                               Copyright (c) 2012
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -39,6 +38,10 @@
 #endif
 
 /* ----- Message Specific Constants Definition section ----- */
+#define ACK_T1413_RevNo_O_Get_T1413REV1 0x0
+#define ACK_T1413_RevNo_O_Get_T1413REV2 0x1
+#define ACK_T1413_RevNo_R_Get_T1413REV1 0x0
+#define ACK_T1413_RevNo_R_Get_T1413REV2 0x1
 #define ACK_XTSE_StatusGet_L0 0
 #define ACK_XTSE_StatusGet_L3 3
 #define CMD_RFI_BandControlGet_FV 33
@@ -400,6 +403,108 @@ typedef struct CMD_AuxInventoryInfo_R_Get CMD_AuxInventoryInfo_R_Get_t;
    CMD_AuxInventoryInfo_R_Get.
 */
 typedef struct ACK_AuxInventoryInfo_R_Get ACK_AuxInventoryInfo_R_Get_t;
+
+/** Message ID for CMD_T1413_VendorID_O_Get */
+#define CMD_T1413_VENDORID_O_GET 0x7C03
+
+/**
+   Requests the ATU-CÕs T1.413 Vendor identification. (Section 9.6.4.2 of ANSI
+   T1.413 [16])
+*/
+typedef struct CMD_T1413_VendorID_O_Get CMD_T1413_VendorID_O_Get_t;
+
+/** Message ID for ACK_T1413_VendorID_O_Get */
+#define ACK_T1413_VENDORID_O_GET 0x7C03
+
+/**
+   Delivers the ATU-CÕs T1.413 vendor identification number.
+*/
+typedef struct ACK_T1413_VendorID_O_Get ACK_T1413_VendorID_O_Get_t;
+
+/** Message ID for CMD_T1413_VendorID_R_Get */
+#define CMD_T1413_VENDORID_R_GET 0x7D03
+
+/**
+   Requests the ATU-RÕs T1.413 Vendor identification. (Section 9.6.4.2 of ANSI
+   T1.413 [16])
+*/
+typedef struct CMD_T1413_VendorID_R_Get CMD_T1413_VendorID_R_Get_t;
+
+/** Message ID for ACK_T1413_VendorID_R_Get */
+#define ACK_T1413_VENDORID_R_GET 0x7D03
+
+/**
+   Reports the ATU-RÕs T1.413 vendor identification number.
+*/
+typedef struct ACK_T1413_VendorID_R_Get ACK_T1413_VendorID_R_Get_t;
+
+/** Message ID for CMD_T1413_RevNo_O_Get */
+#define CMD_T1413_REVNO_O_GET 0x7E03
+
+/**
+   Requests the xTU-OÕs T1.413 revision number. (Section 9.6.4.3 of ANSI T1.413
+   [16])
+*/
+typedef struct CMD_T1413_RevNo_O_Get CMD_T1413_RevNo_O_Get_t;
+
+/** Message ID for ACK_T1413_RevNo_O_Get */
+#define ACK_T1413_REVNO_O_GET 0x7E03
+
+/**
+   Delivers the xTU-OÕs T1.413 revision number.
+*/
+typedef struct ACK_T1413_RevNo_O_Get ACK_T1413_RevNo_O_Get_t;
+
+/** Message ID for CMD_T1413_RevNo_R_Get */
+#define CMD_T1413_REVNO_R_GET 0x7F03
+
+/**
+   Requests the xTU-RÕs T1.413 revision number. (Section 9.7.6.2 of ANSI T1.413
+   [16])
+*/
+typedef struct CMD_T1413_RevNo_R_Get CMD_T1413_RevNo_R_Get_t;
+
+/** Message ID for ACK_T1413_RevNo_R_Get */
+#define ACK_T1413_REVNO_R_GET 0x7F03
+
+/**
+   Delivers the xTU-RÕs T1.413 revision number.
+*/
+typedef struct ACK_T1413_RevNo_R_Get ACK_T1413_RevNo_R_Get_t;
+
+/** Message ID for CMD_T1413_VendorRevNo_O_Get */
+#define CMD_T1413_VENDORREVNO_O_GET 0x8003
+
+/**
+   Requests the xTU-OÕs T1.413 vendor revision number. (Section 9.6.4.4 of ANSI
+   T1.413 [16])
+*/
+typedef struct CMD_T1413_VendorRevNo_O_Get CMD_T1413_VendorRevNo_O_Get_t;
+
+/** Message ID for ACK_T1413_VendorRevNo_O_Get */
+#define ACK_T1413_VENDORREVNO_O_GET 0x8003
+
+/**
+   Delivers the xTU-OÕs T1.413 vendor revision number.
+*/
+typedef struct ACK_T1413_VendorRevNo_O_Get ACK_T1413_VendorRevNo_O_Get_t;
+
+/** Message ID for CMD_T1413_VendorRevNo_R_Get */
+#define CMD_T1413_VENDORREVNO_R_GET 0x8103
+
+/**
+   Requests the xTU-RÕs T1.413 vendor revision number. (Section 9.7.6.3 of ANSI
+   T1.413 [16])
+*/
+typedef struct CMD_T1413_VendorRevNo_R_Get CMD_T1413_VendorRevNo_R_Get_t;
+
+/** Message ID for ACK_T1413_VendorRevNo_R_Get */
+#define ACK_T1413_VENDORREVNO_R_GET 0x8103
+
+/**
+   Delivers the xTU-RÕs T1.413 vendor revision number.
+*/
+typedef struct ACK_T1413_VendorRevNo_R_Get ACK_T1413_VendorRevNo_R_Get_t;
 
 /** Message ID for CMD_XTSE_StatusGet */
 #define CMD_XTSE_STATUSGET 0x0102
@@ -2509,6 +2614,264 @@ struct ACK_AuxInventoryInfo_R_Get
 
 
 /**
+   Requests the ATU-CÕs T1.413 Vendor identification. (Section 9.6.4.2 of ANSI
+   T1.413 [16])
+*/
+struct CMD_T1413_VendorID_O_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Delivers the ATU-CÕs T1.413 vendor identification number.
+*/
+struct ACK_T1413_VendorID_O_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** T1.413 Vendor ID */
+   DSL_uint16_t T1413VendorID;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** T1.413 Vendor ID */
+   DSL_uint16_t T1413VendorID;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Requests the ATU-RÕs T1.413 Vendor identification. (Section 9.6.4.2 of ANSI
+   T1.413 [16])
+*/
+struct CMD_T1413_VendorID_R_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Reports the ATU-RÕs T1.413 vendor identification number.
+*/
+struct ACK_T1413_VendorID_R_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** T1.413 Vendor ID */
+   DSL_uint16_t T1413VendorID;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** T1.413 Vendor ID */
+   DSL_uint16_t T1413VendorID;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Requests the xTU-OÕs T1.413 revision number. (Section 9.6.4.3 of ANSI T1.413
+   [16])
+*/
+struct CMD_T1413_RevNo_O_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Delivers the xTU-OÕs T1.413 revision number.
+*/
+struct ACK_T1413_RevNo_O_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** T1.413 Revision Number */
+   DSL_uint16_t T1413RevNo;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** T1.413 Revision Number */
+   DSL_uint16_t T1413RevNo;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Requests the xTU-RÕs T1.413 revision number. (Section 9.7.6.2 of ANSI T1.413
+   [16])
+*/
+struct CMD_T1413_RevNo_R_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Delivers the xTU-RÕs T1.413 revision number.
+*/
+struct ACK_T1413_RevNo_R_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** T1.413 Revision Number */
+   DSL_uint16_t T1413RevNo;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** T1.413 Revision Number */
+   DSL_uint16_t T1413RevNo;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Requests the xTU-OÕs T1.413 vendor revision number. (Section 9.6.4.4 of ANSI
+   T1.413 [16])
+*/
+struct CMD_T1413_VendorRevNo_O_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Delivers the xTU-OÕs T1.413 vendor revision number.
+*/
+struct ACK_T1413_VendorRevNo_O_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** T1.413 Vendor Revision Number */
+   DSL_uint16_t T1413VendorRevNo;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** T1.413 Vendor Revision Number */
+   DSL_uint16_t T1413VendorRevNo;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Requests the xTU-RÕs T1.413 vendor revision number. (Section 9.7.6.3 of ANSI
+   T1.413 [16])
+*/
+struct CMD_T1413_VendorRevNo_R_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Delivers the xTU-RÕs T1.413 vendor revision number.
+*/
+struct ACK_T1413_VendorRevNo_R_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** T1.413 Vendor Revision Number */
+   DSL_uint16_t T1413VendorRevNo;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** T1.413 Vendor Revision Number */
+   DSL_uint16_t T1413VendorRevNo;
+#endif
+} __PACKED__ ;
+
+
+/**
    Requests the transmission system in use on the line (DSL flavour).(Section
    7.5.1.1. of G.997.1 [11])
 */
@@ -2834,7 +3197,9 @@ struct ACK_LineStatusDS_Get
    /** Virtual Noise Status DS */
    DSL_uint16_t VNstatus_ds : 1;
    /** Reserved */
-   DSL_uint16_t Res2 : 7;
+   DSL_uint16_t Res2 : 6;
+   /** NTR Status DS */
+   DSL_uint16_t NTRstatus_ds : 1;
    /** TCM Status DS */
    DSL_uint16_t TCMstatus_ds : 1;
 #else
@@ -2860,8 +3225,10 @@ struct ACK_LineStatusDS_Get
    DSL_uint16_t ACTPSDds;
    /** TCM Status DS */
    DSL_uint16_t TCMstatus_ds : 1;
+   /** NTR Status DS */
+   DSL_uint16_t NTRstatus_ds : 1;
    /** Reserved */
-   DSL_uint16_t Res2 : 7;
+   DSL_uint16_t Res2 : 6;
    /** Virtual Noise Status DS */
    DSL_uint16_t VNstatus_ds : 1;
    /** Reserved */

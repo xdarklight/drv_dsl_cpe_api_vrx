@@ -2,7 +2,6 @@
 
                               Copyright (c) 2012
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -39,8 +38,7 @@
 #endif
 
 /* ----- Message Specific Constants Definition section ----- */
-#define CMD_BearerCh0_DS_Set_PTMControl 0x1
-#define CMD_BearerCh0_DS_Set_ATMControl 0x2
+#define ACK_TC_StatusGet_UNKNOWN_TC 0x0
 #define ACK_TC_StatusGet_EFM_TC 0x1
 #define ACK_TC_StatusGet_ATM_TC 0x2
 #define ACK_VersionInfoGet_HW_VER11 0x1
@@ -243,7 +241,7 @@ typedef struct ACK_ATM_BC0_TxStatsNE_Get ACK_ATM_BC0_TxStatsNE_Get_t;
 
 /**
    Writes the transmit data-path counters for BC0 of an ATM-TC link.For "Why
-   writing performance counters" see Page 579.
+   writing performance counters" see Page 578.
 */
 typedef struct CMD_ATM_BC0_TxStatsNE_Set CMD_ATM_BC0_TxStatsNE_Set_t;
 
@@ -268,7 +266,7 @@ typedef struct CMD_VersionInfoGet CMD_VersionInfoGet_t;
 
 /**
    Provides version information about hardware and firmware. The FW version
-   numbering scheme has a long and a short form (Table 298).
+   numbering scheme has a long and a short form (Table 320).
 */
 typedef struct ACK_VersionInfoGet ACK_VersionInfoGet_t;
 
@@ -1190,7 +1188,7 @@ struct ACK_ATM_BC0_TxStatsNE_Get
 
 /**
    Writes the transmit data-path counters for BC0 of an ATM-TC link.For "Why
-   writing performance counters" see Page 579.
+   writing performance counters" see Page 578.
 */
 struct CMD_ATM_BC0_TxStatsNE_Set
 {
@@ -1264,7 +1262,7 @@ struct CMD_VersionInfoGet
 
 /**
    Provides version information about hardware and firmware. The FW version
-   numbering scheme has a long and a short form (Table 298).
+   numbering scheme has a long and a short form (Table 320).
 */
 struct ACK_VersionInfoGet
 {
@@ -1325,9 +1323,9 @@ struct ACK_ADSL_FeatureMapGet
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Feature Bit15 of Word 0: ATM Off-chip Bonding (ADSL only) */
+   /** Feature-Bit15 of Word 0: ATM Off-chip Bonding (ADSL only) */
    DSL_uint32_t W0F15 : 1;
-   /** Feature -Bit14 of Word 0: ATM On-chip Bonding (ADSL only) */
+   /** Feature-Bit14 of Word 0: ATM On-chip Bonding (ADSL only) */
    DSL_uint32_t W0F14 : 1;
    /** Feature-Bit13 of Word 0: PTM Off-chip Bonding BACP */
    DSL_uint32_t W0F13 : 1;
@@ -1357,9 +1355,9 @@ struct ACK_ADSL_FeatureMapGet
    DSL_uint32_t W0F01 : 1;
    /** Feature-Bit0 of Word 0: Annex A (incl. Annex L) (ADSL only) */
    DSL_uint32_t W0F00 : 1;
-   /** Feature Bit15 of Word 1: NTR */
+   /** Feature-Bit15 of Word 1: NTR */
    DSL_uint32_t W1F15 : 1;
-   /** Feature -Bit14 of Word 1: CIPolicy */
+   /** Feature-Bit14 of Word 1: CIPolicy */
    DSL_uint32_t W1F14 : 1;
    /** Feature-Bit10 of Word 1: Pre-emption & Short Packets  */
    DSL_uint32_t W1F13 : 1;
@@ -1436,9 +1434,9 @@ struct ACK_ADSL_FeatureMapGet
    DSL_uint32_t W1F12 : 1;
    /** Feature-Bit10 of Word 1: Pre-emption & Short Packets  */
    DSL_uint32_t W1F13 : 1;
-   /** Feature -Bit14 of Word 1: CIPolicy */
+   /** Feature-Bit14 of Word 1: CIPolicy */
    DSL_uint32_t W1F14 : 1;
-   /** Feature Bit15 of Word 1: NTR */
+   /** Feature-Bit15 of Word 1: NTR */
    DSL_uint32_t W1F15 : 1;
    /** Feature-Bit0 of Word 0: Annex A (incl. Annex L) (ADSL only) */
    DSL_uint32_t W0F00 : 1;
@@ -1468,9 +1466,9 @@ struct ACK_ADSL_FeatureMapGet
    DSL_uint32_t W0F12 : 1;
    /** Feature-Bit13 of Word 0: PTM Off-chip Bonding BACP */
    DSL_uint32_t W0F13 : 1;
-   /** Feature -Bit14 of Word 0: ATM On-chip Bonding (ADSL only) */
+   /** Feature-Bit14 of Word 0: ATM On-chip Bonding (ADSL only) */
    DSL_uint32_t W0F14 : 1;
-   /** Feature Bit15 of Word 0: ATM Off-chip Bonding (ADSL only) */
+   /** Feature-Bit15 of Word 0: ATM Off-chip Bonding (ADSL only) */
    DSL_uint32_t W0F15 : 1;
    /** Reserved */
    DSL_uint32_t Res1 : 16;
@@ -1521,7 +1519,7 @@ struct ACK_VDSL_FeatureMapGet
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Feature Bits15:14 of Word 0: Not used in VDSL */
+   /** Feature-Bits15:14 of Word 0: Not used in VDSL */
    DSL_uint32_t Res0 : 2;
    /** Feature-Bit13 of Word 0: PTM Off-chip Bonding BACP */
    DSL_uint32_t W0F13 : 1;
@@ -1535,9 +1533,9 @@ struct ACK_VDSL_FeatureMapGet
    DSL_uint32_t W0F09 : 1;
    /** Feature-Bits 8:0 of Word 0: Not used in VDSL */
    DSL_uint32_t Res1 : 9;
-   /** Feature Bit15 of Word 1: NTR */
+   /** Feature-Bit15 of Word 1: NTR */
    DSL_uint32_t W1F15 : 1;
-   /** Feature -Bit14 of Word 1: CIPolicy */
+   /** Feature-Bit14 of Word 1: CIPolicy */
    DSL_uint32_t W1F14 : 1;
    /** Feature-Bit13 of Word 1: Pre-emption & Short Packets  */
    DSL_uint32_t W1F13 : 1;
@@ -1618,9 +1616,9 @@ struct ACK_VDSL_FeatureMapGet
    DSL_uint32_t W1F12 : 1;
    /** Feature-Bit13 of Word 1: Pre-emption & Short Packets  */
    DSL_uint32_t W1F13 : 1;
-   /** Feature -Bit14 of Word 1: CIPolicy */
+   /** Feature-Bit14 of Word 1: CIPolicy */
    DSL_uint32_t W1F14 : 1;
-   /** Feature Bit15 of Word 1: NTR */
+   /** Feature-Bit15 of Word 1: NTR */
    DSL_uint32_t W1F15 : 1;
    /** Feature-Bits 8:0 of Word 0: Not used in VDSL */
    DSL_uint32_t Res1 : 9;
@@ -1634,7 +1632,7 @@ struct ACK_VDSL_FeatureMapGet
    DSL_uint32_t W0F12 : 1;
    /** Feature-Bit13 of Word 0: PTM Off-chip Bonding BACP */
    DSL_uint32_t W0F13 : 1;
-   /** Feature Bits15:14 of Word 0: Not used in VDSL */
+   /** Feature-Bits15:14 of Word 0: Not used in VDSL */
    DSL_uint32_t Res0 : 2;
    /** Feature-Bit0 of Word 3: Vectoring (fully standard compliant) */
    DSL_uint32_t W3F00 : 1;

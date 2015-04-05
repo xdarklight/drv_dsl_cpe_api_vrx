@@ -1053,6 +1053,7 @@ typedef struct
 
    \note The status value for virtual noise is directly derived by the
          configuration value (configuration value only) for the Danube device.
+   \note Supported by VRX
    \note For the Vinax device virtual noise config/status value is only valid in
          the VDSL mode.*/
    DSL_CFG DSL_boolean_t bVirtualNoiseSupport;

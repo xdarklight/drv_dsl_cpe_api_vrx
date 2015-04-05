@@ -1,7 +1,7 @@
 
 AC_REVISION($Revision: 1.177 $)
 
-AC_INIT([DSL CPE API driver],[4.11.4],[],[drv_dsl_cpe_api])
+AC_INIT([DSL CPE API driver],[4.11.11],[],[drv_dsl_cpe_api])
 
 AC_CONFIG_SRCDIR(src/Makefile.am)
 AM_INIT_AUTOMAKE

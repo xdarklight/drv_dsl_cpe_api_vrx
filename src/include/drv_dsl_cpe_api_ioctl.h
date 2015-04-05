@@ -2510,7 +2510,8 @@ typedef union
 
 #endif /* #ifdef INCLUDE_DSL_CPE_API_VRX*/
 
-#ifdef INCLUDE_DSL_CPE_API_DANUBE
+#ifdef INCLUDE_DSL_CPE_PM_RETX_COUNTERS
+#ifdef INCLUDE_DSL_CPE_PM_RETX_THRESHOLDS
 /**
    This function returns statistics counter that are related to retransmission
    functionality.
@@ -2543,7 +2544,8 @@ typedef union
    \ingroup DRV_DSL_CPE_COMMON */
 #define DSL_FIO_RETX_STATISTICS_GET \
    _IOWR(DSL_IOC_MAGIC_CPE_API, 58, DSL_ReTxStatistics_t)
-#endif /* #ifdef INCLUDE_DSL_CPE_API_DANUBE */
+#endif /* INCLUDE_DSL_CPE_PM_RETX_THRESHOLDS */
+#endif /* INCLUDE_DSL_CPE_PM_RETX_COUNTERS */
 
 #if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
 #ifdef INCLUDE_DSL_FILTER_DETECTION

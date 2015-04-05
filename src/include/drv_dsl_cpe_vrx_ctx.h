@@ -192,6 +192,12 @@ typedef struct
    IRQ of the VRX device */
    DSL_int8_t nIrqNum;
    /**
+   US Virtual Noise Support */
+   DSL_boolean_t bVirtualNoiseSupportUs;
+   /**
+   DS Virtual Noise Support */
+   DSL_boolean_t bVirtualNoiseSupportDs;
+   /**
    Network Timing Reference Control */
    DSL_boolean_t bNtrEnable;
 } DSL_DeviceLowLevelConfig_t;

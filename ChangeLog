@@ -1,5 +1,61 @@
 NEXT VERSION
 
+V4.11.11 - 2013-01-24
+common:
+- VRX (DSLCPE_SW-673) In case of ReTx is used ActualNetDataRate (g997csg) is zero
+- VRX (DSLCPE_SW-669) ReTx is also supported for ADSL AnnexB
+
+V4.11.10 - 2013-01-16
+Bug fix(es):
+- VRX (DSLCPE_SW-668) ReTx: lfsg does not give the correct status for
+  Retransmission (on/off)
+common:
+- VRX (DSLCPE_SW-653) Update implementation of DSL_FIO_G997_CHANNEL_STATUS_GET
+  for ReTx specific handling. Added ActualNetDataRate parameter handling.
+- VRX (DSLCPE_SW-660) Supported for TC-Layer automode in VDSL (Step 2).
+  Updated SystemIf Status handling. Updated DataPathCounters (ATM or PTM)
+  according to the selected TC-Layer.
+
+V4.11.9 - 2012-12-07
+common:
+- VRX (DSLCPE_SW-654) Added supporting SRA for VDSL.
+- VRX (DSLCPE_SW-660) Supported for TC-Layer automode in VDSL (Step 1)
+
+V4.11.8 - 2012-09-14
+common:
+- VRX (DSLCPE_SW-635) Message header files update to VRX FWMCAT Rev1.7,
+  function DSL_DRV_PM_DEV_ShowtimeReachedHandle removed,
+  flag bNeChannelCntReset handling removed.
+- VRX (DSLCPE_SW-637) API for FW R5.1 Release - Support for Virtual Noise.
+  Added CMD_ModemFSM_Options2Set msg handle to ModemWriteConfig.
+  Updated ioctl DSL_FIO_LINE_FEATURE_CONFIG_SET handle (VRX support).
+- VRX (DSLCPE_SW-639) API for FW R5.1 Release - ReTx is also supported for ADSL.
+  RTX related messages handled for minimun firmware versions
+  DSL_MIN_FW_VERSION_RETX_ADSL and DSL_MIN_FW_VERSION_RETX_VDSL.
+
+V4.11.7 - 2012-09-03
+common:
+- VRX (DSLCPE_SW-641) FSM Extensions for Telefonica.
+  FSM handling extended as proposed.
+- VRX (DSLCPE_SW-642) Link drops in G992.1A mode.
+  DSL_DRV_VRX_AdslChStatusGet() handling fixed, added back ADSL1 mode
+  detection.
+
+V4.11.6 - 2012-07-26
+common:
+- VRX (DSLCPE_SW-610) [VRX200] Correct includation of ReTx functionality:
+  IOCTL DSL_FIO_RETX_STATISTICS_GET extended for VRX.
+Bug fix(es):
+- (DSLCPE_SW-612) [ARX100] Problem within context of issuing SW reboot.
+  Fixed hanging within LED module.
+
+V4.11.5 - 2012-03-28
+Bug fix(es):
+- VRX (DSLCPE_SW-597) [VRX200] Include functionality to support PM related
+  counters for ADSL modes. Supported compilation for Danube.
+- VRX (DSLCPE_SW-606) [VRX200] Showtime Interleaving Delay is wrong in ADSL2/2.
+  Using direct fw delay values instead of calculating it in API (only ADSL).
+
 V4.11.4 - 2012-03-05
 Bug fix(es):
 - VRX: HS tones configuration fixed
