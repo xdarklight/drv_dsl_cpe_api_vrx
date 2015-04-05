@@ -1,0 +1,385 @@
+Document file - DO NOT EDIT
+
+<BEGIN> BUILD_PPC860gnu_BUILDRULE
+archive
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_AR
+arppc
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_ARCHIVE
+$(PRJ_DIR)/PPC860gnu/drv_dsl_cpe_api.a
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_AS
+ccppc
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_CC
+ccppc
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_CFLAGS
+-DDSL_CHANNELS_PER_LINE=1 \
+	-g \
+	-O0 \
+	-mcpu=860 \
+	-ansi \
+	-nostdinc \
+	-DRW_MULTI_THREAD \
+	-D_REENTRANT \
+	-fvolatile \
+	-fno-builtin \
+	-fno-for-scope \
+	-DCPU=PPC860 \
+	-DVXWORKS \
+	-DUSE_LIB_IFXOS=1 \
+	-D__PROTOTYPE_5_0 \
+	-Wall \
+	-I$(WIND_BASE)/target/h \
+	-I$(PRJ_DIR)/vinax \
+	-I$(PRJ_DIR) \
+	-I$(PRJ_DIR)/../src/include \
+	-I$(PRJ_DIR)/../../../../comacsd_lib/lib_ifxos/src/include \
+	-I$(PRJ_DIR)/../../../../comacsd_driver/drv_vdsl2_dfe/src
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_CFLAGS_AS
+-g \
+	-mcpu=860 \
+	-ansi \
+	-nostdinc \
+	-fvolatile \
+	-fno-builtin \
+	-fno-for-scope \
+	-P \
+	-x \
+	assembler-with-cpp \
+	-I. \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PPC860
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_CPP
+ccppc -E -P -xc
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_LD
+ldppc
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_LDDEPS
+
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_LDFLAGS
+-X -N
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_LD_PARTIAL_FLAGS
+-X -r
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_MAKEFLAGS
+-ws
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_NM
+nmppc
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_OPTION_DEFINE_MACRO
+-D
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_OPTION_INCLUDE_DIR
+-I
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_POST_BUILD_RULE
+
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_PRJ_LIBS
+
+<END>
+
+<BEGIN> BUILD_PPC860gnu_MACRO_SIZE
+sizeppc
+<END>
+
+<BEGIN> BUILD_PPC860gnu_RO_DEPEND_PATH
+{$(WIND_BASE)/target/h/} {$(WIND_BASE)/target/src/}
+<END>
+
+<BEGIN> BUILD_PPC860gnu_TC
+::tc_PPC860gnu
+<END>
+
+<BEGIN> BUILD_RULE_archive
+
+<END>
+
+<BEGIN> BUILD_RULE_drv_dsl_cpe_api.out
+
+<END>
+
+<BEGIN> BUILD_RULE_objects
+
+<END>
+
+<BEGIN> BUILD__CURRENT
+PPC860gnu
+<END>
+
+<BEGIN> BUILD__LIST
+PPC860gnu
+<END>
+
+<BEGIN> CORE_INFO_TYPE
+::prj_vxApp
+<END>
+
+<BEGIN> CORE_INFO_VERSION
+2.0
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/ceoc/drv_dsl_cpe_ceoc.c_objects
+drv_dsl_cpe_ceoc.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/ceoc/drv_dsl_cpe_ceoc.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/ceoc/drv_dsl_cpe_danube_ceoc.c_objects
+drv_dsl_cpe_danube_ceoc.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/ceoc/drv_dsl_cpe_danube_ceoc.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/ceoc/drv_dsl_cpe_intern_ceoc.c_objects
+drv_dsl_cpe_intern_ceoc.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/ceoc/drv_dsl_cpe_intern_ceoc.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/ceoc/drv_dsl_cpe_vinax_ceoc.c_objects
+drv_dsl_cpe_vinax_ceoc.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/ceoc/drv_dsl_cpe_vinax_ceoc.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/common/drv_dsl_cpe_api.c_objects
+drv_dsl_cpe_api.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/common/drv_dsl_cpe_api.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/common/drv_dsl_cpe_autoboot.c_objects
+drv_dsl_cpe_autoboot.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/common/drv_dsl_cpe_autoboot.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/common/drv_dsl_cpe_debug.c_objects
+drv_dsl_cpe_debug.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/common/drv_dsl_cpe_debug.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/common/drv_dsl_cpe_fifo.c_objects
+drv_dsl_cpe_fifo.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/common/drv_dsl_cpe_fifo.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/common/drv_dsl_cpe_os_vxworks.c_objects
+drv_dsl_cpe_os_vxworks.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/common/drv_dsl_cpe_os_vxworks.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/common/drv_dsl_cpe_timeout.c_objects
+drv_dsl_cpe_timeout.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/common/drv_dsl_cpe_timeout.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/device/drv_dsl_cpe_device_danube.c_objects
+drv_dsl_cpe_device_danube.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/device/drv_dsl_cpe_device_danube.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/device/drv_dsl_cpe_device_vinax.c_objects
+drv_dsl_cpe_device_vinax.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/device/drv_dsl_cpe_device_vinax.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/g997/drv_dsl_cpe_api_g997.c_objects
+drv_dsl_cpe_api_g997.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/g997/drv_dsl_cpe_api_g997.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/g997/drv_dsl_cpe_api_g997_danube.c_objects
+drv_dsl_cpe_api_g997_danube.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/g997/drv_dsl_cpe_api_g997_danube.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/g997/drv_dsl_cpe_api_g997_vinax.c_objects
+drv_dsl_cpe_api_g997_vinax.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/g997/drv_dsl_cpe_api_g997_vinax.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/led/drv_dsl_cpe_led.c_objects
+drv_dsl_cpe_led.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/led/drv_dsl_cpe_led.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/pm/drv_dsl_cpe_api_pm.c_objects
+drv_dsl_cpe_api_pm.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/pm/drv_dsl_cpe_api_pm.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/pm/drv_dsl_cpe_api_pm_danube.c_objects
+drv_dsl_cpe_api_pm_danube.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/pm/drv_dsl_cpe_api_pm_danube.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/pm/drv_dsl_cpe_api_pm_vinax.c_objects
+drv_dsl_cpe_api_pm_vinax.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/pm/drv_dsl_cpe_api_pm_vinax.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/pm/drv_dsl_cpe_pm_core.c_objects
+drv_dsl_cpe_pm_core.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/pm/drv_dsl_cpe_pm_core.c_tool
+C/C++ compiler
+<END>
+
+
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/sar/drv_dsl_cpe_sar.c_objects
+drv_dsl_cpe_sar.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../src/sar/drv_dsl_cpe_sar.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> PROJECT_FILES
+$(PRJ_DIR)/../src/common/drv_dsl_cpe_timeout.c \
+	$(PRJ_DIR)/../src/common/drv_dsl_cpe_autoboot.c \
+	$(PRJ_DIR)/../src/common/drv_dsl_cpe_debug.c \
+	$(PRJ_DIR)/../src/common/drv_dsl_cpe_fifo.c \
+	$(PRJ_DIR)/../src/common/drv_dsl_cpe_api.c \
+	$(PRJ_DIR)/../src/ceoc/drv_dsl_cpe_vinax_ceoc.c \
+	$(PRJ_DIR)/../src/ceoc/drv_dsl_cpe_danube_ceoc.c \
+	$(PRJ_DIR)/../src/ceoc/drv_dsl_cpe_intern_ceoc.c \
+	$(PRJ_DIR)/../src/ceoc/drv_dsl_cpe_ceoc.c \
+	$(PRJ_DIR)/../src/device/drv_dsl_cpe_device_vinax.c \
+	$(PRJ_DIR)/../src/device/drv_dsl_cpe_device_danube.c \
+	$(PRJ_DIR)/../src/g997/drv_dsl_cpe_api_g997_vinax.c \
+	$(PRJ_DIR)/../src/g997/drv_dsl_cpe_api_g997_danube.c \
+	$(PRJ_DIR)/../src/g997/drv_dsl_cpe_api_g997.c \
+	$(PRJ_DIR)/../src/led/drv_dsl_cpe_led.c \
+	$(PRJ_DIR)/../src/pm/drv_dsl_cpe_pm_core.c \
+	$(PRJ_DIR)/../src/pm/drv_dsl_cpe_api_pm_danube.c \
+	$(PRJ_DIR)/../src/pm/drv_dsl_cpe_api_pm_vinax.c \
+	$(PRJ_DIR)/../src/pm/drv_dsl_cpe_api_pm.c \
+	$(PRJ_DIR)/../src/sar/drv_dsl_cpe_sar.c \
+	$(PRJ_DIR)/../src/common/drv_dsl_cpe_os_vxworks.c
+<END>
+
+<BEGIN> userComments
+DSL CPE API driver
+<END>
+
