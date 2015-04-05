@@ -1,5 +1,8 @@
 NEXT VERSION
 
+V4.15.2-pd2 - Unknown
+-
+
 V4.11.11 - 2013-01-24
 common:
 - VRX (DSLCPE_SW-673) In case of ReTx is used ActualNetDataRate (g997csg) is zero
