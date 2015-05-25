@@ -3,20 +3,24 @@
 # Install DSL CPE API Driver
 # if no para : use local debug level
 # para 1 ($1): debug level (0 = use local debug level)
-# para 2 ($2): device number (default: 0)
+# para 2 ($2): entities (default: 0)
 #
 
 # This default initializations will be overwritten with external values defined
 # within rc.conf. In case of inconsistencies within rc.conf it takes care that
 # this script can be executed without problems using default settings
-wanphy_phymode=0
+wan_mode="VDSL"
 
 if [ -r /etc/rc.conf ]; then
    . /etc/rc.conf 2> /dev/null
 fi
 
-# WAN Mode ADSL (0), VDSL (3)
-if [ "$wanphy_phymode" = "0" -o "$wanphy_phymode" = "3" ]; then
+if [ -e /etc/rc.d/ltq_dsl_functions.sh ]; then
+   # get_phy_tc_info would return the wan_mode information updated based on the WAN configured.
+   . /etc/rc.d/ltq_dsl_functions.sh 
+   get_phy_tc_info
+fi
+if [ "$wan_mode" = "AUTO" -o "$wan_mode" = "ADSL" -o "$wan_mode" = "VDSL" ]; then
    # check for linux 2.6.x
    uname -r | grep -q 2.6.
    if [ $? -eq 0 ]; then
@@ -65,10 +69,10 @@ if [ "$wanphy_phymode" = "0" -o "$wanphy_phymode" = "3" ]; then
    test ! -d $prefix/ && mkdir $prefix/
 
    # use param $2 or default to 1"
-   export devices=${2:-1}
+   export entities=${2:-1}
 
    I=0
-   while test $I -lt $devices; do
+   while test $I -lt $entities; do
       test ! -e $prefix/$I && mknod $prefix/$I c $major_no $I
       I=`expr $I + 1`
    done

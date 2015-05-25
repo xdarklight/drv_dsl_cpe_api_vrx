@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -35,7 +34,9 @@ typedef struct
    /**
    Enable/disable bonding
    DSL_FALSE - bonding is disabled (Default)
-   DSL_TRUE  -  bonding is enabled */
+   DSL_TRUE  -  bonding is enabled
+   \note In case of operating a VDSL capable platform, bonding is currently only
+         supported for VDSL modes. */
    DSL_IN DSL_boolean_t bPafEnable;
 } DSL_BND_ConfigData_t;
 
@@ -284,36 +285,19 @@ typedef struct
 
 
 /**
-   Structure used for configuration of the port specific bonding logic.
+   Structure used to specify bonding link port mode
 */
 typedef struct
 {
    /**
-   PafEnable indicator.
-   This configuration is done at showtime entry. It configures certain
-   HW register settings to setup bonding logic.
-   The value for bPafActivation is set to true if the following conditions are
-   met:
-   - bPafEnable is true (configuration)
-   - bRemotePafSupported is true (status)
-   - nActivationMode is 1 (set_if_clear)*/
-   DSL_boolean_t bPafActivation;
-   /**
-   TxDataRateRatio
-   The TxDataRateRatio is the ratio of PHY0 to PHY1 data rates.
-   This value is coded as unsigned integer representing a scalar value within
-   range of 1/256 (coded as 0x1) to (2^16-2)/256 (coded as 0xFFFE) in steps
-   of 1/256.
-   The following special values are defined
-   - 0xFFFF specify that PHY0 is in showtime and PHY1 is not in showtime
-   - 0x0000 specify that PHY0 is not in showtime and PHY1 is in showtime */
-   DSL_uint16_t TxDataRateRatio;
-} DSL_BND_SetupData_t;
+   Port mode data*/
+   DSL_IN DSL_PortMode_t nPortMode;
+} DSL_BND_PortModeSyncData_t;
 
 /**
-   Structure used for configuration of the port specific bonding logic.
+   Structure used to specify bonding port mode.
    This structure has to be used for ioctl
-   - \ref  DSL_FIO_BND_SETUP
+   - \ref  DSL_FIO_BND_PORT_MODE_SYNC_SET
 */
 typedef struct
 {
@@ -321,22 +305,9 @@ typedef struct
    Driver control/status structure */
    DSL_IN_OUT DSL_AccessCtl_t accessCtl;
    /**
-   Structure that contains Bonding Setup data */
-   DSL_IN DSL_BND_SetupData_t data;
-} DSL_BND_Setup_t;
-
-/**
-   Structure used to tear down a bonding port.
-   This structure has to be used for ioctl
-   - \ref  DSL_FIO_BND_TEAR_DOWN
-*/
-typedef struct
-{
-   /**
-   Driver control/status structure */
-   DSL_IN_OUT DSL_AccessCtl_t accessCtl;
-} DSL_BND_TearDown_t;
-
+   Structure that contains Bonding link Port Mode data */
+   DSL_IN DSL_BND_PortModeSyncData_t data;
+} DSL_BND_PortModeSync_t;
 
 /**
    For a detailed description please refer to the equivalent ioctl
@@ -346,16 +317,6 @@ typedef struct
 DSL_Error_t DSL_DRV_BND_HwInit(
    DSL_IN DSL_Context_t *pContext,
    DSL_IN DSL_BND_HwInit_t *pData);
-#endif
-
-/*
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_BND_SETUP
-*/
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_BND_Setup(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN DSL_BND_Setup_t *pData);
 #endif
 
 /*
@@ -390,6 +351,12 @@ DSL_Error_t DSL_DRV_BND_HsStatusGet(
    DSL_OUT DSL_BND_HsStatusGet_t *pData);
 #endif
 
+#ifndef SWIG_TMP
+DSL_Error_t DSL_DRV_BND_RemotePafAvailableCheck(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_OUT DSL_uint16_t *pRemotePafAvailable);
+#endif
+
 /*
    For a detailed description please refer to the equivalent ioctl
    \ref DSL_FIO_BND_HS_CONTINUE
@@ -398,16 +365,6 @@ DSL_Error_t DSL_DRV_BND_HsStatusGet(
 DSL_Error_t DSL_DRV_BND_HsContinue(
    DSL_IN DSL_Context_t *pContext,
    DSL_OUT DSL_BND_HsContinue_t *pData);
-#endif
-
-/*
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_BND_TEAR_DOWN
-*/
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_BND_TearDown(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN DSL_BND_TearDown_t *pData);
 #endif
 
 /*
@@ -428,6 +385,18 @@ DSL_Error_t DSL_DRV_BND_EthDbgCountersGet(
 DSL_Error_t DSL_DRV_BND_EthCountersGet(
    DSL_IN DSL_Context_t *pContext,
    DSL_OUT DSL_BND_EthCounters_t *pData);
+#endif
+
+/*
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_BND_PORT_MODE_SYNC_SET
+*/
+#if (DSL_DRV_LINES_PER_DEVICE == 2)
+#ifndef SWIG_TMP
+DSL_Error_t DSL_DRV_BND_PortModeSyncSet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_OUT DSL_BND_PortModeSync_t *pData);
+#endif
 #endif
 
 /** @} DRV_DSL_CPE_BND */

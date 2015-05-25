@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -23,7 +22,6 @@
 
 #include "drv_dsl_cpe_vrx_msg_const.h"
 #include "drv_dsl_cpe_vrx_msg_config_pmd.h"
-#include "drv_dsl_cpe_vrx_msg_debug.h"
 #include "drv_dsl_cpe_vrx_msg_dmt_scope.h"
 #include "drv_dsl_cpe_vrx_msg_ghs_status.h"
 #include "drv_dsl_cpe_vrx_msg_olr.h"
@@ -75,7 +73,7 @@ DSL_Error_t DSL_DRV_VRX_ChRequestMessage(
    - DSL_SUCCESS (0) in case of success
    - DSL_ERROR (-1) if operation failed
 */
-DSL_Error_t DSL_DRV_VXX_SendMsgModemFsmStateGet(
+DSL_Error_t DSL_DRV_VRX_SendMsgModemFsmStateGet(
    DSL_Context_t *pContext,
    DSL_uint8_t *pAck);
 
@@ -283,7 +281,7 @@ DSL_Error_t DSL_DRV_VRX_SnrAllocationTableNeGet(
    - DSL_SUCCESS in case of success
    - DSL_ERROR if operation failed
 */
-DSL_Error_t DSL_DRV_VXX_BitAllocationTableGet(
+DSL_Error_t DSL_DRV_VRX_BitAllocationTableGet(
    DSL_Context_t *pContext,
    const DSL_AccessDir_t nDirection,
    DSL_G997_NSCData8_t *pData,
@@ -336,7 +334,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgOhOptionsSet(
    - DSL_SUCCESS (0) in case of success
    - DSL_ERROR (-1) if operation failed
 */
-DSL_Error_t DSL_DRV_VXX_SendMsgSelectedProfileVdsl2Get(
+DSL_Error_t DSL_DRV_VRX_SendMsgSelectedProfileVdsl2Get(
    DSL_Context_t *pContext);
 
 /*
@@ -350,7 +348,7 @@ DSL_Error_t DSL_DRV_VXX_SendMsgSelectedProfileVdsl2Get(
    - DSL_SUCCESS (0) in case of success
    - DSL_ERROR (-1) if operation failed
 */
-DSL_Error_t DSL_DRV_VXX_SendMsgModemFSMFailReasonGet(
+DSL_Error_t DSL_DRV_VRX_SendMsgModemFSMFailReasonGet(
    DSL_Context_t *pContext,
    DSL_uint8_t *pAck);
 
@@ -364,7 +362,7 @@ DSL_Error_t DSL_DRV_VXX_SendMsgModemFSMFailReasonGet(
    - DSL_SUCCESS in case of success
    - DSL_ERROR if operation failed
 */
-DSL_Error_t DSL_DRV_VXX_SendMsgXtseStatusGet(
+DSL_Error_t DSL_DRV_VRX_SendMsgXtseStatusGet(
    DSL_Context_t *pContext);
 
 /*
@@ -429,6 +427,21 @@ DSL_Error_t DSL_DRV_VRX_SendMsgLineStatusPerBandGet(
    DSL_AccessDir_t nDirection,
    DSL_uint8_t *pAck);
 
+/*
+   This function sends the firmware message "CMD_PBO_AELEM_Status_Get".
+
+   \param pContext Pointer to dsl library context structure, [I]
+   \param pAck pointer to the msg ACK, [O]
+
+   \return
+   Return values are defined within the DSL_Error_t definition
+   - DSL_SUCCESS (0) in case of success
+   - DSL_ERROR (-1) if operation failed
+*/
+DSL_Error_t DSL_DRV_VRX_SendMsgUsPowerBackOffStatusGet(
+   DSL_Context_t *pContext,
+   DSL_uint8_t *pAck);
+
 #ifdef INCLUDE_DSL_G997_LINE_INVENTORY
 /*
    Read all the Inventory information of the Far End from the device,
@@ -441,7 +454,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgLineStatusPerBandGet(
    - DSL_SUCCESS in case of success
    - DSL_ERROR if operation failed
 */
-DSL_Error_t DSL_DRV_VXX_SendMsgInventoryFeGet(
+DSL_Error_t DSL_DRV_VRX_SendMsgInventoryFeGet(
    DSL_Context_t *pContext);
 #endif /* INCLUDE_DSL_G997_LINE_INVENTORY*/
 
@@ -509,7 +522,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsConfigure(
    - DSL_SUCCESS (0) in case of success
    - DSL_ERROR (-1) if operation failed
 */
-DSL_Error_t DSL_DRV_VXX_SendMsgBandControlGet(
+DSL_Error_t DSL_DRV_VRX_SendMsgBandControlGet(
    DSL_Context_t *pContext,
    const DSL_AccessDir_t nDirection,
    DSL_BandList_t *pBandList);
@@ -567,7 +580,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgTestParamsAuxGet(
    - DSL_SUCCESS (0) in case of success
    - DSL_ERROR (-1) if operation failed
 */
-DSL_Error_t DSL_DRV_VXX_SendMsgSpar1Get(
+DSL_Error_t DSL_DRV_VRX_SendMsgSpar1Get(
    DSL_Context_t *pContext);
 
 #ifdef INCLUDE_DSL_G997_LINE_INVENTORY
@@ -682,7 +695,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgBearerChannelStatusGet(
 */
 DSL_Error_t DSL_DRV_VRX_SendMsgTxL3RequestFailReasonGet(
    DSL_Context_t *pContext,
-   DSL_VNX_L3RequestFailReason_t *pFailReason);
+   DSL_VRX_L3RequestFailReason_t *pFailReason);
 
 /*
    This function send the firmware message "CMD_TxL3RequestStatusGet".
@@ -697,10 +710,10 @@ DSL_Error_t DSL_DRV_VRX_SendMsgTxL3RequestFailReasonGet(
 */
 DSL_Error_t DSL_DRV_VRX_SendMsgTxL3RequestStatusGet(
    DSL_Context_t *pContext,
-   DSL_VNX_L3RequestStatus_t *pStatus);
+   DSL_VRX_L3RequestStatus_t *pStatus);
 
 /*
-   This function send the firmware message "CMD_L3ShutdownRequest".
+   This function send the firmware message "CMD_ShutdownRequest".
 
    \param pContext Pointer to DSL CPE library context structure, [I]
 
@@ -709,7 +722,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgTxL3RequestStatusGet(
    - DSL_SUCCESS (0) in case of success
    - DSL_ERROR (-1) if operation failed
 */
-DSL_Error_t DSL_DRV_VRX_SendMsgL3ShutdownRequest(
+DSL_Error_t DSL_DRV_VRX_SendMsgShutdownRequest(
    DSL_Context_t *pContext);
 
 /*
@@ -725,7 +738,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgL3ShutdownRequest(
    - DSL_SUCCESS in case of success
    - DSL_ERROR if operation failed
 */
-DSL_Error_t DSL_DRV_VXX_SendMsgXtseConfigure(
+DSL_Error_t DSL_DRV_VRX_SendMsgXtseConfigure(
    DSL_Context_t *pContext,
    DSL_G997_XTUSystemEnablingData_t *pXTSE);
 
@@ -797,7 +810,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsEnableStatusGet(
 
 /*
    This function sends the VRX firmware message
-   CMD_RTX_PMwoThreshDS_Get
+   CMD_RTX_PM_DS_Get
 
    \param pContext Pointer to dsl library context structure, [I]
    \param pAck Pointer to the msg ACK, [O]
@@ -807,7 +820,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsEnableStatusGet(
    - DSL_SUCCESS in case of success
    - DSL_ERROR if operation failed
 */
-DSL_Error_t DSL_DRV_VRX_SendMsgRtxPmwoThreshDsGet(
+DSL_Error_t DSL_DRV_VRX_SendMsgRtxPmDsGet(
    DSL_Context_t *pContext,
    DSL_uint8_t *pAck);
 
@@ -858,7 +871,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgFrameDataExt2Get(
    - DSL_SUCCESS in case of success
    - DSL_ERROR if operation failed
 */
-DSL_Error_t DSL_DRV_VXX_SendMsgTxControlSet(
+DSL_Error_t DSL_DRV_VRX_SendMsgTxControlSet(
    DSL_Context_t *pContext,
    const DSL_uint16_t TxControl);
 
@@ -921,7 +934,7 @@ DSL_Error_t DSL_DRV_VRX_SendOperationOptionsSet(
    - DSL_SUCCESS in case of success
    - DSL_ERROR if operation failed
 */
-DSL_Error_t DSL_DRV_VXX_SendMsgModemFsmOptionsSet(
+DSL_Error_t DSL_DRV_VRX_SendMsgModemFsmOptionsSet(
    DSL_Context_t *pContext,
    const DSL_boolean_t bAutoRestart,
    const DSL_boolean_t bDiagMode);
@@ -932,13 +945,16 @@ DSL_Error_t DSL_DRV_VXX_SendMsgModemFsmOptionsSet(
 
    \param pContext - Pointer to DSL CPE library context structure, [I]
 
+   \param bEnableVirtualNoise - Enable/Disable virtual noise flag
+
    \return
    Return values are defined within the DSL_Error_t definition
    - DSL_SUCCESS in case of success
    - DSL_ERROR if operation failed
 */
 DSL_Error_t DSL_DRV_VRX_SendMsgModemFsmOptions2Set(
-   DSL_Context_t *pContext);
+   DSL_Context_t *pContext,
+   DSL_boolean_t bEnableVirtualNoise);
 
 /*
    This function sends the firmware message "CMD_HS_ToneGroupSet".
@@ -968,9 +984,56 @@ DSL_Error_t DSL_DRV_VRX_SendMsgHsToneGroupSet(
    - DSL_SUCCESS (0) in case of success
    - DSL_ERROR (-1) if operation failed
 */
-DSL_Error_t DSL_DRV_VXX_SendMsgModemStateSet(
+DSL_Error_t DSL_DRV_VRX_SendMsgModemStateSet(
    DSL_Context_t *pContext,
    const DSL_uint16_t nMode);
+
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+/*
+   This function sends the VRX firmware message "CMD_ShutdownRequest".
+
+   \param pContext Pointer to dsl cpe library context structure, [I]
+
+   \return
+   Return values are defined within the DSL_Error_t definition
+   - DSL_SUCCESS (0) in case of success
+   - DSL_ERROR (-1) if operation failed
+*/
+DSL_Error_t DSL_DRV_VRX_SendMsgOrderlyShutDownRequest(
+   DSL_Context_t *pContext);
+#endif /* INCLUDE_DSL_CPE_API_VRX */
+
+/**
+   This function sends the VRX firmware undefined message
+   to freeze TX link
+
+   \param pContext - Pointer to DSL library context structure,
+   \param nVal  - firmware internal value
+
+   \return
+   Return values are defined within the DSL_Error_t definition
+   - DSL_SUCCESS in case of success
+   - DSL_ERROR if operation failed
+*/
+DSL_Error_t DSL_DRV_VRX_SendMsgLinkFreezeTX(
+   DSL_Context_t *pContext,
+   const DSL_uint16_t nVal);
+
+/**
+   This function sends the VRX firmware undefined message
+   to freeze RX link
+
+   \param pContext - Pointer to DSL library context structure,
+   \param nVal  - firmware internal value
+
+   \return
+   Return values are defined within the DSL_Error_t definition
+   - DSL_SUCCESS in case of success
+   - DSL_ERROR if operation failed
+*/
+DSL_Error_t DSL_DRV_VRX_SendMsgLinkFreezeRX(
+   DSL_Context_t *pContext,
+   const DSL_uint16_t nVal);
 
 /**
    This function sends the VRX firmware message CMD_VersionInfoGet.
@@ -1036,6 +1099,9 @@ DSL_Error_t DSL_DRV_VRX_SendMsgHybridInfoGet(
    DSL_uint8_t *pAck);
 
 DSL_Error_t DSL_DRV_VRX_SendMsgMiscConfigSet(
+   DSL_Context_t *pContext);
+
+DSL_Error_t DSL_DRV_VRX_SendMsgTestOptionsSet(
    DSL_Context_t *pContext);
 
 /** @} DRV_DSL_DEVICE */

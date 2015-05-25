@@ -39,7 +39,6 @@ b) the usage of "<device>" indicates that a device specific file will be
    available according to the used source code delivery type.
    Currently there are deliveries as follows
    - "danube": Danube Family (includes Danube, Amazon-SE and ARX100)
-   - "vinax": Vinax
    - "vrx": VRX200 Family
 
 drv_dsl_cpe_api\
@@ -117,14 +116,6 @@ drv_dsl_cpe_api\
     ¦       // Danube Family only files as follows
     ¦       drv_dsl_cpe_cmv_danube.h
     ¦
-    ¦       // Vinax only files as follows
-    ¦       drv_dsl_cpe_vinax_ctx.h
-    ¦       drv_dsl_cpe_vinax_mdio.h
-    ¦       drv_dsl_cpe_vinax_msg_config_pmd.h
-    ¦       drv_dsl_cpe_vinax_msg_<xxx>.h
-    ¦
-    +---led                                 // LED specific implementation
-    ¦       drv_dsl_cpe_led.c               // Only Danube Family (deprecated)
     ¦
     +---mib                                 // Implementation for SNMP (RFC2662/3440)
     ¦       drv_dsl_cpe_adslmib.c           // Only for Danube Family

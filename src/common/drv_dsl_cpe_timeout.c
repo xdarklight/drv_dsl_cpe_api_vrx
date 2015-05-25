@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -17,7 +16,7 @@
 #undef DSL_DBG_BLOCK
 #define DSL_DBG_BLOCK DSL_DBG_CPE_API
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX) || \
+#if defined(INCLUDE_DSL_CPE_API_VRX) || \
    (defined(INCLUDE_DSL_CPE_API_DANUBE) && defined(INCLUDE_DSL_G997_LINE_INVENTORY))
 
 /** \file
@@ -744,5 +743,5 @@ DSL_Error_t DSL_DRV_Timeout_Debug_PrintTimeoutList(
 
 /** @} DRV_DSL_CPE_COMMON */
 
-#endif /* defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX) ||
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX) ||
          (defined(INCLUDE_DSL_CPE_API_DANUBE) && defined(INCLUDE_DSL_G997_LINE_INVENTORY))*/

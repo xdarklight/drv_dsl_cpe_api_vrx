@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -42,8 +41,21 @@ typedef enum
       - the activated xDSL modes (\ref  DSL_G997_XTUSystemEnablingData_t)
       - the used firmware/hybrid constellation
 
-      \attention Do not change to manual mode unless there are cogent reasons
-                 for it! */
+      In case of operating an AnnexA (oPOTS) firmware the following G.HS tones
+      are used in case of ADSL and VDSL link activation
+      - A43 and A43c
+
+      In case of operating an AnnexB (oISDN) firmware the following G.HS tones
+      are used in case of ADSL and VDSL link activation
+      - B43 and B43c
+
+      \note Do not change to manual mode unless there are cogent reasons for
+            it!
+
+      \note Configuration needs to be changed to
+            DSL_DEV_HS_TONE_GROUP_MODE_MANUAL to include V43 G.HS tones
+            (DSL_DEV_HS_TONE_GROUP_VDSL2_V43) for NA profiles where US0 is
+            disabled (ie TR114 AA profile 17 tests). */
    DSL_DEV_HS_TONE_GROUP_MODE_AUTO = 0,
    /**
       Enables the manual mode for sending handshake tones.
@@ -146,12 +158,12 @@ typedef enum
 /**
    Device specific low level configuration.
 
-   \note Currently (E07/B08 2010) there is no DSL PHY firmware available that
-         supports to configure the handshake tones within ADSL mode.
-         However the API tries to configure it already and interprets the
-         resulting error as an internal "not supported" warning. With this
-         handling the API could directly support full hanshake configurations
-         as defined without further changes.
+   \note Currently there is no DSL PHY firmware available that supports to
+         configure the handshake tones within ADSL mode. However the API tries
+         to configure it already and interprets the resulting error as an
+         internal "not supported" warning. With this handling the API could
+         directly support full handshake configurations as defined without
+         further changes.
 */
 typedef struct
 {
@@ -177,13 +189,8 @@ typedef struct
          handshake tone group selection (\ref DSL_DEV_HS_TONE_GROUP_MODE_MANUAL) */
    DSL_DEV_HsToneGroup_t nHsToneGroup_V;
    /**
-   Selects one or more groups of tones to be used during the handshake phase
-   in case of activating the link using multimode ADSL+VDSL xDSL modes.
-   \note This parameter is only used in case of activating manual mode for
-         handshake tone group selection (\ref DSL_DEV_HS_TONE_GROUP_MODE_MANUAL)
-   \attention In manual mode there is no logic within API internal handling!
-         This means that the ADSL related handshake tones has to be selected
-         in accordance to the used firmware Annex type. */
+   This parameter is not used anymopre, means it is ignored.
+   It is reserved for future usage. */
    DSL_DEV_HsToneGroup_t nHsToneGroup_AV;
    /**
    Base Address of the VRX device */
@@ -191,12 +198,6 @@ typedef struct
    /**
    IRQ of the VRX device */
    DSL_int8_t nIrqNum;
-   /**
-   US Virtual Noise Support */
-   DSL_boolean_t bVirtualNoiseSupportUs;
-   /**
-   DS Virtual Noise Support */
-   DSL_boolean_t bVirtualNoiseSupportDs;
    /**
    Network Timing Reference Control */
    DSL_boolean_t bNtrEnable;
@@ -213,33 +214,29 @@ struct DSL_DeviceConfig
       settings*/
    DSL_DeviceLowLevelConfig_t cfg;
    /**
-   System interface configuration*/
-   DSL_SystemInterfaceConfigData_t sysCIF;
+   System interface configuration
+   \note The value for \ref nSystemIf ist not used because it set API
+         internally fixed to \ref DSL_SYSTEMIF_MII */
+   DSL_SystemInterfaceConfigData_t sysCIF[DSL_MODE_LAST];
    /** MAC configuration settings*/
    DSL_EFM_MacConfigData_t MacCfg;
-#ifdef HAS_TO_BE_CROSSCHECKED_FOR_VRX
-   /** SAR Configuration*/
-   DSL_SAR_ConfigData_t SARcfg;
-   /** Segmentation Table*/
-   DSL_SAR_SegmentationTableData_t SegmentationTable;
-   /** Reassembly Table*/
-   DSL_SAR_ReassemblyTableData_t ReassemblyTable;
-#endif
    /** Common channel configuration parameters
        (see chapter 7.3.2.1 of G.997.1), for the UPSTREAM and DOWNSTREAM direction
        Only for the bearer channel 0*/
-   DSL_G997_ChannelConfigData_t ChannelConfigData[2];
+   DSL_G997_ChannelConfigData_t ChannelConfigData[DSL_ACCESSDIR_LAST];
    /** Actual selected Band Plan/Profile*/
    DSL_BandPlanConfigData_t bandPlanStatusNe;
    /**
       Structure to return the current type of firmware request.
       It defines which kind of firmware is needed for the next reboot
-      sequence. */
+      sequence.  */
    DSL_FirmwareRequestType_t nFwType;
    /** Multimode related initial configurations. */
    DSL_MultimodeFsmConfigData_t nMultimodeCfg;
    /** Initial configurations for handshake related link activation handling. */
    DSL_ActivationFsmConfigData_t nActivationCfg;
+   /** Multimode remember related initial configurations. */
+   DSL_boolean_t bRememberCfg;
 };
 
 

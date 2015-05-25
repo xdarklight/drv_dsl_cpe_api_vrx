@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -14,6 +13,11 @@
 
 #ifdef __cplusplus
    extern "C" {
+#endif
+
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 1)
+extern DSL_DRV_Mutex_t bndLineLockMutex;
+extern DSL_int_t       nLineLocked;
 #endif
 
 /** This type represents internal autoboot thread state */
@@ -33,7 +37,11 @@ typedef enum DSL_Autoboot_State
    DSL_AUTOBOOTSTATE_CONFIG_WRITE_WAIT = 11,
    DSL_AUTOBOOTSTATE_LINK_ACTIVATE_WAIT = 12,
    DSL_AUTOBOOTSTATE_RESTART_WAIT = 13,
-   DSL_AUTOBOOTSTATE_LAST = 14
+   DSL_AUTOBOOTSTATE_ORDERLY_SHUTDOWN_REQUEST = 14,
+   DSL_AUTOBOOTSTATE_ORDERLY_SHUTDOWN_WAIT = 15,
+   DSL_AUTOBOOTSTATE_ORDERLY_SHUTDOWN_REACHED = 16,
+   DSL_AUTOBOOTSTATE_DISABLED = 17,
+   DSL_AUTOBOOTSTATE_LAST = 18
 } DSL_Autoboot_State_t;
 
 /**
@@ -156,6 +164,11 @@ DSL_Error_t DSL_DRV_AutobootTimeoutSet(
 #define DSL_AUTOBOOT_RESTART_WAIT_POLL_TIME 100
 #define DSL_AUTOBOOT_FW_READY_POLL_TIME 100
 #define DSL_AUTOBOOT_RESTART_POLL_TIME 0
+#define DSL_AUTOBOOT_ORDERLY_SHUTDOWN_POLL_TIME 250
+#define DSL_AUTOBOOT_DISABLE_POLL_TIME 100
+
+/** Waitnig for orderly shutdown ready timeout in sec */
+#define DSL_AUTOBOOT_ORDERLY_SHUTDOWN_TIMEOUT 12
 
 /** This constant defines default value for autoboot training timeout in sec */
 #define DSL_AUTOBOOT_TRAINING_TIMEOUT_DEFAULT 120

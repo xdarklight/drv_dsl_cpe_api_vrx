@@ -9,9 +9,6 @@
 /* Include DSL DELT static data support */
 #undef DSL_CPE_STATIC_DELT_DATA
 
-/* ADSL data led flash frequency */
-#undef DSL_DATA_LED_FLASH_FREQUENCY
-
 /* Debug level = local */
 #undef DSL_DBG_MAX_LEVEL_PRE
 
@@ -21,11 +18,17 @@
 /* Disabled debug prints */
 #undef DSL_DEBUG_DISABLE
 
+/* Maximum lines per DSL device to support */
+#undef DSL_DRV_LINES_PER_DEVICE
+
 /* Maximum DSL devices to support */
 #undef DSL_DRV_MAX_DEVICE_NUMBER
 
-/* Include ADSL LED support */
-#undef INCLUDE_ADSL_LED
+/* Add VR10 support */
+#undef DSL_VRX_DEVICE_VR10
+
+/* Add VR9 support */
+#undef DSL_VRX_DEVICE_VR9
 
 /* Include deprecated functions */
 #undef INCLUDE_DEPRECATED
@@ -50,9 +53,6 @@
 
 /* Include IFXOS support */
 #undef INCLUDE_DSL_CPE_API_IFXOS_SUPPORT
-
-/* Add VINAX support */
-#undef INCLUDE_DSL_CPE_API_VINAX
 
 /* Add VRX support */
 #undef INCLUDE_DSL_CPE_API_VRX
@@ -89,9 +89,6 @@
 
 /* Include DSL PM line event showtime counters support */
 #undef INCLUDE_DSL_CPE_PM_LINE_EVENT_SHOWTIME_COUNTERS
-
-/* Include DSL PM line failure counters support */
-#undef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
 
 /* Include DSL PM line thresholds support */
 #undef INCLUDE_DSL_CPE_PM_LINE_THRESHOLDS

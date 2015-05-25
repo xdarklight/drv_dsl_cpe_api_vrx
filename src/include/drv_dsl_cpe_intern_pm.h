@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -289,14 +288,6 @@ DSL_Error_t DSL_DRV_PM_LineEventShowtimeHistoryStats15MinGet(
    DSL_IN DSL_Context_t *pContext,
    DSL_IN_OUT DSL_PM_HistoryStatsChDir_t *pStats
 );
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_Error_t DSL_DRV_PM_LineFailureHistoryStats15MinGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_PM_HistoryStatsChDir_t *pStats
-);
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /* INCLUDE_DEPRECATED */
 
 /**
    For a detailed description please refer to the equivalent ioctl
@@ -306,14 +297,6 @@ DSL_Error_t DSL_DRV_PM_LineEventShowtimeHistoryStats1DayGet(
    DSL_IN DSL_Context_t *pContext,
    DSL_IN_OUT DSL_PM_HistoryStatsChDir_t *pStats
 );
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_Error_t DSL_DRV_PM_LineFailureHistoryStats1DayGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_PM_HistoryStatsChDir_t *pStats
-);
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /* INCLUDE_DEPRECATED */
 #endif /* INCLUDE_DSL_CPE_PM_OPTIONAL_PARAMETERS*/
 
 /**
@@ -324,14 +307,6 @@ DSL_Error_t DSL_DRV_PM_LineEventShowtimeCounters15MinGet(
    DSL_IN DSL_Context_t *pContext,
    DSL_IN_OUT DSL_PM_LineEventShowtimeCounters_t *pCounters
 );
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_Error_t DSL_DRV_PM_LineFailureCounters15MinGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_PM_LineFailureCounters_t *pCounters
-);
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /* INCLUDE_DEPRECATED */
 
 /**
    For a detailed description please refer to the equivalent ioctl
@@ -341,12 +316,6 @@ DSL_Error_t DSL_DRV_PM_LineEventShowtimeCounters1DayGet(
    DSL_IN DSL_Context_t *pContext,
    DSL_IN_OUT DSL_PM_LineEventShowtimeCounters_t *pCounters
 );
-#ifdef INCLUDE_DEPRECATED
-DSL_Error_t DSL_DRV_PM_LineFailureCounters1DayGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_PM_LineFailureCounters_t *pCounters
-);
-#endif /* INCLUDE_DEPRECATED */
 
 #ifdef INCLUDE_DSL_CPE_PM_TOTAL_COUNTERS
 /**
@@ -357,15 +326,7 @@ DSL_Error_t DSL_DRV_PM_LineEventShowtimeCountersTotalGet(
    DSL_IN DSL_Context_t *pContext,
    DSL_IN_OUT DSL_PM_LineEventShowtimeCountersTotal_t *pCounters
 );
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_Error_t DSL_DRV_PM_LineFailureCountersTotalGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_PM_LineFailureCountersTotal_t *pCounters
-);
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /** INCLUDE_DEPRECATED */
-#endif /** INCLUDE_DSL_CPE_PM_TOTAL_COUNTERS*/
+#endif /* INCLUDE_DSL_CPE_PM_TOTAL_COUNTERS */
 
 #ifdef INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS
 /**
@@ -376,15 +337,7 @@ DSL_Error_t DSL_DRV_PM_LineEventShowtimeCountersShowtimeGet(
    DSL_IN DSL_Context_t *pContext,
    DSL_IN_OUT DSL_PM_LineEventShowtimeCounters_t *pCounters
 );
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_Error_t DSL_DRV_PM_LineFailureCountersShowtimeGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_PM_LineFailureCounters_t *pCounters
-);
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /** INCLUDE_DEPRECATED */
-#endif /** INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS*/
+#endif /* INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS */
 
 #endif /* #ifdef INCLUDE_DSL_CPE_PM_LINE_EVENT_SHOWTIME_COUNTERS */
 
@@ -887,6 +840,10 @@ DSL_Error_t DSL_DRV_PM_Dump(
 );
 
 #endif /* defined(DSL_PM_DEBUG_MODE_ENABLE) && (DSL_PM_DEBUG_MODE_ENABLE > 0) */
+
+#ifdef INCLUDE_DSL_CPE_PM_RETX_COUNTERS
+#define EFTR_ZERO_VALUE_SKIP(x) (!(x)) ? 0xFFFFFFFF : (x)
+#endif /*INCLUDE_DSL_CPE_PM_RETX_COUNTERS*/
 
 /** @} DRV_DSL_CPE_PM */
 

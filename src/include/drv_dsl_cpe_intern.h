@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -38,10 +37,6 @@
 
 #if defined(INCLUDE_DSL_ADSL_MIB)
    #include "drv_dsl_cpe_intern_mib.h"
-#endif
-
-#if defined(INCLUDE_DSL_CPE_API_VINAX)
-   #include "drv_dsl_cpe_intern_sar.h"
 #endif
 
 /*
@@ -164,31 +159,6 @@ typedef enum
    DSL_ANNEX_LAST
 } DSL_AnnexType_t;
 
-typedef enum
-{
-   /* Turn Data LED OFF*/
-   DSL_DATA_LED_OFF = 0,
-   /* Turn Data LED ON*/
-   DSL_DATA_LED_ON  = 1,
-   /* Turn Data LED to BLINK. Data LED blinking is only possible during
-      showtime.*/
-   DAL_DATA_LED_BLINK = 2,
-   /* Stop Data LED blink*/
-   DAL_DATA_LED_STOP_BLINK = 3
-} DSL_DataLedBehavior_t;
-
-typedef struct
-{
-   /* Data LED behavior.*/
-   DSL_DataLedBehavior_t nLedBehavior;
-   /* Timeout value expressed in [ms].
-      Optional parameter to specify Data LED timeout before consecutive
-      Data LED blink triggers. Used only in conjunction with DAL_DATA_LED_BLINK.
-      Valid range is: 1...10000 with 1 ms steps,
-      Default value is 1000 ms*/
-   DSL_uint32_t nBlinkTimeout;
-} DSL_DataLedSimControlData_t;
-
 typedef struct
 {
    DSL_uint32_t nRxCorruptedTotal;
@@ -205,7 +175,6 @@ typedef struct
 */
 typedef struct
 {
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
    DSL_HybridSelectionData_t hybridSelectionData;
    DSL_boolean_t bLoopLengthValid;
    DSL_Error_t nLoopLengthErrCode;
@@ -216,7 +185,6 @@ typedef struct
    DSL_boolean_t bFilterDetectionActive;
    DSL_FilterDetectionData_t filterDetectionData;
 #endif /* #if defined(INCLUDE_DSL_FILTER_DETECTION)*/
-#endif /* INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_VRX */
 } DSL_ShowtimeMeasurement_t;
 
 /**
@@ -228,6 +196,8 @@ struct DSL_Context
    DSL_boolean_t bInitComplete;
    /** Back pointer to the device context structure */
    DSL_devCtx_t *pDevCtx;
+   /** TBD*/
+   DSL_devCtx_t *pXDev;
    /** Device mutex */
    DSL_DRV_Mutex_t  bspMutex;
    /** Data access mutex */
@@ -262,6 +232,14 @@ struct DSL_Context
    DSL_boolean_t bAutobootRestart;
    /** External Trigger to resume autoboot handling*/
    DSL_boolean_t bAutobootContinue;
+   /** Soft restart flag*/
+   DSL_boolean_t bSoftRestart;
+   /** Hard restart flag*/
+   DSL_boolean_t bHardRestart;
+   /** Orderly shutdown reached */
+   DSL_boolean_t bOrderlyShutDown;
+   /** External Trigger to restart autoboot handling*/
+   DSL_boolean_t bAutobootDisable;
    /** Autoboot queue */
    DSL_DRV_Event_t autobootEvent;
    /** Autoboot thread activity flag */
@@ -304,16 +282,16 @@ struct DSL_Context
    /** Firmware unavailable duration */
    DSL_uint32_t nFwUnavailableTime;
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX) || \
+#if defined(INCLUDE_DSL_CPE_API_VRX) || \
    (defined(INCLUDE_DSL_CPE_API_DANUBE) && defined(INCLUDE_DSL_G997_LINE_INVENTORY))
    /** Timeout lists context includes information of a specified
        timeout list. */
    DSL_TimeoutContext_t TimeoutListsContext;
-#endif /* defined(INCLUDE_DSL_CPE_API_VINAX) || (defined(INCLUDE_DSL_CPE_API_DANUBE) && defined(INCLUDE_DSL_G997_LINE_INVENTORY))*/
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#endif /* (defined(INCLUDE_DSL_CPE_API_DANUBE) && defined(INCLUDE_DSL_G997_LINE_INVENTORY))*/
+#if defined(INCLUDE_DSL_CPE_API_VRX)
    /** EAPS timeout ID*/
    DSL_uint32_t nEapsTimeoutId;
-#endif /** defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)*/
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX)*/
    /** Flag that indicates about presence of firmware load handler */
    DSL_boolean_t bFirmwareEventAssigned;
 #ifdef INCLUDE_DSL_CPE_API_DANUBE
@@ -357,7 +335,7 @@ struct DSL_Context
 #endif /* INCLUDE_DSL_CPE_API_DANUBE*/
 #ifdef INCLUDE_DEVICE_EXCEPTION_CODES
    /** Last Exception Codes*/
-   DSL_DBG_LastExceptionCodesData_t LastExceptionCodes;
+   DSL_LastExceptionCodesData_t LastExceptionCodes;
 #endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
    /** Near end inventory information */
    DSL_G997_LineInventoryData_t lineInventoryNe;
@@ -402,10 +380,10 @@ struct DSL_Context
    DSL_uint32_t lineInitRetryCount;
 
    /** Channel status */
-   DSL_uint32_t ActualInterleaveDelayUs[DSL_CHANNELS_PER_LINE];
-   DSL_uint32_t ActualInterleaveDelayDs[DSL_CHANNELS_PER_LINE];
-   DSL_uint8_t ActualImpulseNoiseProtectionUs[DSL_CHANNELS_PER_LINE];
-   DSL_uint8_t ActualImpulseNoiseProtectionDs[DSL_CHANNELS_PER_LINE];
+   DSL_uint32_t ActualInterleaveDelay[DSL_ACCESSDIR_LAST][DSL_CHANNELS_PER_LINE];
+   DSL_uint16_t ActualImpulseNoiseProtection[DSL_ACCESSDIR_LAST][DSL_CHANNELS_PER_LINE];
+   DSL_uint16_t ActualImpulseNoiseProtectionRein[DSL_ACCESSDIR_LAST][DSL_CHANNELS_PER_LINE];
+   DSL_uint16_t ActualImpulseNoiseProtectionNoErasure[DSL_ACCESSDIR_LAST][DSL_CHANNELS_PER_LINE];
 
    /** Actual Data Rate per direction, per channel */
    DSL_uint32_t nChannelActualDataRate[DSL_ACCESSDIR_LAST][DSL_CHANNELS_PER_LINE];
@@ -413,6 +391,9 @@ struct DSL_Context
 
    /** Previous Data Rate per direction, per channel */
    DSL_uint32_t nChannelPreviousDataRate[DSL_ACCESSDIR_LAST][DSL_CHANNELS_PER_LINE];
+
+   /** Actual Net Data Rate per direction, per channel */
+   DSL_uint32_t nChannelActualNetDataRate[DSL_ACCESSDIR_LAST][DSL_CHANNELS_PER_LINE];
 
    /** Previous Data Rate valid flag */
    DSL_boolean_t bPrevDataRateValid;
@@ -438,7 +419,7 @@ struct DSL_Context
 #ifdef INCLUDE_DSL_DELT
    /** Pointer to DELT data storage */
    DSL_G997_DeltData_t *DELT;
-   #if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+   #if defined(INCLUDE_DSL_CPE_API_VRX)
    DSL_G997_DeltShowtimeData_t *DELT_SHOWTIME;
    #endif
 #endif /* #ifdef INCLUDE_DSL_DELT*/
@@ -447,23 +428,6 @@ struct DSL_Context
    DSL_xDslMode_t nXDslMode;
    /** Current Annex type */
    DSL_AnnexType_t nAnnexType;
-
-   /** LED */
-#if defined(INCLUDE_DEPRECATED) && defined(INCLUDE_ADSL_LED)
-   /** Led polling queue */
-   DSL_DRV_Event_t ledPollingEvent;
-   /** This flag indicates that Status Led should be turned on */
-   DSL_boolean_t bLedStatusOn;
-   /** This flag indicates that Status Led should flash */
-   DSL_boolean_t bLedNeedToFlash;
-   /** This flag indicates the status of the Led module initialization*/
-   DSL_boolean_t bLedInit;
-#endif /* defined(INCLUDE_DEPRECATED) && defined(INCLUDE_ADSL_LED)*/
-
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) && defined(INCLUDE_DSL_DATA_LED_SIMULATOR)
-   DSL_DataLedSimControlData_t nDataLedSimControlData;
-   DSL_DRV_Event_t dataLedSimEvent;
-#endif /* defined(INCLUDE_DSL_CPE_API_DANUBE) && defined(INCLUDE_DSL_DATA_LED_SIMULATOR)*/
 
    /** Statistics */
    /** Software UAS counter */
@@ -483,11 +447,6 @@ struct DSL_Context
    DSL_G997_BF_DataPathFailures_t nDataPathFailuresFe[DSL_CHANNELS_PER_LINE];
    DSL_G997_BF_DataPathFailures_t nDataPathFailuresNeAlarmMask;
    DSL_G997_BF_DataPathFailures_t nDataPathFailuresFeAlarmMask;
-
-#if defined(INCLUDE_DSL_CPE_API_VINAX)
-   DSL_LinePathCounterTotalData_t nTotalLinePathCounters[DSL_CHANNELS_PER_LINE];
-   DSL_DataPathCounterTotalData_t nTotalDataPathCounters[DSL_CHANNELS_PER_LINE];
-#endif
 
 #ifdef INCLUDE_DSL_CPE_TRACE_BUFFER
    /** Showtime event logging buffer */
@@ -543,12 +502,15 @@ struct DSL_Context
    /**
    Bonding Configuration Data*/
    DSL_BND_ConfigData_t BndConfig;
+#if (DSL_DRV_LINES_PER_DEVICE == 2)
+   /**
+   Bonding Port Mode sync Data*/
+   DSL_PortMode_t BndPortModeSync;
+#endif
 #endif /* INCLUDE_DSL_BONDING*/
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
    /** Retransmission counters */
    DSL_ReTxCounters_t retxCounters;
-#endif /*#if defined(INCLUDE_DSL_CPE_API_DANUBE)*/
 
 #ifdef INCLUDE_REAL_TIME_TRACE
    DSL_boolean_t bRttEnabled;
@@ -561,6 +523,12 @@ struct DSL_Context
    DSL_uint16_t nRttStartIndex;
    DSL_uint16_t nRttSize;
 #endif /*#ifdef INCLUDE_REAL_TIME_TRACE*/
+
+#ifdef INCLUDE_DSL_CPE_API_VRX
+   DSL_G997_PMMode_t PMMode;
+   DSL_VRX_TestParams_Fe_Status_t eTestParametersFeReady;
+   DSL_uint32_t                   nTestParametersFeRefreshTimeout;
+#endif /* INCLUDE_DSL_CPE_API_VRX*/
 };
 
 #define DSL_EVENT2MASK(evt) ((DSL_uint32_t)(0x1 << ((DSL_uint32_t)evt)))
@@ -828,7 +796,7 @@ DSL_Error_t DSL_DRV_EventGenerate(
 #endif
 
 #if defined(INCLUDE_DSL_G997_STATUS) || defined(INCLUDE_DSL_G997_ALARM) || \
-    defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+    defined(INCLUDE_DSL_CPE_API_VRX)
 #ifndef SWIG
 DSL_Error_t DSL_DRV_HandleLinitValue(
    DSL_Context_t *pContext,
@@ -962,32 +930,6 @@ DSL_Error_t DSL_DRV_TestModeStatusGet(
 
 /** \addtogroup DRV_DSL_CPE_COMMON
  @{ */
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/**
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_LINE_PATH_COUNTER_TOTAL_GET
-*/
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_LinePathCounterTotalGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_LinePathCounterTotal_t *pData
-);
-#endif
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX */
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/**
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_DATA_PATH_COUNTER_TOTAL_GET
-*/
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_DataPathCounterTotalGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_DataPathCounterTotal_t *pData
-);
-#endif
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX */
 
 /**
    For a detailed description please refer to the equivalent ioctl
@@ -1128,41 +1070,6 @@ DSL_Error_t DSL_DRV_RebootCriteriaConfigGet(
    DSL_IN DSL_Context_t *pContext,
    DSL_IN_OUT DSL_RebootCriteriaConfig_t *pData);
 
-#if defined(INCLUDE_DSL_CPE_API_VRX)
-/**
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_MULTIMODE_FSM_CONFIG_SET
-*/
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_MultimodeFsmConfigSet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_MultimodeFsmConfig_t *pData);
-#endif
-
-/**
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_MULTIMODE_FSM_CONFIG_GET
-*/
-#ifdef INCLUDE_DSL_CONFIG_GET
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_MultimodeFsmConfigGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_MultimodeFsmConfig_t *pData);
-#endif
-#endif
-
-/**
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_MULTIMODE_FSM_STATUS_GET
-*/
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_MultimodeFsmStatusGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_MultimodeFsmStatus_t *pData);
-#endif
-#endif /* #if defined(INCLUDE_DSL_CPE_API_VRX)*/
-
-
 #if defined(INCLUDE_DSL_CPE_MISC_LINE_STATUS) || defined(INCLUDE_DSL_CPE_API_DANUBE)
 #ifndef SWIG_TMP
 DSL_Error_t DSL_DRV_AdslBandLimitsGet(
@@ -1225,13 +1132,13 @@ DSL_Error_t DSL_DRV_LineOptionsConfigGet(
 
 /**
    For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_DBG_LAST_EXCEPTION_CODES_GET
+   \ref DSL_FIO_LAST_EXCEPTION_CODES_GET
 */
 #ifdef INCLUDE_DEVICE_EXCEPTION_CODES
 #ifndef SWIG_TMP
-DSL_Error_t DSL_DBG_LastExceptionCodesGet(
+DSL_Error_t DSL_LastExceptionCodesGet(
    DSL_Context_t *pContext,
-   DSL_DBG_LastExceptionCodes_t *pData);
+   DSL_LastExceptionCodes_t *pData);
 #endif
 #endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
 
@@ -1297,42 +1204,6 @@ DSL_Error_t DSL_DRV_BandPlanSupportedGet(
 #endif
 #endif /* #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1) */
 
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_EfmMacConfigCheck(
-   DSL_Context_t *pContext,
-   DSL_EFM_MacConfigData_t *pData);
-#endif
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX */
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/**
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_EFM_MAC_CONFIG_SET
-*/
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_EfmMacConfigSet(
-   DSL_Context_t *pContext,
-   DSL_EFM_MacConfig_t *pData
-);
-#endif
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX */
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/**
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_EFM_MAC_CONFIG_GET
-*/
-#ifdef INCLUDE_DSL_CONFIG_GET
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_EfmMacConfigGet(
-   DSL_Context_t *pContext,
-   DSL_EFM_MacConfig_t *pData
-);
-#endif
-#endif /* INCLUDE_DSL_CONFIG_GET*/
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX */
-
 /**
    For a detailed description please refer to the equivalent ioctl
    \ref DSL_FIO_LOOP_LENGTH_STATUS_GET
@@ -1343,62 +1214,6 @@ DSL_Error_t DSL_DRV_LoopLengthStatusGet(
    DSL_IN_OUT DSL_LoopLengthStatus_t *pData
 );
 #endif
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/**
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_UTOPIA_ADDRESS_CONFIG_SET
-*/
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_UtopiaAddressConfigSet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_PhyAddressConfig_t *pData
-);
-#endif
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX */
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/**
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_UTOPIA_ADDRESS_CONFIG_GET
-*/
-#ifdef INCLUDE_DSL_CONFIG_GET
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_UtopiaAddressConfigGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_PhyAddressConfig_t *pData
-);
-#endif
-#endif /* INCLUDE_DSL_CONFIG_GET*/
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX */
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/*
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_UTOPIA_BUS_WIDTH_CONFIG_SET
-*/
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_UtopiaBusWidthConfigSet(
-   DSL_Context_t *pContext,
-   DSL_UtopiaBusWidthConfig_t *pData
-);
-#endif
-#endif /* #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1) */
-
-#if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
-/*
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_UTOPIA_BUS_WIDTH_CONFIG_GET
-*/
-#ifdef INCLUDE_DSL_CONFIG_GET
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_UtopiaBusWidthConfigGet(
-   DSL_Context_t *pContext,
-   DSL_UtopiaBusWidthConfig_t *pData
-);
-#endif
-#endif /* INCLUDE_DSL_CONFIG_GET*/
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX */
 
 #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
 /**
@@ -1429,6 +1244,7 @@ DSL_Error_t DSL_DRV_PosphyAddressConfigGet(
 #ifndef SWIG_TMP
 DSL_Error_t DSL_DRV_SystemInterfaceConfigCheck(
    DSL_Context_t *pContext,
+   DSL_DslModeSelection_t nDslMode,
    DSL_SystemInterfaceConfigData_t *pData
 );
 #endif
@@ -1615,7 +1431,6 @@ DSL_void_t DSL_DRV_Cleanup(DSL_void_t);
    \remarks
    Supported by
    - Danube: ADSL-CPE
-   - VINAX:
 */
 #ifndef SWIG
 DSL_Error_t DSL_DRV_HandleGet(
@@ -1719,6 +1534,22 @@ DSL_Error_t DSL_DRV_HandleCleanup(
 #ifndef SWIG
 DSL_Error_t DSL_DRV_LinkReset(
    DSL_Context_t *pContext
+);
+#endif
+
+/**
+   This routine freezes a DSL line
+
+   \param pContext
+      pointer to the DSL context
+
+   \param pXTSE
+      pointer to the last XTSE configuration status
+*/
+#ifndef SWIG
+DSL_Error_t DSL_DRV_LinkFreeze(
+   DSL_Context_t *pContext,
+   DSL_uint8_t *pXTSE
 );
 #endif
 
@@ -1854,7 +1685,7 @@ DSL_Error_t DSL_DRV_DualLatency_FirmwareInit(
    - DSL_Success Timeout event handled successfully
    - DSL_Error Error during handling of timeout event
 */
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX) || \
+#if defined(INCLUDE_DSL_CPE_API_VRX) || \
    (defined(INCLUDE_DSL_CPE_API_DANUBE) && defined(INCLUDE_DSL_G997_LINE_INVENTORY))
 #ifndef SWIG
 DSL_Error_t DSL_DRV_OnTimeoutEvent(
@@ -1862,17 +1693,13 @@ DSL_Error_t DSL_DRV_OnTimeoutEvent(
    DSL_int_t nEventType,
    DSL_uint32_t nTimeoutID);
 #endif
-#endif /* defined(INCLUDE_DSL_CPE_API_VINAX) || (defined(INCLUDE_DSL_CPE_API_DANUBE) && defined(INCLUDE_DSL_G997_LINE_INVENTORY))*/
+#endif /* (defined(INCLUDE_DSL_CPE_API_DANUBE) && defined(INCLUDE_DSL_G997_LINE_INVENTORY))*/
 
 /** @} DRV_DSL_CPE_COMMON */
 
 #if (defined(INCLUDE_DSL_ADSL_MIB))
    #include "drv_dsl_cpe_intern_mib.h"
 #endif
-
-#if defined(INCLUDE_DEPRECATED) && defined(INCLUDE_ADSL_LED) && defined(INCLUDE_DSL_CPE_API_DANUBE)
-   #include "drv_dsl_cpe_intern_led.h"
-#endif /* defined(INCLUDE_DEPRECATED) && defined(INCLUDE_ADSL_LED) && defined(INCLUDE_DSL_CPE_API_DANUBE)*/
 
 #if (defined(INCLUDE_DSL_CEOC))
    #include "drv_dsl_cpe_intern_ceoc.h"
@@ -2034,7 +1861,67 @@ DSL_Error_t DSL_DRV_OnTimeoutEvent(
       _DSL_CHECK_DIRECTION(pContext, nDirection))
 #endif
 
+#ifdef DRV_DSL_CPE_FORCE_MACROS
+   #define _DSL_CHECK_DSLMODE(nDslMode) \
+      do { \
+         if ((nDslMode < 0) || (nDslMode >= DSL_MODE_LAST)) \
+         { \
+            DSL_DEBUG(DSL_DBG_ERR, \
+               (pContext, "DSL: invalid DSL mode!" DSL_DRV_CRLF)); \
+            nErrCode |= DSL_ERR_DSLMODE; \
+         } \
+      } while(0)
+   #define DSL_CHECK_DSLMODE(nDslMode) _DSL_CHECK_DSLMODE(nDslMode)
+#else
+   DSL_Error_t
+   _DSL_CHECK_DSLMODE(
+      DSL_Context_t *pContext,
+      DSL_DslModeSelection_t nDslMode
+   );
+
+   #define DSL_CHECK_DSLMODE(nDslMode) (nErrCode |= \
+      _DSL_CHECK_DSLMODE(pContext, nDslMode))
+#endif
+
 #define DSL_CHECK_ERR_CODE() if (nErrCode != DSL_SUCCESS) { return nErrCode; }
+
+#ifdef DRV_DSL_CPE_FORCE_MACROS
+/**
+   Macro for checking the return value of the last access (nRetCode) and
+   comparing it with the currently set value of reference error code to be
+   returned (nErrCode). If required the value for nErrCode will be set to the
+   value of nRetCode. Priorites are defined as follows
+   - for negative values: smaller one (more negative) will be selected
+   - for positive values: higher one will be selected
+
+   \note The higher absolute value (more negative or more positiv) usually
+         defines the more precise root cause.
+
+   \param nRetCode  Error code from the last access that will be checked, [I]
+   \param nErrCode  Error code that will be set regarding to result of the
+                    comparison algorithm, [I/O]
+*/
+#define DSL_SET_ERROR_CODE(nRetCode, nErrCode) \
+   do { \
+      if ((nErrCode >= 0) && (nRetCode >= 0)) \
+      { \
+         nErrCode = (nRetCode > nErrCode) ? nRetCode : nErrCode; \
+      } \
+      else \
+      { \
+         nErrCode = (nRetCode < nErrCode) ? nRetCode : nErrCode; \
+      } \
+   } while(0)
+#else
+   DSL_Error_t
+   _DSL_SET_ERROR_CODE(
+      DSL_Error_t nRetCode,
+      DSL_Error_t nErrCode
+   );
+
+   #define DSL_SET_ERROR_CODE(nRetCode, nErrCode) \
+      (nErrCode = _DSL_SET_ERROR_CODE(nRetCode, nErrCode))
+#endif
 
 /**
    Firmware download routine
@@ -2215,6 +2102,32 @@ DSL_Error_t DSL_DRV_RTT_StatisticsGet(
 #endif
 #endif /*#if defined(INCLUDE_REAL_TIME_TRACE)*/
 
+#ifdef INCLUDE_DSL_DELT
+/**
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_DELT_SNR_GET
+*/
+#ifndef SWIG
+DSL_Error_t DSL_DRV_DeltSNRGet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_G997_DeltSnr_t *pData
+);
+#endif
+
+#ifndef SWIG
+DSL_Error_t DSL_DRV_DEV_DeltSNRGet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN const DSL_AccessDir_t nDirection,
+   DSL_IN DSL_DeltDataType_t nDeltDataType,
+   DSL_OUT DSL_G997_DeltSnrData_t *pData);
+#endif
+#endif /* INCLUDE_DSL_DELT */
+
+#ifndef SWIG
+DSL_Error_t  DSL_DRV_VRX_TestParamsFeCheck(
+   DSL_Context_t *pContext);
+#endif
+
 /*
    DSL IOCTL handler helpers stuff
 */
@@ -2255,13 +2168,6 @@ typedef struct
 
 #define DSL_IOCTL_REGISTER(cmd, type, instance, func, argSz) \
            {cmd, type, instance, (DSL_void_t*)func, argSz}
-
-/* Just a temporary solution not to change the general LED module
-   implementation*/
-extern int stop_led_module;
-extern DSL_uint16_t flash;
-extern DSL_uint16_t off;
-extern DSL_uint16_t on;
 
 #ifdef __cplusplus
 }

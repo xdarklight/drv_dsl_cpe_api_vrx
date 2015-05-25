@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -22,8 +21,6 @@
 
 #if defined (INCLUDE_DSL_CPE_API_DANUBE)
    #include "drv_dsl_cpe_device_danube.h"
-#elif defined (INCLUDE_DSL_CPE_API_VINAX)
-   #include "drv_dsl_cpe_device_vinax.h"
 #elif defined (INCLUDE_DSL_CPE_API_VRX)
    #include "drv_dsl_cpe_device_vrx.h"
 #else
@@ -47,10 +44,10 @@ typedef struct DSL_DEV_Context
 {
    /** Handle to the corresponding low level driver */
    DSL_DEV_Handle_t lowHandle;
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
    /** Handle to the corresponding low level driver for the autonomous messages processing*/
    DSL_DEV_Handle_t nfc_lowHandle;
-#endif /* defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)*/
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX)*/
    /** Specifies a usage count of this device  */
    DSL_uint32_t nUsageCount;
 
@@ -74,7 +71,7 @@ typedef struct DSL_DEV_Context
 
 typedef DSL_DEV_Context_t DSL_devCtx_t;
 
-extern DSL_devCtx_t ifxDevices[DSL_DRV_MAX_DEVICE_NUMBER];
+extern DSL_devCtx_t ifxDevices[DSL_DRV_MAX_ENTITIES];
 
 DSL_DEV_Handle_t DSL_DRV_DEV_DriverHandleGet(
    DSL_int_t nMaj,
@@ -128,13 +125,13 @@ DSL_Error_t DSL_DRV_DEV_AutobootHandleStart(
    DSL_boolean_t bShortInit
 );
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
 /** Device dependent part of DSL_AutobootHandleFwRequest() */
 DSL_Error_t DSL_DRV_DEV_AutobootHandleFwRequest
 (
    DSL_Context_t *pContext
 );
-#endif /* defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)*/
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX)*/
 
 /** Device dependent part of DSL_AutobootHandleTraining() */
 DSL_Error_t DSL_DRV_DEV_AutobootHandleTraining(
@@ -183,6 +180,25 @@ DSL_Error_t DSL_DRV_DEV_LinkReset(
 
 #endif
 
+/**
+   This routine freezes a DSL line
+
+   \param pContext
+      pointer to the DSL context
+
+   \param pXTSE
+      pointer to the last XTSE configuration status
+*/
+
+#ifndef SWIG
+
+DSL_Error_t DSL_DRV_DEV_LinkFreeze(
+   DSL_Context_t *pContext,
+   DSL_uint8_t *pXTSE
+);
+
+#endif
+
 DSL_Error_t DSL_DRV_DEV_XtseSettingsCheck(
    DSL_IN DSL_Context_t *pContext,
    DSL_IN DSL_uint8_t *pXTSE);
@@ -206,14 +222,6 @@ DSL_Error_t DSL_DRV_DEV_DataPathCounterTotalGet(
 );
 #endif
 #endif /** #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)*/
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-#ifndef SWIG
-DSL_Error_t DSL_DRV_DEV_Clause30CountersSave(
-   DSL_Context_t *pContext
-);
-#endif
-#endif /** #ifdef INCLUDE_DSL_CPE_API_VINAX*/
 
 #ifndef SWIG
 DSL_Error_t DSL_DRV_DEV_LinkActivate(
@@ -269,44 +277,6 @@ DSL_Error_t DSL_DRV_DEV_SystemInterfaceStatusGet(
 );
 #endif
 #endif /* INCLUDE_DSL_SYSTEM_INTERFACE*/
-
-#ifdef INCLUDE_DSL_CPE_API_SAR_SUPPORT
-/**
-   This function gets performance counters values for AAL5 segmentation statistics.
-
-   \param pContext   Pointer to dsl library context structure, [I]
-   \param pData      Pointer to the Segmentation counters data, [O]
-
-   \return
-   Return values are defined within the DSL_Error_t definition
-   - DSL_SUCCESS in case of success
-   - DSL_ERROR if operation failed
-   - or any other defined specific error code
-*/
-#ifndef SWIG
-DSL_Error_t DSL_DRV_DEV_SegmentationCountersGet(
-   DSL_Context_t *pContext,
-   DSL_SAR_SegmentationCountersData_t *pData);
-#endif
-
-/**
-   This function gets performance counters values for AAL5 reassembly statistics.
-
-   \param pContext   Pointer to dsl library context structure, [I]
-   \param pData      Pointer to the Reassembly counters data, [O]
-
-   \return
-   Return values are defined within the DSL_Error_t definition
-   - DSL_SUCCESS in case of success
-   - DSL_ERROR if operation failed
-   - or any other defined specific error code
-*/
-#ifndef SWIG
-DSL_Error_t DSL_DRV_DEV_ReassemblyCountersGet(
-   DSL_Context_t *pContext,
-   DSL_SAR_ReassemblyCountersData_t *pData);
-#endif
-#endif /* #ifdef INCLUDE_DSL_CPE_API_SAR_SUPPORT*/
 
 /**
    This function requests the pilot tones used in Showtime.
@@ -396,13 +366,13 @@ DSL_Error_t DSL_DRV_DEV_UtopiaBusWidthConfigGet(
 */
 
 #ifndef SWIG
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
 DSL_Error_t DSL_DRV_DEV_InitDataPrepare(
    DSL_Context_t *pContext,
    DSL_boolean_t bIsInKernel,
    DSL_Init_t *pInit
 );
-#endif /* defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)*/
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX)*/
 #endif
 
 /**
@@ -413,7 +383,7 @@ DSL_Error_t DSL_DRV_DEV_InitDataPrepare(
 */
 
 #ifndef SWIG
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
 DSL_void_t DSL_DRV_DEV_InitDataFree(
    DSL_Init_t *pInit
 );
@@ -428,11 +398,9 @@ DSL_void_t DSL_DRV_DEV_InitDataFree(
    \return  Return whether the feature is supported by the FW or not
 */
 #ifndef SWIG
-#if defined(INCLUDE_DSL_CPE_API_VRX) || defined(INCLUDE_DSL_CPE_API_DANUBE)
 DSL_Error_t DSL_DRV_DEV_G994VendorIdFirmwareUpdate(
    DSL_Context_t *pContext
 );
-#endif /* defined(INCLUDE_DSL_CPE_API_VRX) || defined(INCLUDE_DSL_CPE_API_DANUBE) */
 #endif
 
 /**
@@ -648,35 +616,11 @@ DSL_Error_t DSL_DRV_DEV_Annex_M_J_UsBandBordersStatusGet(
    DSL_Band_t *pData);
 #endif /* defined(INCLUDE_DSL_CPE_MISC_LINE_STATUS) || defined(INCLUDE_DSL_CPE_API_DANUBE)*/
 
-/* LED block */
-
-/**
-   Device implementation of LED module firmware initialization routine
-
-   \param pContext Pointer to dsl library context structure, [I]
-
-   \return  Return values are defined within the \ref DSL_Error_t definition
-    - DSL_SUCCESS in case of success
-    - DSL_ERROR if operation failed
-    - or any other defined specific error code
-
-   \ingroup DRV_DSL_CPE_INIT
-*/
-
-#ifndef SWIG
-
-DSL_Error_t DSL_DRV_DEV_LED_FirmwareInit(
-   DSL_Context_t *pContext
-);
-
-#endif
-
 #ifndef SWIG
 DSL_Error_t DSL_DRV_DEV_TrainingTimeoutSet(
    DSL_IN DSL_Context_t *pContext);
 #endif
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
 /*
    This function saves retransmission related counters
    into driver context.
@@ -690,8 +634,6 @@ DSL_Error_t DSL_DRV_DEV_ReTxCountersSave(
 DSL_Error_t DSL_DRV_DEV_RetxStatisticsGet(
    DSL_IN DSL_Context_t *pContext,
    DSL_IN_OUT DSL_ReTxStatistics_t *pData);
-#endif
-
 #endif
 
 #if defined(INCLUDE_DSL_CPE_API_DANUBE)
@@ -746,7 +688,27 @@ DSL_Error_t DSL_DRV_DEV_ChannelsStatusUpdate(
    DSL_Context_t *pContext
 );
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
+/**
+   Firmware feature check routine
+
+   \param pContext      Pointer to dsl library context structure, [I]
+   \param nFeature      Feature to check, [I]
+
+   \return  Return whether the feature is supported by the FW or not
+*/
+#ifndef SWIG
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+DSL_boolean_t DSL_DRV_DEV_FirmwareFeatureCheck(
+   DSL_Context_t *pContext,
+   DSL_FirmwareXdslFeature_t nFeature
+);
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX)*/
+#endif
+
+DSL_Error_t DSL_DRV_DEV_OlrStatisticsGet(
+   DSL_Context_t *pContext,
+   DSL_OUT DSL_OlrStatistics_t *pData
+);
 
 #ifdef INCLUDE_DSL_FILTER_DETECTION
 DSL_Error_t DSL_DRV_FilterDetectionInit(
@@ -765,8 +727,6 @@ DSL_Error_t DSL_DRV_HybridContextReset(
 DSL_Error_t DSL_DRV_HybridContextInit(
    DSL_Context_t *pContext
 );
-
-#endif /* INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_VRX */
 
 #endif
 /** @} DRV_DSL_DEVICE */

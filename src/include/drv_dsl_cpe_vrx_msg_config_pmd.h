@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2012
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -48,6 +48,7 @@
 #define ACK_ModemFSM_StateGet_STEADY_STATE_TC_SYNC 8
 #define ACK_ModemFSM_StateGet_DIAGMODE_STATE 9
 #define ACK_ModemFSM_StateGet_T1413_STATE 14
+#define ACK_ModemFSM_StateGet_PRE_FAIL_STATE 15
 #define ACK_ModemFSM_StateGet_GHS_BONDING_CLR_STATE 16
 #define ACK_ModemFSM_StateGet_MFD_STATE 18
 #define ACK_ModemFSM_StateGet_MFD_COMPLETE_STATE 19
@@ -65,9 +66,13 @@
 #define EVT_ModemFSM_StateGet_STEADY_STATE_TC_SYNC 8
 #define EVT_ModemFSM_StateGet_DIAGMODE_STATE 9
 #define EVT_ModemFSM_StateGet_T1413_STATE 14
+#define EVT_ModemFSM_StateGet_PRE_FAIL_STATE 15
 #define EVT_ModemFSM_StateGet_GHS_BONDING_CLR_STATE 16
 #define EVT_ModemFSM_StateGet_MFD_STATE 18
 #define EVT_ModemFSM_StateGet_MFD_COMPLETE_STATE 19
+#define EVT_ModemFSM_StateGet_L0 0
+#define EVT_ModemFSM_StateGet_L2 2
+#define EVT_ModemFSM_StateGet_L3 3
 #define EVT_ModemReady_MRERR_OK 0x0
 #define EVT_ModemReady_MRWARN_OK 0x0
 #define CMD_ModemFSM_StateSet_LINKRES 0
@@ -88,12 +93,16 @@
 #define ALM_ModemFSM_FailReasonGet_S_LOF 0x11
 #define ALM_ModemFSM_FailReasonGet_S_LPR 0x12
 #define ALM_ModemFSM_FailReasonGet_S_LOM 0x13
+#define ALM_ModemFSM_FailReasonGet_S_FAST_LOS 0x14
 #define ALM_ModemFSM_FailReasonGet_S_ESE 0x15
+#define ALM_ModemFSM_FailReasonGet_S_SESX 0x16
+#define ALM_ModemFSM_FailReasonGet_S_ESX 0x17
 #define ALM_ModemFSM_FailReasonGet_S_OOS0 0x18
 #define ALM_ModemFSM_FailReasonGet_S_LCD0 0x20
 #define ALM_ModemFSM_FailReasonGet_S_NCD0 0x22
 #define ALM_ModemFSM_FailReasonGet_S_CRC_DS 0x24
 #define ALM_ModemFSM_FailReasonGet_S_PP_DRIVER 0x25
+#define ALM_ModemFSM_FailReasonGet_S_INTENDED_LOCAL_SHUTDOWN 0x26
 #define ALM_ModemFSM_FailReasonGet_E_OK 0x0
 #define ALM_ModemFSM_FailReasonGet_E_CONFIG 0x1
 #define ALM_ModemFSM_FailReasonGet_E_NOTFEASIBLE 0x2
@@ -119,12 +128,16 @@
 #define ACK_ModemFSM_FailReasonGet_S_LOF 0x11
 #define ACK_ModemFSM_FailReasonGet_S_LPR 0x12
 #define ACK_ModemFSM_FailReasonGet_S_LOM 0x13
+#define ACK_ModemFSM_FailReasonGet_S_FAST_LOS 0x14
 #define ACK_ModemFSM_FailReasonGet_S_ESE 0x15
+#define ACK_ModemFSM_FailReasonGet_S_SESX 0x16
+#define ACK_ModemFSM_FailReasonGet_S_ESX 0x17
 #define ACK_ModemFSM_FailReasonGet_S_OOS0 0x18
 #define ACK_ModemFSM_FailReasonGet_S_LCD0 0x20
 #define ACK_ModemFSM_FailReasonGet_S_NCD0 0x22
 #define ACK_ModemFSM_FailReasonGet_S_CRC_DS 0x24
 #define ACK_ModemFSM_FailReasonGet_S_PP_DRIVER 0x25
+#define ACK_ModemFSM_FailReasonGet_S_INTENDED_LOCAL_SHUTDOWN 0x26
 #define ACK_ModemFSM_FailReasonGet_E_OK 0x0
 #define ACK_ModemFSM_FailReasonGet_E_CONFIG 0x1
 #define ACK_ModemFSM_FailReasonGet_E_NOTFEASIBLE 0x2
@@ -163,6 +176,12 @@
 #define CMD_ErasureControlSet_MAX_INP 0x1
 #define CMD_Misc_ConfigSet_GHSMODE 0x0
 #define CMD_Misc_ConfigSet_T1413MODE 0x1
+#define CMD_OperatorSelect_TELCO_OFF 0
+#define CMD_OperatorSelect_TELCO_DTAG 1
+#define CMD_OperatorSelect_TELCO_BT 2
+#define CMD_OperatorSelect_TELCO_TS 3
+#define CMD_OperatorSelect_TELCO_FT 4
+#define CMD_OperatorSelect_TELCO_KPN 5
 /* ----- Message Specific Constants Definition section (End) ----- */
 
 /** Message ID for CMD_ModemFSM_StateGet */
@@ -358,24 +377,42 @@ typedef struct CMD_ReInitNE_Configure CMD_ReInitNE_Configure_t;
 */
 typedef struct ACK_ReInitNE_Configure ACK_ReInitNE_Configure_t;
 
-/** Message ID for CMD_L3ShutdownRequest */
-#define CMD_L3SHUTDOWNREQUEST 0x0341
+/** Message ID for CMD_ReinitThreshConfigure */
+#define CMD_REINITTHRESHCONFIGURE 0x1E62
 
 /**
-   Triggers the sending of an L3 orderly shutdown request to the remote side.If
-   applied at the CPE and accepted by the CO, the following shall happen: The
-   CPE-Host forces L3 entry with transition to RESET state by applying
-   CMD_ModemFSM_StateGet.
+   Configuration of reinitialization trigger definitions.
 */
-typedef struct CMD_L3ShutdownRequest CMD_L3ShutdownRequest_t;
+typedef struct CMD_ReinitThreshConfigure CMD_ReinitThreshConfigure_t;
 
-/** Message ID for ACK_L3ShutdownRequest */
-#define ACK_L3SHUTDOWNREQUEST 0x0341
+/** Message ID for ACK_ReinitThreshConfigure */
+#define ACK_REINITTHRESHCONFIGURE 0x1E62
 
 /**
-   Acknowledgement for CMD_L3ShutdownRequest.
+   Acknowledgement for the message ACK_ReinitThreshConfigure.
 */
-typedef struct ACK_L3ShutdownRequest ACK_L3ShutdownRequest_t;
+typedef struct ACK_ReinitThreshConfigure ACK_ReinitThreshConfigure_t;
+
+/** Message ID for CMD_ShutdownRequest */
+#define CMD_SHUTDOWNREQUEST 0x0341
+
+/**
+   Triggers a shutdown request, either as "L3 orderly shutdown" towards the
+   remote side or as "locally forced shutdown" to the DSL-FW without sending a
+   request to the remote side.After an "L3 orderly shutdown" request was
+   accepted by the CO, the following shall happen: The CPE-Host forces L3 entry
+   with transition to RESET state by applying CMD_ModemFSM_StateGet.A "locally
+   forced shutdown" always results in exiting Showtime.
+*/
+typedef struct CMD_ShutdownRequest CMD_ShutdownRequest_t;
+
+/** Message ID for ACK_ShutdownRequest */
+#define ACK_SHUTDOWNREQUEST 0x0341
+
+/**
+   Acknowledgement for CMD_ShutdownRequest.
+*/
+typedef struct ACK_ShutdownRequest ACK_ShutdownRequest_t;
 
 /** Message ID for CMD_RxL3RequestStatusGet */
 #define CMD_RXL3REQUESTSTATUSGET 0x0402
@@ -557,6 +594,42 @@ typedef struct CMD_UPBO_KL0Get CMD_UPBO_KL0Get_t;
 */
 typedef struct ACK_UPBO_KL0Get ACK_UPBO_KL0Get_t;
 
+/** Message ID for CMD_PBO_AELEM_Status_Get */
+#define CMD_PBO_AELEM_STATUS_GET 0xEA03
+
+/**
+   Requests status parameters for the Upstream  Power  Back-Off  (UPBO)
+   alternative  electrical  length  estimation  method (AELEM).
+*/
+typedef struct CMD_PBO_AELEM_Status_Get CMD_PBO_AELEM_Status_Get_t;
+
+/** Message ID for ACK_PBO_AELEM_Status_Get */
+#define ACK_PBO_AELEM_STATUS_GET 0xEA03
+
+/**
+   Upstream  Power  Back-Off  (UPBO)  status  parameters  for  the  alternative
+   electrical  length  estimation  method (AELEM) are reported.
+*/
+typedef struct ACK_PBO_AELEM_Status_Get ACK_PBO_AELEM_Status_Get_t;
+
+/** Message ID for CMD_PSD_CeilingDS_Set */
+#define CMD_PSD_CEILINGDS_SET 0x3848
+
+/**
+   Enables for each VDSL2 Profile an adaptive PSD optimization (ceiling)
+   algorithm. Currently only required for Profile 8b due to the high transmit
+   power.
+*/
+typedef struct CMD_PSD_CeilingDS_Set CMD_PSD_CeilingDS_Set_t;
+
+/** Message ID for ACK_PSD_CeilingDS_Set */
+#define ACK_PSD_CEILINGDS_SET 0x3848
+
+/**
+   Acknowledgement for message CMD_PSD_CeilingDS_Set.
+*/
+typedef struct ACK_PSD_CeilingDS_Set ACK_PSD_CeilingDS_Set_t;
+
 /** Message ID for CMD_NoiseMarginDeltaSet */
 #define CMD_NOISEMARGINDELTASET 0x1C45
 
@@ -706,6 +779,39 @@ typedef struct CMD_OperationOptionsSet CMD_OperationOptionsSet_t;
 */
 typedef struct ACK_OperationOptionsSet ACK_OperationOptionsSet_t;
 
+/** Message ID for CMD_OperatorSelect */
+#define CMD_OPERATORSELECT 0x1562
+
+/**
+   The message selects a DSL operator. The information is used to configure
+   operator specific settings inside the DSL firmware.
+*/
+typedef struct CMD_OperatorSelect CMD_OperatorSelect_t;
+
+/** Message ID for ACK_OperatorSelect */
+#define ACK_OPERATORSELECT 0x1562
+
+/**
+   This is the acknowledgement for ACK_OperatorSelect.
+*/
+typedef struct ACK_OperatorSelect ACK_OperatorSelect_t;
+
+/** Message ID for CMD_TestOptionsSet */
+#define CMD_TESTOPTIONSSET 0x1C44
+
+/**
+   The messages configures settings for test modes.
+*/
+typedef struct CMD_TestOptionsSet CMD_TestOptionsSet_t;
+
+/** Message ID for ACK_TestOptionsSet */
+#define ACK_TESTOPTIONSSET 0x1C44
+
+/**
+   This is the acknowledgement for CMD_TestOptionsSet.
+*/
+typedef struct ACK_TestOptionsSet ACK_TestOptionsSet_t;
+
 /** Message ID for CMD_ClockSet */
 #define CMD_CLOCKSET 0x0F62
 
@@ -787,6 +893,10 @@ struct EVT_ModemFSM_StateGet
    DSL_uint16_t Length;
    /** Modem Status */
    DSL_uint16_t ModemState;
+   /** Reserved */
+   DSL_uint16_t Res0 : 14;
+   /** Line Power Management State */
+   DSL_uint16_t LxState : 2;
 #else
    /** Index */
    DSL_uint16_t Index;
@@ -794,6 +904,10 @@ struct EVT_ModemFSM_StateGet
    DSL_uint16_t Length;
    /** Modem Status */
    DSL_uint16_t ModemState;
+   /** Line Power Management State */
+   DSL_uint16_t LxState : 2;
+   /** Reserved */
+   DSL_uint16_t Res0 : 14;
 #endif
 } __PACKED__ ;
 
@@ -896,8 +1010,22 @@ struct ALM_ModemFSM_FailReasonGet
    DSL_uint8_t ErrorCode;
    /** Failure State Information */
    DSL_uint16_t FW_FailCode;
-   /** Reserved */
-   DSL_uint16_t Res0[8];
+   /** Tx Symbol Count, LSW */
+   DSL_uint16_t TxSymCountLSW;
+   /** Tx Symbol Count, MSW */
+   DSL_uint16_t TxSymCountMSW;
+   /** Tx State at Failure */
+   DSL_uint16_t TxStateOnFail;
+   /** Tx Sub State at Failure */
+   DSL_uint16_t TxSubStateOnFail;
+   /** Rx Symbol Count, LSW */
+   DSL_uint16_t RxSymCountLSW;
+   /** Rx Symbol Count, MSW */
+   DSL_uint16_t RxSymCountMSW;
+   /** Rx State at Failure */
+   DSL_uint16_t RxStateOnFail;
+   /** Rx Sub State at Failure */
+   DSL_uint16_t RxSubStateOnFail;
 #else
    /** Index */
    DSL_uint16_t Index;
@@ -909,8 +1037,22 @@ struct ALM_ModemFSM_FailReasonGet
    DSL_uint8_t SubErrorCode;
    /** Failure State Information */
    DSL_uint16_t FW_FailCode;
-   /** Reserved */
-   DSL_uint16_t Res0[8];
+   /** Tx Symbol Count, LSW */
+   DSL_uint16_t TxSymCountLSW;
+   /** Tx Symbol Count, MSW */
+   DSL_uint16_t TxSymCountMSW;
+   /** Tx State at Failure */
+   DSL_uint16_t TxStateOnFail;
+   /** Tx Sub State at Failure */
+   DSL_uint16_t TxSubStateOnFail;
+   /** Rx Symbol Count, LSW */
+   DSL_uint16_t RxSymCountLSW;
+   /** Rx Symbol Count, MSW */
+   DSL_uint16_t RxSymCountMSW;
+   /** Rx State at Failure */
+   DSL_uint16_t RxStateOnFail;
+   /** Rx Sub State at Failure */
+   DSL_uint16_t RxSubStateOnFail;
 #endif
 } __PACKED__ ;
 
@@ -950,8 +1092,22 @@ struct ACK_ModemFSM_FailReasonGet
    DSL_uint8_t ErrorCode;
    /** Failure State Information */
    DSL_uint16_t FW_FailCode;
-   /** Reserved */
-   DSL_uint16_t Res0[8];
+   /** Tx Symbol Count, LSW */
+   DSL_uint16_t TxSymCountLSW;
+   /** Tx Symbol Count, MSW */
+   DSL_uint16_t TxSymCountMSW;
+   /** Tx State at Failure */
+   DSL_uint16_t TxStateOnFail;
+   /** Tx Sub State at Failure */
+   DSL_uint16_t TxSubStateOnFail;
+   /** Rx Symbol Count, LSW */
+   DSL_uint16_t RxSymCountLSW;
+   /** Rx Symbol Count, MSW */
+   DSL_uint16_t RxSymCountMSW;
+   /** Rx State at Failure */
+   DSL_uint16_t RxStateOnFail;
+   /** Rx Sub State at Failure */
+   DSL_uint16_t RxSubStateOnFail;
 #else
    /** Index */
    DSL_uint16_t Index;
@@ -963,8 +1119,22 @@ struct ACK_ModemFSM_FailReasonGet
    DSL_uint8_t SubErrorCode;
    /** Failure State Information */
    DSL_uint16_t FW_FailCode;
-   /** Reserved */
-   DSL_uint16_t Res0[8];
+   /** Tx Symbol Count, LSW */
+   DSL_uint16_t TxSymCountLSW;
+   /** Tx Symbol Count, MSW */
+   DSL_uint16_t TxSymCountMSW;
+   /** Tx State at Failure */
+   DSL_uint16_t TxStateOnFail;
+   /** Tx Sub State at Failure */
+   DSL_uint16_t TxSubStateOnFail;
+   /** Rx Symbol Count, LSW */
+   DSL_uint16_t RxSymCountLSW;
+   /** Rx Symbol Count, MSW */
+   DSL_uint16_t RxSymCountMSW;
+   /** Rx State at Failure */
+   DSL_uint16_t RxStateOnFail;
+   /** Rx Sub State at Failure */
+   DSL_uint16_t RxSubStateOnFail;
 #endif
 } __PACKED__ ;
 
@@ -980,34 +1150,42 @@ struct CMD_ModemFSM_OptionsSet
    /** Length */
    DSL_uint16_t Length;
    /** Reserved */
-   DSL_uint16_t Res0 : 7;
-   /** L2 Low-Power Mode (ADSL only) */
+   DSL_uint16_t Res0 : 5;
+   /** L2 Extensions of G.992.3 Amd4 (2011), (ADSL only), Bit 10 */
+   DSL_uint16_t E10 : 1;
+   /** L2 Automatic Exit (ADSL only), Bit 9 */
+   DSL_uint16_t E9 : 1;
+   /** L2 Low-Power Mode Enable (ADSL only), Bit 8 */
    DSL_uint16_t E8 : 1;
    /** Reserved */
    DSL_uint16_t Res1 : 5;
-   /** Loop Diagnostic Mode Control */
+   /** Loop Diagnostic Mode Control, Bit 2 */
    DSL_uint16_t E2 : 1;
    /** Reserved 0 */
    DSL_uint16_t E1 : 1;
-   /** Automatic Re-Start Control */
+   /** Automatic Re-Start Control, Bit 0 */
    DSL_uint16_t E0 : 1;
 #else
    /** Index */
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** L2 Low-Power Mode (ADSL only) */
-   FX_bit_t E8;
-   /** Reserved */
-   DSL_uint16_t Res0 : 7;
-   /** Automatic Re-Start Control */
+   /** Automatic Re-Start Control, Bit 0 */
    DSL_uint16_t E0 : 1;
    /** Reserved 0 */
    DSL_uint16_t E1 : 1;
-   /** Loop Diagnostic Mode Control */
+   /** Loop Diagnostic Mode Control, Bit 2 */
    DSL_uint16_t E2 : 1;
    /** Reserved */
    DSL_uint16_t Res1 : 5;
+   /** L2 Low-Power Mode Enable (ADSL only), Bit 8 */
+   DSL_uint16_t E8 : 1;
+   /** L2 Automatic Exit (ADSL only), Bit 9 */
+   DSL_uint16_t E9 : 1;
+   /** L2 Extensions of G.992.3 Amd4 (2011), (ADSL only), Bit 10 */
+   DSL_uint16_t E10 : 1;
+   /** Reserved */
+   DSL_uint16_t Res0 : 5;
 #endif
 } __PACKED__ ;
 
@@ -1042,7 +1220,9 @@ struct CMD_ModemFSM_Options2Set
    /** Length */
    DSL_uint16_t Length;
    /** Reserved */
-   DSL_uint16_t Res0 : 13;
+   DSL_uint16_t Res0 : 12;
+   /** AELEM Control (VDSL only), Bit 3 */
+   DSL_uint16_t enableAelem : 1;
    /** Short Init Control (ADSL only), Bit 2 */
    DSL_uint16_t shortInit : 1;
    /** US Virtual Noise Support, Bit 1 */
@@ -1060,8 +1240,10 @@ struct CMD_ModemFSM_Options2Set
    DSL_uint16_t enableVN_US : 1;
    /** Short Init Control (ADSL only), Bit 2 */
    DSL_uint16_t shortInit : 1;
+   /** AELEM Control (VDSL only), Bit 3 */
+   DSL_uint16_t enableAelem : 1;
    /** Reserved */
-   DSL_uint16_t Res0 : 13;
+   DSL_uint16_t Res0 : 12;
 #endif
 } __PACKED__ ;
 
@@ -1102,7 +1284,7 @@ struct CMD_ModemFSM_EventConfigure
    DSL_uint16_t Res0 : 1;
    /** Enable Bit 13 */
    DSL_uint16_t E13 : 1;
-   /** Enable Bit 13 */
+   /** Enable Bit 12 */
    DSL_uint16_t E12 : 1;
    /** Reserved */
    DSL_uint16_t Res1 : 1;
@@ -1161,7 +1343,7 @@ struct CMD_ModemFSM_EventConfigure
    DSL_uint16_t E11 : 1;
    /** Reserved */
    DSL_uint16_t Res1 : 1;
-   /** Enable Bit 13 */
+   /** Enable Bit 12 */
    DSL_uint16_t E12 : 1;
    /** Enable Bit 13 */
    DSL_uint16_t E13 : 1;
@@ -1363,9 +1545,9 @@ struct CMD_ReInitNE_Configure
    DSL_uint16_t E0 : 1;
    /** Reserved */
    DSL_uint16_t Res6 : 14;
-   /** ES90 */
+   /** ESx */
    DSL_uint16_t F1 : 1;
-   /** SES30 */
+   /** SESx */
    DSL_uint16_t F0 : 1;
 #else
    /** Index */
@@ -1400,9 +1582,9 @@ struct CMD_ReInitNE_Configure
    DSL_uint16_t E14 : 1;
    /** Reserved */
    DSL_uint16_t Res0 : 1;
-   /** SES30 */
+   /** SESx */
    DSL_uint16_t F0 : 1;
-   /** ES90 */
+   /** ESx */
    DSL_uint16_t F1 : 1;
    /** Reserved */
    DSL_uint16_t Res6 : 14;
@@ -1431,12 +1613,64 @@ struct ACK_ReInitNE_Configure
 
 
 /**
-   Triggers the sending of an L3 orderly shutdown request to the remote side.If
-   applied at the CPE and accepted by the CO, the following shall happen: The
-   CPE-Host forces L3 entry with transition to RESET state by applying
-   CMD_ModemFSM_StateGet.
+   Configuration of reinitialization trigger definitions.
 */
-struct CMD_L3ShutdownRequest
+struct CMD_ReinitThreshConfigure
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** SESx Reinit Period */
+   DSL_uint16_t SESxPeriod;
+   /** LOM Persistency Time for Reinit */
+   DSL_uint16_t LomRiPeriod;
+   /** ESx Reinit Period */
+   DSL_uint16_t ESxPeriod;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** SESx Reinit Period */
+   DSL_uint16_t SESxPeriod;
+   /** LOM Persistency Time for Reinit */
+   DSL_uint16_t LomRiPeriod;
+   /** ESx Reinit Period */
+   DSL_uint16_t ESxPeriod;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Acknowledgement for the message ACK_ReinitThreshConfigure.
+*/
+struct ACK_ReinitThreshConfigure
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Triggers a shutdown request, either as "L3 orderly shutdown" towards the
+   remote side or as "locally forced shutdown" to the DSL-FW without sending a
+   request to the remote side.After an "L3 orderly shutdown" request was
+   accepted by the CO, the following shall happen: The CPE-Host forces L3 entry
+   with transition to RESET state by applying CMD_ModemFSM_StateGet.A "locally
+   forced shutdown" always results in exiting Showtime.
+*/
+struct CMD_ShutdownRequest
 {
 #if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
    /** Index */
@@ -1444,7 +1678,9 @@ struct CMD_L3ShutdownRequest
    /** Length */
    DSL_uint16_t Length;
    /** Reserved */
-   DSL_uint16_t Res0 : 15;
+   DSL_uint16_t Res0 : 14;
+   /** Locally Forced Shutdown */
+   DSL_uint16_t ForcedShutdown : 1;
    /** L3 Orderly Shutdown Request */
    DSL_uint16_t L3shutdown : 1;
 #else
@@ -1454,16 +1690,18 @@ struct CMD_L3ShutdownRequest
    DSL_uint16_t Length;
    /** L3 Orderly Shutdown Request */
    DSL_uint16_t L3shutdown : 1;
+   /** Locally Forced Shutdown */
+   DSL_uint16_t ForcedShutdown : 1;
    /** Reserved */
-   DSL_uint16_t Res0 : 15;
+   DSL_uint16_t Res0 : 14;
 #endif
 } __PACKED__ ;
 
 
 /**
-   Acknowledgement for CMD_L3ShutdownRequest.
+   Acknowledgement for CMD_ShutdownRequest.
 */
-struct ACK_L3ShutdownRequest
+struct ACK_ShutdownRequest
 {
 #if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
    /** Index */
@@ -2046,19 +2284,155 @@ struct ACK_UPBO_KL0Get
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Kl0 Estimate VTU-O */
-   DSL_uint16_t kl0_EstimO;
    /** Kl0 Estimate VTU-R */
    DSL_uint16_t kl0_EstimR;
+   /** Kl0 Estimate VTU-O */
+   DSL_uint16_t kl0_EstimO;
 #else
    /** Index */
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Kl0 Estimate VTU-O */
-   DSL_uint16_t kl0_EstimO;
    /** Kl0 Estimate VTU-R */
    DSL_uint16_t kl0_EstimR;
+   /** Kl0 Estimate VTU-O */
+   DSL_uint16_t kl0_EstimO;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Requests status parameters for the Upstream  Power  Back-Off  (UPBO)
+   alternative  electrical  length  estimation  method (AELEM).
+*/
+struct CMD_PBO_AELEM_Status_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Upstream  Power  Back-Off  (UPBO)  status  parameters  for  the  alternative
+   electrical  length  estimation  method (AELEM) are reported.
+*/
+struct ACK_PBO_AELEM_Status_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** AELE-MODE Used */
+   DSL_uint16_t AeleMode;
+   /** Kl0 Estimate per Band VTU-R */
+   DSL_uint16_t Kl0EstimRPb[4];
+   /** Final Kl0 per Band VTU-O */
+   DSL_uint16_t Kl0EstimOPb[4];
+   /** UPBOELMT */
+   DSL_uint16_t UpboElmt;
+   /** RXTHRSHDS */
+   DSL_int16_t RxThreshDs;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** AELE-MODE Used */
+   DSL_uint16_t AeleMode;
+   /** Kl0 Estimate per Band VTU-R */
+   DSL_uint16_t Kl0EstimRPb[4];
+   /** Final Kl0 per Band VTU-O */
+   DSL_uint16_t Kl0EstimOPb[4];
+   /** UPBOELMT */
+   DSL_uint16_t UpboElmt;
+   /** RXTHRSHDS */
+   DSL_int16_t RxThreshDs;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Enables for each VDSL2 Profile an adaptive PSD optimization (ceiling)
+   algorithm. Currently only required for Profile 8b due to the high transmit
+   power.
+*/
+struct CMD_PSD_CeilingDS_Set
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t  Length;
+   /** Reserved */
+   DSL_uint8_t Res0;
+   /** Enable PSD Ceiling Optimization for Profile 30a */
+   DSL_uint16_t PSDCeil7 : 1;
+   /** Enable PSD Ceiling Optimization for Profile 17a */
+   DSL_uint16_t PSDCeil6 : 1;
+   /** Enable PSD Ceiling Optimization for Profile 12b */
+   DSL_uint16_t PSDCeil5 : 1;
+   /** Enable PSD Ceiling Optimization for Profile 12a */
+   DSL_uint16_t PSDCeil4 : 1;
+   /** Enable PSD Ceiling Optimization for Profile 8d */
+   DSL_uint16_t PSDCeil3 : 1;
+   /** Enable PSD Ceiling Optimization for Profile 8c */
+   DSL_uint16_t PSDCeil2 : 1;
+   /** Enable PSD Ceiling Optimization for Profile 8b */
+   DSL_uint16_t PSDCeil1 : 1;
+   /** Enable PSD Ceiling Optimization for Profile 8a */
+   DSL_uint16_t PSDCeil0 : 1;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t  Length;
+   /** Enable PSD Ceiling Optimization for Profile 8a */
+   DSL_uint16_t PSDCeil0 : 1;
+   /** Enable PSD Ceiling Optimization for Profile 8b */
+   DSL_uint16_t PSDCeil1 : 1;
+   /** Enable PSD Ceiling Optimization for Profile 8c */
+   DSL_uint16_t PSDCeil2 : 1;
+   /** Enable PSD Ceiling Optimization for Profile 8d */
+   DSL_uint16_t PSDCeil3 : 1;
+   /** Enable PSD Ceiling Optimization for Profile 12a */
+   DSL_uint16_t PSDCeil4 : 1;
+   /** Enable PSD Ceiling Optimization for Profile 12b */
+   DSL_uint16_t PSDCeil5 : 1;
+   /** Enable PSD Ceiling Optimization for Profile 17a */
+   DSL_uint16_t PSDCeil6 : 1;
+   /** Enable PSD Ceiling Optimization for Profile 30a */
+   DSL_uint16_t PSDCeil7 : 1;
+   /** Reserved */
+   DSL_uint8_t Res0;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Acknowledgement for message CMD_PSD_CeilingDS_Set.
+*/
+struct ACK_PSD_CeilingDS_Set
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
 #endif
 } __PACKED__ ;
 
@@ -2126,7 +2500,7 @@ struct CMD_BearerCh0_DS_Set
    DSL_uint16_t Res0 : 13;
    /** Reserved (STM) */
    DSL_uint16_t Res1 : 1;
-   /** ATM Configuration Control (ADSL) */
+   /** ATM Configuration Control */
    DSL_uint16_t ATMControl : 1;
    /** PTM Configuration Control */
    DSL_uint16_t PTMControl : 1;
@@ -2181,7 +2555,7 @@ struct CMD_BearerCh0_DS_Set
    DSL_uint16_t Length;
    /** PTM Configuration Control */
    DSL_uint16_t PTMControl : 1;
-   /** ATM Configuration Control (ADSL) */
+   /** ATM Configuration Control */
    DSL_uint16_t ATMControl : 1;
    /** Reserved (STM) */
    DSL_uint16_t Res1 : 1;
@@ -2273,7 +2647,7 @@ struct CMD_BearerCh0_US_Set
    DSL_uint16_t Res0 : 13;
    /** Reserved (STM) */
    DSL_uint16_t Res1 : 1;
-   /** ATM Configuration Control (ADSL only) */
+   /** ATM Configuration Control */
    DSL_uint16_t ATMControl : 1;
    /** PTM Configuration Control */
    DSL_uint16_t PTMControl : 1;
@@ -2328,7 +2702,7 @@ struct CMD_BearerCh0_US_Set
    DSL_uint16_t Length;
    /** PTM Configuration Control */
    DSL_uint16_t PTMControl : 1;
-   /** ATM Configuration Control (ADSL only) */
+   /** ATM Configuration Control */
    DSL_uint16_t ATMControl : 1;
    /** Reserved (STM) */
    DSL_uint16_t Res1 : 1;
@@ -2615,11 +2989,7 @@ struct CMD_Misc_ConfigSet
    /** Length */
    DSL_uint16_t Length;
    /** Reserved */
-   DSL_uint16_t Res0 : 7;
-   /** Finegain Control */
-   DSL_uint16_t FgainControl : 1;
-   /** Reserved */
-   DSL_uint16_t Res1 : 1;
+   DSL_uint16_t Res0 : 9;
    /** Short CLR for ADSL2+ */
    DSL_uint16_t ShortClrA2p : 1;
    /** Short CLR for ADSL2 */
@@ -2628,8 +2998,8 @@ struct CMD_Misc_ConfigSet
    DSL_uint16_t ShortClrA1 : 1;
    /** INP Protection Improvement (VDSL only) */
    DSL_uint16_t FrameParams : 1;
-   /** Reserved */
-   DSL_uint16_t Res2 : 1;
+   /** LOS Criteria Control (VDSL only) */
+   DSL_uint16_t losCondition : 1;
    /** Activation Start Mode (ADSL only) */
    DSL_uint16_t StartMode : 1;
    /** Non-standard GHS-ANSI Activation (ADSL only) */
@@ -2643,8 +3013,8 @@ struct CMD_Misc_ConfigSet
    DSL_uint16_t GhsAnsiSeq : 1;
    /** Activation Start Mode (ADSL only) */
    DSL_uint16_t StartMode : 1;
-   /** Reserved */
-   DSL_uint16_t Res2 : 1;
+   /** LOS Criteria Control (VDSL only) */
+   DSL_uint16_t losCondition : 1;
    /** INP Protection Improvement (VDSL only) */
    DSL_uint16_t FrameParams : 1;
    /** Short CLR for ADSL1 */
@@ -2654,11 +3024,7 @@ struct CMD_Misc_ConfigSet
    /** Short CLR for ADSL2+ */
    DSL_uint16_t ShortClrA2p : 1;
    /** Reserved */
-   DSL_uint16_t Res1 : 1;
-   /** Finegain Control */
-   DSL_uint16_t FgainControl : 1;
-   /** Reserved */
-   DSL_uint16_t Res0 : 7;
+   DSL_uint16_t Res0 : 9;
 #endif
 } __PACKED__ ;
 
@@ -2694,7 +3060,7 @@ struct CMD_OperationOptionsSet
    DSL_uint16_t Length;
    /** Reserved */
    DSL_uint16_t Res0 : 13;
-   /** VRX_ENABLE, Fixed value */
+   /** MFD (ADSL only) */
    DSL_uint16_t Mfd : 1;
    /** Enhanced Upstream Framing (ADSL-Only) */
    DSL_uint16_t UsFramingExt : 1;
@@ -2709,7 +3075,7 @@ struct CMD_OperationOptionsSet
    DSL_uint16_t Ntr : 1;
    /** Enhanced Upstream Framing (ADSL-Only) */
    DSL_uint16_t UsFramingExt : 1;
-   /** VRX_ENABLE, Fixed value */
+   /** MFD (ADSL only) */
    DSL_uint16_t Mfd : 1;
    /** Reserved */
    DSL_uint16_t Res0 : 13;
@@ -2721,6 +3087,99 @@ struct CMD_OperationOptionsSet
    This is the acknowledgement for CMD_OperationOptionsSet.
 */
 struct ACK_OperationOptionsSet
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   The message selects a DSL operator. The information is used to configure
+   operator specific settings inside the DSL firmware.
+*/
+struct CMD_OperatorSelect
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** DSL Operator Selection */
+   DSL_uint16_t DslOperator;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** DSL Operator Selection */
+   DSL_uint16_t DslOperator;
+#endif
+} __PACKED__ ;
+
+
+/**
+   This is the acknowledgement for ACK_OperatorSelect.
+*/
+struct ACK_OperatorSelect
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   The messages configures settings for test modes.
+*/
+struct CMD_TestOptionsSet
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** Reserved */
+   DSL_uint16_t Res0 : 14;
+   /** US Finegain Control */
+   DSL_uint16_t FgainControlUs : 1;
+   /** DS Finegain Control */
+   DSL_uint16_t FgainControlDs : 1;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** DS Finegain Control */
+   DSL_uint16_t FgainControlDs : 1;
+   /** US Finegain Control */
+   DSL_uint16_t FgainControlUs : 1;
+   /** Reserved */
+   DSL_uint16_t Res0 : 14;
+#endif
+} __PACKED__ ;
+
+
+/**
+   This is the acknowledgement for CMD_TestOptionsSet.
+*/
+struct ACK_TestOptionsSet
 {
 #if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
    /** Index */

@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -34,8 +33,13 @@ static const char* dsl_cpe_api_version = "@(#)DSL CPE API V" DSL_CPE_API_PACKAGE
 static DSL_ssize_t DSL_DRV_Write(DSL_DRV_file_t *pFile, const DSL_char_t * pBuf,
                                  DSL_DRV_size_t nSize, DSL_DRV_offset_t * pLoff);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35))
 static DSL_int_t DSL_DRV_Ioctls(DSL_DRV_inode_t * pINode, DSL_DRV_file_t * pFile,
                          DSL_uint_t nCommand, unsigned long nArg);
+#else
+static DSL_long_t DSL_DRV_Ioctls(DSL_DRV_file_t * pFile,
+                         DSL_uint_t nCommand, unsigned long nArg);
+#endif
 
 static int DSL_DRV_Open(DSL_DRV_inode_t * ino, DSL_DRV_file_t * fil);
 
@@ -71,9 +75,14 @@ static struct file_operations dslCpeApiOperations = {
    open:    DSL_DRV_Open,
    release: DSL_DRV_Release,
    write:   DSL_DRV_Write,
-   ioctl:   DSL_DRV_Ioctls,
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35))
+   ioctl   : DSL_DRV_Ioctls,
+#else
+   unlocked_ioctl   : DSL_DRV_Ioctls,
+#endif
    poll:    DSL_DRV_Poll
 };
+
 #else
 static struct file_operations dslCpeApiOperations = {
    /*open:*/    DSL_DRV_Open,
@@ -111,7 +120,7 @@ static int DSL_DRV_Release(DSL_DRV_inode_t * ino, DSL_DRV_file_t * fil)
    DSL_DEBUG(DSL_DBG_MSG,
       (DSL_NULL, SYS_DBG_MSG"Device will be closed..."DSL_DRV_CRLF));
 
-   if (num >= DSL_DRV_MAX_DEVICE_NUMBER)
+   if (num >= DSL_DRV_MAX_ENTITIES)
    {
       return -EIO;
    }
@@ -172,16 +181,22 @@ static DSL_ssize_t DSL_DRV_Write(DSL_DRV_file_t *pFile, const DSL_char_t * pBuf,
    \return  Success or failure.
    \ingroup Internal
 */
-static DSL_int_t DSL_DRV_Ioctls(DSL_DRV_inode_t * pINode,
-   DSL_DRV_file_t * pFile,
-   DSL_uint_t nCommand,
-   unsigned long nArg)
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35))
+static DSL_int_t DSL_DRV_Ioctls(DSL_DRV_inode_t * pINode, DSL_DRV_file_t * pFile,
+                         DSL_uint_t nCommand, unsigned long nArg)
+#else
+static DSL_long_t DSL_DRV_Ioctls(DSL_DRV_file_t * pFile,
+                         DSL_uint_t nCommand, unsigned long nArg)
+#endif
 {
    DSL_int_t nErr=0;
    DSL_boolean_t bIsInKernel;
    DSL_Error_t nRetCode = DSL_SUCCESS;
    DSL_Context_t *pContext;
    DSL_devCtx_t *pDevCtx;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
+   DSL_DRV_inode_t * pINode;
+#endif
 
    DSL_OpenContext_t *pOpenCtx;
 
@@ -222,6 +237,17 @@ static DSL_int_t DSL_DRV_Ioctls(DSL_DRV_inode_t * pINode,
       }
    }
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
+   if (pFile->f_dentry != DSL_NULL)
+   {
+      pINode = pFile->f_dentry->d_inode;
+   }
+   else
+   {
+      pINode == DSL_NULL;
+   }
+#endif
+
    if (pINode == DSL_NULL)
    {
       bIsInKernel = DSL_TRUE;
@@ -234,7 +260,6 @@ static DSL_int_t DSL_DRV_Ioctls(DSL_DRV_inode_t * pINode,
    if ( (_IOC_TYPE(nCommand) == DSL_IOC_MAGIC_CPE_API) ||
         (_IOC_TYPE(nCommand) == DSL_IOC_MAGIC_CPE_API_G997) ||
         (_IOC_TYPE(nCommand) == DSL_IOC_MAGIC_CPE_API_PM) ||
-        (_IOC_TYPE(nCommand) == DSL_IOC_MAGIC_CPE_API_SAR) ||
         (_IOC_TYPE(nCommand) == DSL_IOC_MAGIC_CPE_API_BND) ||
         (_IOC_TYPE(nCommand) == DSL_IOC_MAGIC_CPE_API_DEP) ||
         (_IOC_TYPE(nCommand) == DSL_IOC_MAGIC_CPE_API_RTT) )
@@ -870,8 +895,7 @@ DSL_uint32_t DSL_DRV_ElapsedTimeMSecGet(
                                      : (refTime_ms - currTime_ms);
 }
 
-#if (defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)) && \
-     defined(INCLUDE_DSL_BONDING)
+#if defined(INCLUDE_DSL_CPE_API_VRX) && defined(INCLUDE_DSL_BONDING)
 /**
    LINUX Kernel - Map the physical address to a virtual memory space.
    For virtual memory management this is required.
@@ -994,7 +1018,7 @@ DSL_int32_t DSL_DRV_Phy2VirtUnmap(
 
    return 0;
 }
-#endif /* #if defined(INCLUDE_DSL_CPE_API_VINAX) && defined(INCLUDE_DSL_BONDING)*/
+#endif /* #if defined(INCLUDE_DSL_CPE_API_VRX) && defined(INCLUDE_DSL_BONDING)*/
 #endif /* #ifndef INCLUDE_DSL_CPE_API_IFXOS_SUPPORT*/
 
 static void DSL_DRV_DebugInit(void)
@@ -1086,25 +1110,14 @@ int __init DSL_ModuleInit(void)
    printk(DSL_DRV_CRLF DSL_DRV_CRLF "Lantiq CPE API Driver version: %s" DSL_DRV_CRLF,
       &(dsl_cpe_api_version[4]));
 
-   DSL_DRV_MemSet( ifxDevices, 0, sizeof(DSL_devCtx_t) * DSL_DRV_MAX_DEVICE_NUMBER );
+   DSL_DRV_MemSet( ifxDevices, 0, sizeof(DSL_devCtx_t) * DSL_DRV_MAX_ENTITIES );
 
    /* Apply initial debug levels. The lines below should be updated in case of
       new modules insert */
    DSL_DRV_DebugInit();
 
-#if (defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)) && \
-     defined(INCLUDE_DSL_BONDING)
-   if ( DSL_DRV_Phy2VirtMap(
-           DSL_FPGA_BND_BASE_ADDR, DSL_FPGA_BND_REGS_SZ_BYTE,
-           "BND_FPGA", (DSL_uint8_t**)&g_BndFpgaBase) < 0)
-   {
-      DSL_DEBUG(DSL_DBG_ERR,
-         (DSL_NULL, SYS_DBG_ERR"Bonding FPGA memory mapping failed!"DSL_DRV_CRLF));
-   }
-#endif /* defined(INCLUDE_DSL_CPE_API_VINAX) && defined(INCLUDE_DSL_BONDING)*/
-
    /* Get handles for lower level driver */
-   for (i = 0; i < DSL_DRV_MAX_DEVICE_NUMBER; i++)
+   for (i = 0; i < DSL_DRV_MAX_ENTITIES; i++)
    {
       ifxDevices[i].lowHandle = DSL_DRV_DEV_DriverHandleGet(0,i);
       if (ifxDevices[i].lowHandle == DSL_NULL)
@@ -1137,14 +1150,6 @@ void __exit DSL_ModuleCleanup(void)
    unregister_chrdev(nMajorNum, DRV_DSL_CPE_API_DEV_NAME);
 
    DSL_DRV_Cleanup();
-
-#if (defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)) && \
-     defined(INCLUDE_DSL_BONDING)
-   DSL_DRV_Phy2VirtUnmap(
-               (DSL_ulong_t*)DSL_FPGA_BND_BASE_ADDR,
-               DSL_FPGA_BND_REGS_SZ_BYTE,
-               (DSL_uint8_t**)&g_BndFpgaBase);
-#endif
 
    return;
 }

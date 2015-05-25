@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2012
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -66,6 +66,9 @@
 #define ACK_RA_ModeUS_Get_AT_INIT 2
 #define ACK_RA_ModeUS_Get_DYNAMIC 3
 #define ACK_RA_ModeUS_Get_SOS 4
+#define CMD_DSM_Control_OFF 0
+#define CMD_DSM_Control_FULL_VECTOR 1
+#define CMD_DSM_Control_VECTOR_FRIENLY 2
 /* ----- Message Specific Constants Definition section (End) ----- */
 
 /** Message ID for CMD_BAT_TableEntriesGet */
@@ -110,9 +113,11 @@ typedef struct ACK_GainTableEntriesGet ACK_GainTableEntriesGet_t;
 #define CMD_SNR_NE_TABLEENTRIESGET 0x0B03
 
 /**
-   The message requests information about the SNR per subcarrier available at
-   the near-end side , which means for downstream direction at the CPE. It is
-   the hosts responsibility to select the tone indices accordingly.
+   The message requests information about the SNR per subcarrier with virtual
+   noise for the near-end side , which means for downstream direction at the
+   CPE. It is the hosts responsibility to select the tone indices
+   accordingly.See also Table 12 "How to retrieve test parameter data" on Page
+   466.
 */
 typedef struct CMD_SNR_NE_TableEntriesGet CMD_SNR_NE_TableEntriesGet_t;
 
@@ -120,8 +125,8 @@ typedef struct CMD_SNR_NE_TableEntriesGet CMD_SNR_NE_TableEntriesGet_t;
 #define ACK_SNR_NE_TABLEENTRIESGET 0x0B03
 
 /**
-   Returns information about the SNR per subcarrier available at the near-end
-   side, which means for downstream direction at the CPE.
+   Returns information about the SNR per subcarrier with virtual noise for the
+   near-end side, meaning for downstream direction.
 */
 typedef struct ACK_SNR_NE_TableEntriesGet ACK_SNR_NE_TableEntriesGet_t;
 
@@ -338,8 +343,9 @@ typedef struct ACK_QLN_US_Get ACK_QLN_US_Get_t;
 #define CMD_SNR_DS_GET 0x5503
 
 /**
-   Requests information about the downstream SNR per subcarrier group (Section
-   7.5.1.28.3 of G997.1).
+   Requests information about the downstream SNR per subcarrier group in VDSL or
+   the SNR per subcarrier in ADSL, both without considering virtual noise
+   (Section 7.5.1.28.3 of G997.1).
 */
 typedef struct CMD_SNR_DS_Get CMD_SNR_DS_Get_t;
 
@@ -347,8 +353,9 @@ typedef struct CMD_SNR_DS_Get CMD_SNR_DS_Get_t;
 #define ACK_SNR_DS_GET 0x5503
 
 /**
-   Returns information about the SNR per subcarrier group for the chosen range.
-   (Section 7.5.1.28.3 of G997.1)
+   Returns information about the SNR per subcarrier (ADSL) or per subcarrier
+   group (VDSL) for the chosen range without considering virtual noise. (Section
+   7.5.1.28.3 of G997.1)
 */
 typedef struct ACK_SNR_DS_Get ACK_SNR_DS_Get_t;
 
@@ -596,7 +603,7 @@ typedef struct EVT_ClearEOCStatusGet EVT_ClearEOCStatusGet_t;
    The message is used to reset the transmit or receive status of the clear eoc
    data transmission to IDLE (for defined states see also
    CMD_ClearEOCStatusGet). See the description on the Clear EOC handling on Page
-   491 for when it has to be applied. Transmit and receive status are
+   514 for when it has to be applied. Transmit and receive status are
    distinguished by the Index parameter.
 */
 typedef struct CMD_ClearEOCStatusSet CMD_ClearEOCStatusSet_t;
@@ -816,27 +823,25 @@ typedef struct CMD_BearerChsDS_RTX_Get CMD_BearerChsDS_RTX_Get_t;
 
 /**
    Delivers status information for the downstream bearer channels when G.INP
-   retransmission is used.
+   retransmission is actually used.
 */
 typedef struct ACK_BearerChsDS_RTX_Get ACK_BearerChsDS_RTX_Get_t;
 
-/** Message ID for CMD_RTX_PMwoThreshDS_Get */
-#define CMD_RTX_PMWOTHRESHDS_GET 0x2B0A
+/** Message ID for CMD_RTX_PM_DS_Get */
+#define CMD_RTX_PM_DS_GET 0x2B0A
 
 /**
-   Requests counters for RTX performance monitoring which don’t include TR1
-   threshold supervision.
+   Requests counters for RTX performance monitoring.
 */
-typedef struct CMD_RTX_PMwoThreshDS_Get CMD_RTX_PMwoThreshDS_Get_t;
+typedef struct CMD_RTX_PM_DS_Get CMD_RTX_PM_DS_Get_t;
 
-/** Message ID for ACK_RTX_PMwoThreshDS_Get */
-#define ACK_RTX_PMWOTHRESHDS_GET 0x2B0A
+/** Message ID for ACK_RTX_PM_DS_Get */
+#define ACK_RTX_PM_DS_GET 0x2B0A
 
 /**
-   Delivers retransmission counters for RTX performance monitoring which don’t
-   include TR1 threshold supervision.
+   Delivers retransmission counters for RTX performance monitoring.
 */
-typedef struct ACK_RTX_PMwoThreshDS_Get ACK_RTX_PMwoThreshDS_Get_t;
+typedef struct ACK_RTX_PM_DS_Get ACK_RTX_PM_DS_Get_t;
 
 /** Message ID for CMD_RTX_DS_StatsGet */
 #define CMD_RTX_DS_STATSGET 0x2C0A
@@ -869,6 +874,60 @@ typedef struct CMD_RTX_StatusGet CMD_RTX_StatusGet_t;
    Provides the actually used G.INP retransmission status.
 */
 typedef struct ACK_RTX_StatusGet ACK_RTX_StatusGet_t;
+
+/** Message ID for CMD_DSM_Control */
+#define CMD_DSM_CONTROL 0x5248
+
+/**
+   Enables/Disables support for full vectoring (G.993.5) and full vector-
+   friendly operation (G.993.2 Annex O). In case of ADSL, this only means the
+   indication of the (VDSL) vectoring capabilities during G.Handshake.
+*/
+typedef struct CMD_DSM_Control CMD_DSM_Control_t;
+
+/** Message ID for ACK_DSM_Control */
+#define ACK_DSM_CONTROL 0x5248
+
+/**
+   Acknowledgement to CMD_DSM_Control.
+*/
+typedef struct ACK_DSM_Control ACK_DSM_Control_t;
+
+/** Message ID for EVT_DSM_ErrorVectorReady */
+#define EVT_DSM_ERRORVECTORREADY 0x1109
+
+/**
+   This autononmous message indicates that new downstream DSM error vector data
+   were written by the DSL FW into the SDRAM. Generation of this EVT message is
+   enabled/disabled together with the G.993.5 vectoring functionality itself, by
+   means of CMD_DSM_Control, parameter "Vector".
+*/
+typedef struct EVT_DSM_ErrorVectorReady EVT_DSM_ErrorVectorReady_t;
+
+/** Message ID for CMD_DSM_StatsGet */
+#define CMD_DSM_STATSGET 0x370A
+
+/**
+   Requests vectoring debug counter values for the number of discarded error
+   vector packets. (It increments when the error vector data was not processed
+   by the PP driver before being overwritten by the DSL FW with the next data).
+*/
+typedef struct CMD_DSM_StatsGet CMD_DSM_StatsGet_t;
+
+/** Message ID for ACK_DSM_StatsGet */
+#define ACK_DSM_STATSGET 0x370A
+
+/**
+   Delivers vectoring debug counter values: the number of discarded error vector
+   packets. (It increments when the error vector data was not processed by the
+   PP driver before being overwritten by the DSL FW with the next data). It is a
+   wrap-around counter which is not affected by the TR1-period and only reset on
+   FW download. Recognition of the counted event: If the error vector data was
+   not processed by the PP driver, then the first 32-bit value [Size] of the
+   error vector information in the SDRAM is NOT set to zero on processing the
+   next error vector by the DSL FW.
+*/
+typedef struct ACK_DSM_StatsGet ACK_DSM_StatsGet_t;
 
 /**
    Requests information about the bit-allocation per subcarrier in VDSL mode.
@@ -961,9 +1020,11 @@ struct ACK_GainTableEntriesGet
 
 
 /**
-   The message requests information about the SNR per subcarrier available at
-   the near-end side , which means for downstream direction at the CPE. It is
-   the hosts responsibility to select the tone indices accordingly.
+   The message requests information about the SNR per subcarrier with virtual
+   noise for the near-end side , which means for downstream direction at the
+   CPE. It is the hosts responsibility to select the tone indices
+   accordingly.See also Table 12 "How to retrieve test parameter data" on Page
+   466.
 */
 struct CMD_SNR_NE_TableEntriesGet
 {
@@ -982,8 +1043,8 @@ struct CMD_SNR_NE_TableEntriesGet
 
 
 /**
-   Returns information about the SNR per subcarrier available at the near-end
-   side, which means for downstream direction at the CPE.
+   Returns information about the SNR per subcarrier with virtual noise for the
+   near-end side, meaning for downstream direction.
 */
 struct ACK_SNR_NE_TableEntriesGet
 {
@@ -1501,8 +1562,9 @@ struct ACK_QLN_US_Get
 
 
 /**
-   Requests information about the downstream SNR per subcarrier group (Section
-   7.5.1.28.3 of G997.1).
+   Requests information about the downstream SNR per subcarrier group in VDSL or
+   the SNR per subcarrier in ADSL, both without considering virtual noise
+   (Section 7.5.1.28.3 of G997.1).
 */
 struct CMD_SNR_DS_Get
 {
@@ -1521,8 +1583,9 @@ struct CMD_SNR_DS_Get
 
 
 /**
-   Returns information about the SNR per subcarrier group for the chosen range.
-   (Section 7.5.1.28.3 of G997.1)
+   Returns information about the SNR per subcarrier (ADSL) or per subcarrier
+   group (VDSL) for the chosen range without considering virtual noise. (Section
+   7.5.1.28.3 of G997.1)
 */
 struct ACK_SNR_DS_Get
 {
@@ -2226,7 +2289,7 @@ struct EVT_ClearEOCStatusGet
    The message is used to reset the transmit or receive status of the clear eoc
    data transmission to IDLE (for defined states see also
    CMD_ClearEOCStatusGet). See the description on the Clear EOC handling on Page
-   491 for when it has to be applied. Transmit and receive status are
+   514 for when it has to be applied. Transmit and receive status are
    distinguished by the Index parameter.
 */
 struct CMD_ClearEOCStatusSet
@@ -2989,7 +3052,7 @@ struct CMD_BearerChsDS_RTX_Get
 
 /**
    Delivers status information for the downstream bearer channels when G.INP
-   retransmission is used.
+   retransmission is actually used.
 */
 struct ACK_BearerChsDS_RTX_Get
 {
@@ -3028,10 +3091,9 @@ struct ACK_BearerChsDS_RTX_Get
 
 
 /**
-   Requests counters for RTX performance monitoring which don’t include TR1
-   threshold supervision.
+   Requests counters for RTX performance monitoring.
 */
-struct CMD_RTX_PMwoThreshDS_Get
+struct CMD_RTX_PM_DS_Get
 {
 #if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
    /** Index */
@@ -3048,45 +3110,60 @@ struct CMD_RTX_PMwoThreshDS_Get
 
 
 /**
-   Delivers retransmission counters for RTX performance monitoring which don’t
-   include TR1 threshold supervision.
+   Delivers retransmission counters for RTX performance monitoring.
 */
-struct ACK_RTX_PMwoThreshDS_Get
+struct ACK_RTX_PM_DS_Get
 {
 #if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
    /** Index */
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** ErrorFreeBitsCNT, LSW, Current Period */
+   /** ErrorFreeBitsCNT, LSW */
    DSL_uint16_t ErrorFreeBits_LSW;
-   /** ErrorFreeBitsCNT, MSW, Current Period */
+   /** ErrorFreeBitsCNT, MSW */
    DSL_uint16_t ErrorFreeBits_MSW;
    /** Reserved */
    DSL_uint16_t Res0[2];
-   /** EFTR_min, LSW, Current Period */
+   /** EFTR_min reported to CO, LSW */
    DSL_uint16_t EFTR_min_LSW;
-   /** EFTR_min, MSW, Current Period */
+   /** EFTR_min reported to CO, MSW */
    DSL_uint16_t EFTR_min_MSW;
    /** Reserved */
    DSL_uint16_t Res1[2];
+   /** "leftr" Count, LSW */
+   DSL_uint16_t leftr_LSW;
+   /** "leftr" Count, MSW */
+   DSL_uint16_t leftr_MSW;
+   /** EFTR, LSW */
+   DSL_uint16_t EFTR_LSW;
+   /** EFTR, MSW */
+   DSL_uint16_t EFTR_MSW;
 #else
    /** Index */
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** ErrorFreeBitsCNT, LSW, Current Period */
+   /** ErrorFreeBitsCNT, LSW */
    DSL_uint16_t ErrorFreeBits_LSW;
-   /** ErrorFreeBitsCNT, MSW, Current Period */
+   /** ErrorFreeBitsCNT, MSW */
    DSL_uint16_t ErrorFreeBits_MSW;
    /** Reserved */
    DSL_uint16_t Res0[2];
-   /** EFTR_min, LSW, Current Period */
+   /** EFTR_min reported to CO, LSW */
    DSL_uint16_t EFTR_min_LSW;
-   /** EFTR_min, MSW, Current Period */
+   /** EFTR_min reported to CO, MSW */
    DSL_uint16_t EFTR_min_MSW;
    /** Reserved */
    DSL_uint16_t Res1[2];
+   /** "leftr" Count, LSW */
+   DSL_uint16_t leftr_LSW;
+   /** "leftr" Count, MSW */
+   DSL_uint16_t leftr_MSW;
+   /** EFTR, LSW */
+   DSL_uint16_t EFTR_LSW;
+   /** EFTR, MSW */
+   DSL_uint16_t EFTR_MSW;
 #endif
 } __PACKED__ ;
 
@@ -3191,6 +3268,139 @@ struct ACK_RTX_StatusGet
    DSL_uint16_t Length;
    /** Retransmission Used "RTX_USED" */
    DSL_uint16_t RtxUsed;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Enables/Disables support for full vectoring (G.993.5) and full vector-
+   friendly operation (G.993.2 Annex O). In case of ADSL, this only means the
+   indication of the (VDSL) vectoring capabilities during G.Handshake.
+*/
+struct CMD_DSM_Control
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** Reserved */
+   DSL_uint16_t Res0 : 14;
+   /** Supported Vectoring Mode */
+   DSL_uint16_t VectoringMode : 2;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** Supported Vectoring Mode */
+   DSL_uint16_t VectoringMode : 2;
+   /** Reserved */
+   DSL_uint16_t Res0 : 14;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Acknowledgement to CMD_DSM_Control.
+*/
+struct ACK_DSM_Control
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   This autononmous message indicates that new downstream DSM error vector data
+   were written by the DSL FW into the SDRAM. Generation of this EVT message is
+   enabled/disabled together with the G.993.5 vectoring functionality itself, by
+   means of CMD_DSM_Control, parameter "Vector".
+*/
+struct EVT_DSM_ErrorVectorReady
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** ERB Event Result Code */
+   DSL_uint16_t ErrVecProcResult;
+   /** L2 Backchannel Error Vector Date Size */
+   DSL_uint16_t ErrVecSize;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** ERB Event Result Code */
+   DSL_uint16_t ErrVecProcResult;
+   /** L2 Backchannel Error Vector Date Size */
+   DSL_uint16_t ErrVecSize;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Requests vectoring debug counter values for the number of discarded error
+   vector packets. (It increments when the error vector data was not processed
+   by the PP driver before being overwritten by the DSL FW with the next data).
+*/
+struct CMD_DSM_StatsGet
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Delivers vectoring debug counter values: the number of discarded error vector
+   packets. (It increments when the error vector data was not processed by the
+   PP driver before being overwritten by the DSL FW with the next data). It is a
+   wrap-around counter which is not affected by the TR1-period and only reset on
+   FW download. Recognition of the counted event: If the error vector data was
+   not processed by the PP driver, then the first 32-bit value [Size] of the
+   error vector information in the SDRAM is NOT set to zero on processing the
+   next error vector by the DSL FW.
+*/
+struct ACK_DSM_StatsGet
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** Discarded Error Vectors, LSW */
+   DSL_uint16_t ErrVecDiscard_LSW;
+   /** Discarded Error Vectors, MSW */
+   DSL_uint16_t ErrVecDiscard_MSW;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** Discarded Error Vectors, LSW */
+   DSL_uint16_t ErrVecDiscard_LSW;
+   /** Discarded Error Vectors, MSW */
+   DSL_uint16_t ErrVecDiscard_MSW;
 #endif
 } __PACKED__ ;
 

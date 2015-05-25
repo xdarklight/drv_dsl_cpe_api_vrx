@@ -22,7 +22,7 @@ PROJECT_NAME           = "DSL CPE API"
 # This could be handy for archiving the generated documentation or
 # if some version control system is used.
 
-PROJECT_NUMBER         = 4.11.11
+PROJECT_NUMBER         = 4.15.2
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute)
 # base path where the generated documentation will be put.
@@ -424,9 +424,11 @@ INPUT                  = ./dsl_cpe_api.h \
                          ../src/include/drv_dsl_cpe_api_types.h \
                          ../src/include/drv_dsl_cpe_api_g997.h \
                          ../src/include/drv_dsl_cpe_api_pm.h \
+                         ../src/include/drv_dsl_cpe_api_bnd.h \
                          ../src/include/drv_dsl_cpe_debug.h \
                          ../src/include/drv_dsl_cpe_api_error.h \
-                         ../src/include/drv_dsl_cpe_vrx_ctx.h
+                         ../src/include/drv_dsl_cpe_vrx_ctx.h \
+                         ../../../drv_dsl_cpe_mei/vdsl/src/drv_mei_cpe_interface.h
 FILE_PATTERNS          =
 
 # The RECURSIVE tag can be used to turn specify whether or not subdirectories
@@ -987,12 +989,12 @@ PREDEFINED             = __PACKED__= \
                          INCLUDE_DSL_CPE_API_VRX \
                          DSL_DOC_GENERATION_EXCLUDE_ADSL_MIB \
                          DSL_DOC_GENERATION_EXCLUDE_UNWANTED \
+                         INCLUDE_DSL_BONDING \
                          INCLUDE_DSL_API_G997 \
                          INCLUDE_DSL_CONFIG_GET \
                          INCLUDE_DSL_SYSTEM_INTERFACE \
                          INCLUDE_DSL_RESOURCE_STATISTICS \
                          INCLUDE_DSL_FRAMING_PARAMETERS \
-                         INCLUDE_DSL_FILTER_DETECTION \
                          INCLUDE_DSL_G997_LINE_INVENTORY \
                          INCLUDE_DSL_G997_FRAMING_PARAMETERS \
                          INCLUDE_DSL_G997_PER_TONE \

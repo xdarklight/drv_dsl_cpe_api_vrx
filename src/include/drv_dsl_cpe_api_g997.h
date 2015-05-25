@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -698,7 +697,16 @@ typedef struct
    xTU Transmission System Enabling.
    This configuration parameter defines the transmission system coding types
    to be allowed by the near-end xTU on this line.
-   It is coded in a bitmap representation (0 if not allowed, 1 if allowed). */
+   It is coded in a bitmap representation (0 if not allowed, 1 if allowed).
+   \note Please note the following specific handling for the 8th XTSE (VDSL)octet:
+      - Independent from the selected bit, respective bit combination (of the
+        available three bits which are defined by G.997.1 for Region A/B/C) all
+        features are enabled within VDSL Firmware.
+      - For status request \ref DSL_FIO_G997_XTU_SYSTEM_ENABLING_STATUS_GET and
+        in case that US0 is not used, the region information is not available on
+        the CPE side. In this case all defined region bits A/B/C will be set
+        within returned status information. This is the only case in which
+        multiple bits are set within this status information! */
    DSL_CFG DSL_uint8_t XTSE[DSL_G997_NUM_XTSE_OCTETS];
 } DSL_G997_XTUSystemEnablingData_t;
 
@@ -721,7 +729,6 @@ typedef struct
    DSL_CFG DSL_G997_XTUSystemEnablingData_t data;
 } DSL_G997_XTUSystemEnabling_t;
 
-
 /**
    Power Management State Enabling (PMMode).
    This configuration parameter defines the line states the xTU-C or xTU-R may
@@ -730,12 +737,15 @@ typedef struct
 */
 typedef enum
 {
-   /** L3 state (Idle state) */
+   /**
+   L3 state (Idle state)
+   \note This configuration is not supported (will be disabled and ignored on
+         enabling. */
    DSL_G997_PMMODE_BIT_L3_STATE = 0x01,
-   /** L1/L2 state (Low power state) */
-   DSL_G997_PMMODE_BIT_L1_L2_STATE = 0x02
+   /**
+   L2 state (Low power state) */
+   DSL_G997_PMMODE_BIT_L2_STATE = 0x02
 } DSL_G997_PMMode_t;
-
 
 /**
    This definitions defines all possible power management states.
@@ -795,6 +805,32 @@ typedef struct
    Structure that contains power management status data */
    DSL_OUT DSL_G997_PowerManagementStatusData_t data;
 } DSL_G997_PowerManagementStatus_t;
+
+/**
+   Power Management State Configuration (see chapter 7.3.1 of G.997.1)
+*/
+typedef struct
+{
+   /**
+   Power Management State Enabling (PMMode) */
+   DSL_G997_PMMode_t PMMode;
+} DSL_G997_LowPowerModeConfigData_t;
+
+/**
+   Structure for configuration of Low Power Modes.
+   This structure has to be used for ioctl
+   - \ref DSL_FIO_G997_LOW_POWER_MODE_CONFIG_SET
+   - \ref DSL_FIO_G997_LOW_POWER_MODE_CONFIG_GET
+*/
+typedef struct
+{
+   /**
+   Driver control/status structure */
+   DSL_IN_OUT DSL_AccessCtl_t accessCtl;
+   /**
+   Structure that contains SRA configuration data */
+   DSL_OUT DSL_G997_LowPowerModeConfigData_t data;
+} DSL_G997_LowPowerModeConfig_t;
 
 /**
    This parameter represents the last successful transmitted initialization
@@ -920,7 +956,7 @@ typedef struct
 typedef struct
 {
    /**
-   Returns the bit allocation for the number of subcarriers (NSC) */
+   Returns the signal-to-noise-ration (SNR) for the number of subcarriers (NSC) */
    DSL_OUT DSL_G997_NSCData8_t snrAllocationNsc;
 } DSL_G997_SnrAllocationNscData_t;
 
@@ -1209,42 +1245,101 @@ typedef struct
 {
    /**
    Actual Data Rate.
-   This parameter reports the actual net data rate the bearer channel is
-   operating at excluding rate in L1 and L2 states. In L1 or L2 states, the
-   parameter contains the net data rate in the previous L0 state. The data rate
-   is coded in bit/s. */
+
+   If retransmission is not used in a given transmit direction:
+   this parameter reports the actual net data rate at which the bearer channel
+   is operating (in L2, the actual L2 net data rate is reported).
+
+   If retransmission is used in a given transmit direction:
+   this parameter reports the Expected Throughput (ETR) (as defined in G.inp)
+   at which the bearer channel is operating.
+
+   If retransmsission is used in a given direction: the reporting of
+   ActualDataRate is according to  ITU-T G.997.1 chapter 7.5.2.1.
+   If retransmsission is not used in a given direction: the reporting of
+   ActualDataRate is not according to  ITU-T G.997.1 chapter 7.5.2.1
+   during L2 power state but the reporting of parameter ActualNetDataRate
+   is according to  ITU-T G.997.1 chapter 7.5.2.1 during all power states.
+
+   The data rate is coded in bit/s.
+   According to G992.1 Table 6-3:
+   "Net data rate" + Frame overhead rate = "Aggregate data rate"
+   "Aggregate data rate" + RS Coding overhead rate = "Total data rate"
+   "Total data rate" + Trellis Coding overhead rate = Line rate */
    DSL_OUT DSL_uint32_t ActualDataRate;
    /**
    Previous Data Rate.
-   This parameter reports the previous net data rate the bearer channel was
-   operating at just before the latest rate change event occurred excluding all
-   transitions between L0 state and L1 or L2 states. A rate change can occur at
-   a power management state transition, e.g., at full or short initialization,
-   fast retrain, or power down or at a dynamic rate adaptation. The rate is
-   coded in bit/s. */
+
+   If retransmission is not used in a given transmit direction, this parameter
+   reports the previous net data rate the bearer channel was operating at just
+   before the latest net data rate change event occurred, excluding all
+   transitions between L0 state and L2 states.
+   If retransmission is used in a given transmit direction, this parameter
+   reports the previous Expected Throughput (ETR) (as defined in G.inp) the
+   bearer channel was operating at just before the latest ETR change event
+   occurred, excluding all transitions between L0 state and L2 states.
+
+   A rate change can occur at a power management state transition, e.g.,
+   at full or short initialization, fast retrain, or power down or at
+   a dynamic rate adaptation.
+   The rate is coded in bit/s. */
    DSL_OUT DSL_uint32_t PreviousDataRate;
    /**
    Actual Interleaving Delay.
-   This parameter is the actual one-way interleaving delay introduced by the
-   PMS-TC between the alpha and beta reference points excluding delay in L1 and
-   L2 state. In L1 and L2 state, the parameter contains the interleaving delay
-   in the previous L0 state. This parameter is derived from the S and D
-   parameters as [S*D] / 4 ms, where "S" is the Symbols per codeword, and "D"
-   is the "Interleaving Depth" and [x] denotes rounding to the higher integer.
-   \attention The Actual Interleaving Delay is coded in multiple of 1/100 ms.
+
+   If retransmission is not used in a given transmit direction, this parameter
+   is the actual one-way interleaving delay introduced by the PMS-TC between
+   the alfa and beta reference points (including L2 state, not conform to
+   G.997.1).
+   For ADSL, this parameter is derived from the S and D parameters as
+   S*D/4 ms, where "S" is the Symbols per codeword, and "D" is the
+   "Interleaving Depth" and  x  denotes rounding to the higher integer.
+   For ITU T Rec. G.993.2, this parameter shall be computed according to the
+   formula in 9.7/G.993.2.
+   If retransmission is used in a given transmit direction, this parameter
+   specifies the actual value of the time-independent component of the delay
+   due to the combined effect of retransmission and optional interleaving
+   only (see G.inp for detailed specification).
+
+   \attention The Actual Interleaving Delay is coded in in multiple of 1/100 ms.
               For example: 25 means 0.25 ms */
    DSL_OUT DSL_uint32_t ActualInterleaveDelay;
    /**
    Actual Impulse Noise Protection.
-   This parameter reports the actual impulse noise protection (INP) on the
-   bearer channel in the L0 state. In the L1 or L2 state, the parameter
-   contains the INP in the previous L0 state. For ADSL, this value is computed
-   according to the formula specified in the relevant Recommendation based on
-   the actual framing parameters. For G.993.2, the method to report this value
-   is according to the INPREPORT parameter. The value is coded in fractions of
-   DMT symbols with a granularity of 0.1 symbols. The range is from 0 to 25.4.
-   A special value indicates an ACTINP higher than 25.4. */
-   DSL_OUT DSL_uint8_t ActualImpulseNoiseProtection;
+
+   If retransmission is not used in a given transmit direction, this parameter
+   reports the actual impulse noise protection (INP) on the bearer channel in
+   the L0 state (also in L2 state, this is not conform to G.997.1).
+
+   For G.992.1, this value is computed according to the formula specified in
+   G.997.1 based on the actual framing parameters. For G.992.3 and G.992.5,
+   this value is estimated by the xTU receiver. It is identical to the
+   INP_actn for the corresponding bearer channel as defined in these
+   Recommendations (sections K.1.7/G.992.3, K.2.7/G.992.3,
+   and K.3.7/G.992.3). For G.993.2, the method to report this value is
+   according to the INPREPORT=1 parameter.
+
+   If retransmission is used in a given transmit direction, this parameter
+   reports the actual impulse noise protection (INP) against SHINE (under
+   specific conditions detailed in G.inp) on the bearer channel in the L0 state.
+   In the L2 state, the parameter contains the INP in the previous L0 state.
+
+   If Erasure decoding is ON, this ACTINP value is considering it. If Erasure
+   decoding is OFF, the value is the same as in the
+   "ActualImpulseNoiseProtectionNoErasure" Parameter.
+
+   The value is coded in fractions of DMT symbols with a granularity of
+   0.1 symbols. The range and the special value of this parameter depends on
+   the retransmission status as follows
+   - In case of retransmission is not used
+     Range: from 0 to 25.4 coded as 0..254
+     Special value: \ref DSL_G997_SPECIAL_VALUE_ACTINP_LEVEL
+   - In case of retransmission is used
+     Range: from 0 to 204.6 coded as 0..2046.
+     Special value: \ref DSL_G997_SPECIAL_VALUE_ACTINP_RETX_LEVEL
+   The special value indicates that the parameter is above the maximum value
+   of the defined range. */
+   DSL_OUT DSL_uint16_t ActualImpulseNoiseProtection;
    /**
    Actual Net Data Rate (ACTNDR)
 
@@ -1257,9 +1352,44 @@ typedef struct
    -   In  L2 state, the parameter contains the Net Data Rate (as specified
    in G.992.3, G.992.5 or G.993.2) in the previous L0 state.
 
-   The data rate is coded in bit/s.
-   */
+   The data rate is coded in bit/s. */
    DSL_OUT DSL_uint32_t ActualNetDataRate;
+   /**
+   Actual impulse noise protection against REIN (ACTINP_REIN)
+
+   Refer to ITU-T G.997.1 chapter 7.5.2.9
+
+   If retransmission is used in a given transmit direction, this parameter
+   reports the actual impulse noise protection (INP) against REIN (under
+   specific conditions detailed in G.inp) on the bearer channel in the L0
+   state. In the L2 state, the parameter contains the INP in the previous L0
+   state.
+
+   The value is coded in fractions of DMT symbols with a granularity of
+   0.1 symbols. The range is from 0 to 25.4 coded as 0..254.
+   A special value of \ref DSL_G997_SPECIAL_VALUE_ACTINP_LEVEL indicates
+   an ACTINP_REIN of 204.7 or higher.
+
+   \note This parameter is only valid for retransmission which currently means
+         downstream direction. In other cases it is always set to zero. */
+   DSL_OUT DSL_uint16_t ActualImpulseNoiseProtectionRein;
+   /**
+   Actual impulse noise protection (ACTINP) without erasure decoding.
+   In VDSL2 it is calculated according to the "INP_no_erasure" formula in
+   chpter 9.6 of G.993.2 and is the value to be reported in conjunction with
+   INPREPORT=0 (see G.997.1 chpter 7.5.2.5).
+   The value is coded in fractions of DMT symbols with a granularity of
+   0.1 symbols. The range and the special value of this parameter depends on
+   the retransmission status as follows
+   - In case of retransmission is not used
+     Range: from 0 to 25.4 coded as 0..254
+     Special value: \ref DSL_G997_SPECIAL_VALUE_ACTINP_LEVEL
+   - In case of retransmission is used
+     Range: from 0 to 204.6 coded as 0..2046.
+     Special value: \ref DSL_G997_SPECIAL_VALUE_ACTINP_RETX_LEVEL
+   The special value indicates that the parameter is above the maximum value
+   of the defined range. */
+   DSL_OUT DSL_uint16_t ActualImpulseNoiseProtectionNoErasure;
 
 } DSL_G997_ChannelStatusData_t;
 
@@ -1599,8 +1729,25 @@ typedef enum
    Please use a different hybrid or a different firmware binary.*/
    LINIT_SUB_FW_HYBRID = 5,
    /**
+   Retrain required with opposite port mode in same xDSL flavour (e.g. VDSL
+   with SINGLE_PORT_MODE instead of VDSL with DUAL_PORT_MODE ). */
+   LINIT_SUB_PORT_MODE = 6,
+   /**
    Wrong TC layer */
-   LINIT_SUB_S_PP_DRIVER = 6
+   LINIT_SUB_S_PP_DRIVER = 7,
+   /**
+   Orderly shutdown required */
+   LINIT_SUB_S_INTENDED_LOCAL_SHUTDOWN = 8,
+   /**
+   CL_Msg not received by FW, timeout */
+   LINIT_SUB_TIMEOUT = 9,
+   /**
+   FAST LOS is a vectoring only specific LOS criteria.
+   The Firmware will automatically use the best fitting LOS criteria:
+   - FW will use "normal" LOS algorithm if Vectoring is disabled completely
+   - FW will use FAST-LOS and "normal" LOS algorithm if Vector-Friendly is enabled
+   - FW will use FAST-LOS and "normal" LOS algorithm if Vectoring is enabled  */
+   LINIT_SUB_FAST_LOS = 10
 } DSL_G997_LineInitSubStatus_t;
 
 /**
@@ -1659,11 +1806,11 @@ typedef struct
          during showtime.
    \note For ADSL systems the value that will be reported if the line is
          disabled reflects the last init value.
-   \note For the Danube family US showtime value a special handling exists. This
-         handling uses backup value to report LATN parameter in case of
-         unsuccessful FW access or OHC access.
-         Initially this special backup value reflects the Training LATN. Further
-         on each successful FW or OHC access the backup value is updated.*/
+   \note For ADSL only platforms and US showtime value a special handling
+         exists. This handling uses backup value to report LATN parameter in
+         case of unsuccessful FW access or OHC access. Initially this special
+         backup value reflects the Training LATN. Further on each successful
+         FW or OHC access the backup value is updated. */
    DSL_OUT DSL_int16_t LATN;
    /**
    Downstream/Upstream Signal Attenuation (see chapter 7.5.1.8/7.5.1.9 of G.997.1).
@@ -1694,9 +1841,9 @@ typedef struct
          firmware each time it will be requested from DSL API because this value
          might change in showtime.
          If operating in DELT mode according DELT values will be reported.
-   \note For the Danube family US showtime value a special handling exists. This
-         handling uses backup value to report SATN parameter in case of
-         unsuccessful FW access or OHC access.
+   \note FFor ADSL only platforms and US showtime value a special handling
+         exists. This handling uses backup value to report SATN parameter in
+         case of unsuccessful FW access or OHC access.
          Initially this special backup value reflects the Training SATN. Further
          on each successful FW or OHC access the backup value is updated.*/
    DSL_OUT DSL_int16_t SATN;
@@ -1728,9 +1875,9 @@ typedef struct
          firmware each time it will be requested from DSL API because this value
          might change in showtime.
          If operating in DELT mode according DELT values will be reported.
-   \note For the Danube family US showtime value a special handling exists. This
-         handling uses backup value to report SNR parameter in case of
-         unsuccessful FW access or OHC access.
+   \note For ADSL only platforms and US showtime value a special handling
+         exists. This handling uses backup value to report SNR parameter in case
+         of unsuccessful FW access or OHC access.
          Initially this special backup value reflects the Training SNR. Further
          on each successful FW or OHC access the backup value is updated. */
    DSL_OUT DSL_int16_t SNR;
@@ -1742,9 +1889,9 @@ typedef struct
    The rate is coded in bit/s.
    \note For ADSL systems the value that will be reported if the line is
          disabled  reflects the last showtime/DELT value.
-   \note For the Danube family US showtime value a special handling exists. This
-         handling uses backup value to report LATN parameter in case of
-         unsuccessful FW access or OHC access.
+   \note For ADSL only platforms and US showtime value a special handling
+         exists. This handling uses backup value to report LATN parameter in
+         case of unsuccessful FW access or OHC access.
          Initially this special backup value reflects the Training LATN. Further
          on each successful FW or OHC access the backup value is updated. */
    DSL_OUT DSL_uint32_t ATTNDR;
@@ -2424,8 +2571,6 @@ typedef struct
    Rate-Adaptive behavior in the transmit direction for both the ATU-C and the
    ATU-R. An ATU-C Rate Adaptation Mode applies to the upstream direction. An
    ATU-R Rate Adaptation Mode applies to the downstream direction.
-   \note For the Vinax device the Rata Adaptive mode can be only selected for
-         ATU-R (downstream)
 */
 typedef struct
 {
@@ -2456,6 +2601,72 @@ typedef struct
    Structure that contains SRA configuration data */
    DSL_OUT DSL_G997_RateAdaptationConfigData_t data;
 } DSL_G997_RateAdaptationConfig_t;
+
+/**
+   Alternative electrical length estimation mode (AELE-MODE).
+   The  final  electrical  length  is  determined  during  initialisation  and
+   sent  from  the  VTU-O  to  the VTU-R during initialisation in the O-UPDATE
+   message (see clause 12.3.3.2.1.2). Separate values are  provided  for  each
+   upstream band, excluding US0. The values are selected according to the
+   CO-MIB parameter AELE-MODE */
+typedef enum
+{
+   /**
+   kl0[band] = ELE-M0 VTU-O kl0 estimate */
+   DSL_G997_AELE_MODE_0 = 0,
+   /**
+   kl0 [band] = ELEDS [dB], band element of {upbo_bands} */
+   DSL_G997_AELE_MODE_1 = 1,
+   /**
+   kl0 [band] = ELE[band] [dB], band element of {upbo_bands} */
+   DSL_G997_AELE_MODE_2 = 2,
+   /**
+   kl0 [band] = MIN(ELEUS, ELEDS) [dB], band element of {upbo_bands} */
+   DSL_G997_AELE_MODE_3 = 3,
+   /**
+   Delimeter only */
+   DSL_G997_AELE_MODE_LAST = 4
+} DSL_G997_AeleMode_t;
+
+/**
+   Upstream Power Back Off (UPBO) status parameters.
+   See chapter 7.3.1.2.14 of G.997.1 Rev4 */
+typedef struct {
+   /**
+   Alternative electrical length estimation mode (AELE-MODE).
+   This parameter returns the actually used UPBO electrical length estimation
+   mode to be used in the alternative electrical length estimation method
+   (ELE-M1). See chapter 7.2.1.3.2.1.2 of G.993.2.
+   Valid values are 0, 1, 2, 3; where 0 corresponds to the default electrical
+   length estimation method (ELE-M0). */
+   DSL_G997_AeleMode_t nAeleMode;
+   /**
+   Final Kl0 per Band VTU-O (see chapter 7.5.1.23.3 of G.997.1).
+   Final UPBO electrical length per upstream-band (UPBOKLE-pb), excluding US0,
+   as received from the VTU-O with O-UPDATE.
+   Parameter definitions:
+   - Resolution: 0.1 dB
+   - Range: 0 (coded as 0) to 128 dB (coded as 1280)
+   Special Values:
+   - 0x7FF: "Out of range" (greater than 128 dB)
+   - 0x800: Unused band */
+   DSL_uint16_t nKl0EstimOPb[DSL_G997_MAX_NUMBER_OF_BANDS];
+} DSL_G997_UsPowerBackOffStatusData_t;
+
+/**
+   Structure for status of UPBO status parameters.
+   This structure has to be used for ioctl
+   - \ref DSL_FIO_G997_US_POWER_BACK_OFF_STATUS_GET
+*/
+typedef struct
+{
+   /**
+   Driver control/status structure */
+   DSL_IN_OUT DSL_AccessCtl_t accessCtl;
+   /**
+   Structure that contains UPBO status data */
+   DSL_OUT DSL_G997_UsPowerBackOffStatusData_t data;
+} DSL_G997_UsPowerBackOffStatus_t;
 
 /** @} DRV_DSL_CPE_G997 */
 

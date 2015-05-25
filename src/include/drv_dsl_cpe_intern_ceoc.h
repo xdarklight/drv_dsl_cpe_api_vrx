@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -65,10 +64,10 @@ typedef struct
    DSL_CEOC_Callback_t pCeocEventCallback[DSL_CEOC_MAX_OPEN_INSTANCE];
 #endif /** #ifdef INCLUDE_DSL_CEOC_INTERNAL_API*/
    /** Device specific fields*/
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
-   /** VINAX CEOC handling uses the separate instance of the VINAX driver*/
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+   /** VRX CEOC handling uses the separate instance of the VRX driver*/
    DSL_DEV_Handle_t lowHandle;
-#endif /** defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)*/
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX)*/
 } DSL_CEOC_Context_t;
 
 

@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -38,7 +37,7 @@ DSL_Error_t DSL_DRV_DEV_G997_BitAllocationNSCGet(
       SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_G997_DEV_BitAllocationNSCGet(nDirection=%d)"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext), pData->nDirection));
 
-   nErrCode = DSL_DRV_VXX_BitAllocationTableGet(pContext,
+   nErrCode = DSL_DRV_VRX_BitAllocationTableGet(pContext,
                   pData->nDirection, &(pData->data.bitAllocationNsc), DSL_NULL);
 
    DSL_DEBUG(DSL_DBG_MSG, (pContext,
@@ -81,36 +80,64 @@ DSL_Error_t DSL_DRV_DEV_G997_SnrAllocationNscGet(
    DSL_IN_OUT DSL_G997_SnrAllocationNsc_t *pData)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
+   DSL_LineStateValue_t nCurrentState = DSL_LINESTATE_UNKNOWN;
 
-   DSL_DEBUG(DSL_DBG_MSG, (pContext,
-      SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_DEV_G997_SnrAllocationNscGet (nDirection=%d)"
+   DSL_DEBUG(DSL_DBG_MSG, (pContext,SYS_DBG_MSG
+      "DSL[%02d]: IN - DSL_DRV_DEV_G997_SnrAllocationNscGet (nDirection=%d)"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext), pData->nDirection));
 
-   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL) &&
-                                           pData->nDirection == DSL_UPSTREAM)
+   /* Get current line state*/
+   DSL_CTX_READ_SCALAR(pContext, nErrCode, nLineState, nCurrentState);
+
+   /* Only proceed if the specified line is in SHOWTIME state.*/
+   if ( (nCurrentState == DSL_LINESTATE_SHOWTIME_TC_SYNC  ||
+         nCurrentState == DSL_LINESTATE_SHOWTIME_NO_SYNC))
    {
-      nErrCode = DSL_DRV_VRX_SendMsgSnrGet(
-                    pContext, DSL_UPSTREAM, &(pData->data.snrAllocationNsc));
-   }
-   else
-   {
-      /* SNR is only available for the Rx, not for the Tx direction */
-      if ( pData->nDirection == DSL_UPSTREAM )
+
+      if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2) &&
+                                           (pData->nDirection == DSL_UPSTREAM))
       {
-         DSL_DEBUG(DSL_DBG_ERR,
-            (pContext, SYS_DBG_ERR"DSL[%02d]: Sorry, SNR not supported for Upstream"
-            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-         nErrCode = DSL_ERR_NOT_SUPPORTED;
+         nErrCode = DSL_DRV_VRX_TestParamsFeCheck(pContext);
+         if (nErrCode >= DSL_SUCCESS)
+         {
+            if( pContext->DELT_SHOWTIME != DSL_NULL )
+            {
+               /* data is ready, use new amount of data */
+               if (pContext->eTestParametersFeReady == VRX_FE_TESTPARAMS_READY)
+               {
+                  pData->data.snrAllocationNsc.nNumData
+                        = pContext->DELT_SHOWTIME->snrDataUsVdsl.deltSnr.nNumData;
+               }
+               /* data is updating, use previous updated value */
+               else
+               {
+                  pData->data.snrAllocationNsc.nNumData
+                        = pContext->DELT_SHOWTIME->snrDataUsVdsl.deltSnr.nNumDataPrev;
+               }
+               /* copy data */
+               memcpy(&pData->data.snrAllocationNsc.nNSCData,
+                      pContext->DELT_SHOWTIME->snrDataUsVdsl.deltSnr.nSCGData,
+                      pData->data.snrAllocationNsc.nNumData);
+            }
+            else
+            {
+               nErrCode = DSL_ERR_DELT_DATA_NOT_AVAILABLE;
+            }
+         }
       }
       else
       {
-         nErrCode = DSL_DRV_VRX_SnrAllocationTableNeGet(
-                       pContext, &(pData->data.snrAllocationNsc));
+         nErrCode = DSL_DRV_VRX_SendMsgSnrGet(pContext,
+                           pData->nDirection, &(pData->data.snrAllocationNsc));
       }
    }
+   else
+   {
+      nErrCode = DSL_ERR_ONLY_AVAILABLE_IN_SHOWTIME;
+   }
 
-   DSL_DEBUG(DSL_DBG_MSG, (pContext,
-      SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_DEV_G997_SnrAllocationNscGet"
+   DSL_DEBUG(DSL_DBG_MSG, (pContext,SYS_DBG_MSG
+      "DSL[%02d]: OUT - DSL_DRV_DEV_G997_SnrAllocationNscGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
    return (nErrCode);
@@ -158,6 +185,51 @@ DSL_Error_t DSL_DRV_DEV_G997_LineStatusPerBandGet(
 
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_DEV_G997_LineStatusPerBandGet"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   return (nErrCode);
+}
+
+/*
+   For a detailed description of the function, its arguments and return value
+   please refer to the description in the header file 'drv_dsl_cpe_intern_g997.h'
+*/
+DSL_Error_t DSL_DRV_DEV_G997_UsPowerBackOffStatusGet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_G997_UsPowerBackOffStatus_t *pData)
+{
+   DSL_Error_t nErrCode = DSL_SUCCESS;
+   DSL_LineStateValue_t nCurrentState = DSL_LINESTATE_UNKNOWN;
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_DEV_G997_UsPowerBackOffStatusGet"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   memset((void *) pData, 0, sizeof (DSL_G997_UsPowerBackOffStatus_t));
+
+   /* Show Line Status Common information only if the line is in
+   * SHOWTIME state. In other cases reset Line Status Common data.
+   */
+   DSL_CTX_READ_SCALAR(pContext, nErrCode, nLineState, nCurrentState);
+
+   /* Only proceed if the specified line is in SHOWTIME state.
+      In other cases set number of used data elements to zero. */
+   if ((nCurrentState == DSL_LINESTATE_SHOWTIME_TC_SYNC) ||
+       (nCurrentState == DSL_LINESTATE_SHOWTIME_NO_SYNC))
+   {
+      nErrCode = DSL_DRV_VRX_UsPowerBackOffStatusGet(pContext, &(pData->data));
+   }
+   else
+   {
+      nErrCode = DSL_ERR_ONLY_AVAILABLE_IN_SHOWTIME;
+
+      DSL_DEBUG(DSL_DBG_ERR,
+         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Function is only available in the SHOWTIME!"
+         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+   }
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_DEV_G997_UsPowerBackOffStatusGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
    return (nErrCode);
@@ -379,7 +451,7 @@ DSL_Error_t DSL_DRV_DEV_G997_ChannelStatusGet(
    if ( (nCurrentState == DSL_LINESTATE_SHOWTIME_TC_SYNC) ||
         (nCurrentState == DSL_LINESTATE_SHOWTIME_NO_SYNC) )
    {
-      nErrCode = DSL_DRV_VXX_ChannelStatusGet(
+      nErrCode = DSL_DRV_VRX_ChannelStatusGet(
                     pContext,
                     pData->nChannel,
                     pData->nDirection,
@@ -447,7 +519,7 @@ DSL_Error_t DSL_DRV_DEV_G997_FramingParameterStatusGet(
       return DSL_ERR_ONLY_AVAILABLE_IN_SHOWTIME;
    }
 
-   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2))
+   if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2))
    {
       /* VDSL2 mode */
       nErrCode = DSL_DRV_VRX_G997_FramingParameterStatusVdsl2Get(
@@ -542,12 +614,12 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltHlinGet(
       /* get the far end data from the internal buffer*/
       if( pContext->DELT != DSL_NULL )
       {
-         memcpy(
-            pData,
-            nDirection == DSL_DOWNSTREAM ?
-            (DSL_void_t*)&(pContext->DELT->hlinDataDs) :
-            (DSL_void_t*)&(pContext->DELT->hlinDataUs),
-            nDirection == DSL_DOWNSTREAM ? sizeof(pContext->DELT->hlinDataDs) : sizeof(pContext->DELT->hlinDataUs));
+         memcpy(pData,
+                nDirection == DSL_DOWNSTREAM ?
+                (DSL_void_t*)&(pContext->DELT->hlinDataDs) :
+                (DSL_void_t*)&(pContext->DELT->hlinDataUs),
+                nDirection == DSL_DOWNSTREAM ? sizeof(pContext->DELT->hlinDataDs) :
+                                               sizeof(pContext->DELT->hlinDataUs));
       }
       else
       {
@@ -581,7 +653,6 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltHlogGet(
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
    DSL_LineStateValue_t nCurrentState = DSL_LINESTATE_UNKNOWN;
-   DSL_VNX_FwVersion_t fwVersion = {0};
    ACK_TestParamsAuxDS_Get_t  sAck;
 
    DSL_CHECK_POINTER(pContext, pData);
@@ -590,6 +661,8 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltHlogGet(
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_DEV_G997_DeltHlogGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   memset(&sAck, 0, sizeof(sAck));
 
    if (nDeltDataType == DSL_DELT_DATA_SHOWTIME)
    {
@@ -600,46 +673,40 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltHlogGet(
       if ( (nCurrentState == DSL_LINESTATE_SHOWTIME_TC_SYNC  ||
             nCurrentState == DSL_LINESTATE_SHOWTIME_NO_SYNC))
       {
-         if ((DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2)) && nDirection == DSL_UPSTREAM)
+         /* Get Aux Parameters directly from the FW*/
+         nErrCode = DSL_DRV_VRX_SendMsgTestParamsAuxGet(
+                             pContext, nDirection, (DSL_uint8_t*)&sAck);
+         if (nErrCode != DSL_SUCCESS)
          {
-            if( pContext->DELT_SHOWTIME != DSL_NULL )
+            DSL_DEBUG(DSL_DBG_ERR,(pContext, SYS_DBG_ERR
+               "DSL[%02d]: ERROR - Aux Test Parameters get failed (nDirection=%d)"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nDirection));
+         }
+
+         if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2)
+                                               && (nDirection == DSL_UPSTREAM))
+         {
+            nErrCode = DSL_DRV_VRX_TestParamsFeCheck(pContext);
+            if (nErrCode >= DSL_SUCCESS)
             {
-               /* Get FE showtime parameters from the internal buffer*/
-               memcpy(pData,(DSL_void_t*)&(pContext->DELT_SHOWTIME->hlogDataUsVdsl),
-                  sizeof(pContext->DELT_SHOWTIME->hlogDataUsVdsl));
-            }
-            else
-            {
-               nErrCode = DSL_ERR_DELT_DATA_NOT_AVAILABLE;
+               if(pContext->DELT_SHOWTIME != DSL_NULL)
+               {
+                  /* Get FE showtime parameters from the internal buffer*/
+                  memcpy(pData,(DSL_void_t*)&(pContext->DELT_SHOWTIME->hlogDataUsVdsl),
+                           sizeof(pContext->DELT_SHOWTIME->hlogDataUsVdsl));
+               }
+               else
+               {
+                  nErrCode = DSL_ERR_DELT_DATA_NOT_AVAILABLE;
+               }
             }
          }
          else
          {
-            /* Get FW version information*/
-            DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.fwFeatures, fwVersion);
-
-            if (((fwVersion.nApplication == 5) || (fwVersion.nApplication == 6)) &&
-                 (fwVersion.nFeatureSet < 6) && (nDirection == DSL_UPSTREAM))
-            {
-               /* Not supported for the ADSL FW versions with the FS < 6*/
-               nErrCode = DSL_ERR_NOT_SUPPORTED_BY_FIRMWARE;
-            }
-            else
-            {
-               /* Get SHOWTIME Hlog parameter directly from the FW*/
-               nErrCode = DSL_DRV_VRX_SendMsgHlogGet(
-                             pContext, nDirection, &(pData->deltHlog));
-
-               /* Get Aux Parameters directly from the FW*/
-               nErrCode = DSL_DRV_VRX_SendMsgTestParamsAuxGet(
-                             pContext, nDirection, (DSL_uint8_t*)&sAck);
-
-               if (nErrCode == DSL_SUCCESS)
-               {
-                  pData->nGroupSize       = (DSL_uint8_t)sAck.HLOGG;
-                  pData->nMeasurementTime = sAck.HLOGMT;
-               }
-            }
+            /* Get SHOWTIME Hlog parameter directly from the FW*/
+            nErrCode = DSL_DRV_VRX_SendMsgHlogGet(pContext, nDirection, &(pData->deltHlog));
+            pData->nGroupSize       = (DSL_uint8_t)sAck.HLOGG;
+            pData->nMeasurementTime = sAck.HLOGMT;
          }
       }
       else
@@ -652,12 +719,12 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltHlogGet(
       /* get the far end data from the internal buffer*/
       if( pContext->DELT != DSL_NULL )
       {
-         memcpy(
-            pData,
-            nDirection == DSL_DOWNSTREAM ?
-            (DSL_void_t*)&(pContext->DELT->hlogDataDs) :
-            (DSL_void_t*)&(pContext->DELT->hlogDataUs),
-            nDirection == DSL_DOWNSTREAM ? sizeof(pContext->DELT->hlogDataDs) : sizeof(pContext->DELT->hlogDataUs));
+         memcpy(pData,
+                nDirection == DSL_DOWNSTREAM ?
+                (DSL_void_t*)&(pContext->DELT->hlogDataDs) :
+                (DSL_void_t*)&(pContext->DELT->hlogDataUs),
+                nDirection == DSL_DOWNSTREAM ? sizeof(pContext->DELT->hlogDataDs) :
+                                               sizeof(pContext->DELT->hlogDataUs));
       }
       else
       {
@@ -680,7 +747,6 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltHlogGet(
    return nErrCode;
 }
 
-
 /*
    For a detailed description please refer to the drv_dsl_cpe_intern_g997.h
 */
@@ -692,7 +758,6 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltQLNGet(
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
    DSL_LineStateValue_t nCurrentState = DSL_LINESTATE_UNKNOWN;
-   DSL_VNX_FwVersion_t fwVersion = {0};
    ACK_TestParamsAuxDS_Get_t  sAck;
 
    DSL_CHECK_POINTER(pContext, pData);
@@ -701,6 +766,8 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltQLNGet(
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_DEV_G997_DeltQLNGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   memset(&sAck, 0, sizeof(sAck));
 
    if (nDeltDataType == DSL_DELT_DATA_SHOWTIME)
    {
@@ -711,46 +778,40 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltQLNGet(
       if ( (nCurrentState == DSL_LINESTATE_SHOWTIME_TC_SYNC  ||
             nCurrentState == DSL_LINESTATE_SHOWTIME_NO_SYNC))
       {
-         if ((DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2)) && nDirection == DSL_UPSTREAM)
+         /* Get Aux Parameters directly from the FW*/
+         nErrCode = DSL_DRV_VRX_SendMsgTestParamsAuxGet(
+                             pContext, nDirection, (DSL_uint8_t*)&sAck);
+         if (nErrCode != DSL_SUCCESS)
          {
-            if( pContext->DELT_SHOWTIME != DSL_NULL )
+            DSL_DEBUG(DSL_DBG_ERR,(pContext, SYS_DBG_ERR
+               "DSL[%02d]: ERROR - Aux Test Parameters get failed (nDirection=%d)"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nDirection));
+         }
+
+         if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2)
+                                               && (nDirection == DSL_UPSTREAM))
+         {
+            nErrCode = DSL_DRV_VRX_TestParamsFeCheck(pContext);
+            if (nErrCode >= DSL_SUCCESS)
             {
-               /* Get FE showtime parameters from the internal buffer*/
-               memcpy(pData,(DSL_void_t*)&(pContext->DELT_SHOWTIME->qlnDataUsVdsl),
-                  sizeof(pContext->DELT_SHOWTIME->qlnDataUsVdsl));
-            }
-            else
-            {
-               nErrCode = DSL_ERR_DELT_DATA_NOT_AVAILABLE;
+               if(pContext->DELT_SHOWTIME != DSL_NULL)
+               {
+                  /* Get FE showtime parameters from the internal buffer*/
+                  memcpy(pData,(DSL_void_t*)&(pContext->DELT_SHOWTIME->qlnDataUsVdsl),
+                              sizeof(pContext->DELT_SHOWTIME->qlnDataUsVdsl));
+               }
+               else
+               {
+                  nErrCode = DSL_ERR_DELT_DATA_NOT_AVAILABLE;
+               }
             }
          }
          else
          {
-            /* Get FW version information*/
-            DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.fwFeatures, fwVersion);
-
-            if (((fwVersion.nApplication == 5) || (fwVersion.nApplication == 6)) &&
-                 (fwVersion.nFeatureSet < 6) && (nDirection == DSL_UPSTREAM))
-            {
-               /* Not supported for the ADSL FW versions with the FS < 6*/
-               nErrCode = DSL_ERR_NOT_SUPPORTED_BY_FIRMWARE;
-            }
-            else
-            {
-               /* Get SHOWTIME Qln parameter directly from the FW*/
-               nErrCode = DSL_DRV_VRX_SendMsgQlnGet(
-                             pContext, nDirection, &(pData->deltQln));
-
-               /* Get Aux Parameters directly from the FW*/
-               nErrCode = DSL_DRV_VRX_SendMsgTestParamsAuxGet(
-                             pContext, nDirection, (DSL_uint8_t*)&sAck);
-
-               if (nErrCode == DSL_SUCCESS)
-               {
-                  pData->nGroupSize       = (DSL_uint8_t)sAck.QLNG;
-                  pData->nMeasurementTime = sAck.QLNMT;
-               }
-            }
+            /* Get SHOWTIME Qln parameter directly from the FW*/
+            nErrCode = DSL_DRV_VRX_SendMsgQlnGet(pContext, nDirection, &(pData->deltQln));
+            pData->nGroupSize       = (DSL_uint8_t)sAck.QLNG;
+            pData->nMeasurementTime = sAck.QLNMT;
          }
       }
       else
@@ -763,13 +824,12 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltQLNGet(
       /* get the far end data from the internal buffer*/
       if( pContext->DELT != DSL_NULL )
       {
-         memcpy(
-            pData,
-            nDirection == DSL_DOWNSTREAM ?
-            (DSL_void_t*)&(pContext->DELT->qlnDataDs) :
-            (DSL_void_t*)&(pContext->DELT->qlnDataUs),
-            nDirection == DSL_DOWNSTREAM ? sizeof(pContext->DELT->qlnDataDs) :
-                                           sizeof(pContext->DELT->qlnDataUs));
+         memcpy(pData,
+                nDirection == DSL_DOWNSTREAM ?
+                (DSL_void_t*)&(pContext->DELT->qlnDataDs) :
+                (DSL_void_t*)&(pContext->DELT->qlnDataUs),
+                nDirection == DSL_DOWNSTREAM ? sizeof(pContext->DELT->qlnDataDs) :
+                                               sizeof(pContext->DELT->qlnDataUs));
       }
       else
       {
@@ -804,7 +864,7 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltSNRGet(
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
    DSL_LineStateValue_t nCurrentState = DSL_LINESTATE_UNKNOWN;
-   DSL_VNX_FwVersion_t fwVersion = {0};
+   DSL_VRX_FwVersion_t fwVersion = {0};
    ACK_TestParamsAuxDS_Get_t  sAck;
 
    DSL_CHECK_POINTER(pContext, pData);
@@ -813,6 +873,8 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltSNRGet(
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_DEV_G997_DeltSNRGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   memset(&sAck, 0, sizeof(sAck));
 
    if (nDeltDataType == DSL_DELT_DATA_SHOWTIME)
    {
@@ -829,66 +891,35 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltSNRGet(
 
          if (nErrCode != DSL_SUCCESS)
          {
-            DSL_DEBUG(DSL_DBG_ERR,
-               (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Aux Test Parameters get failed (nDirection=%d)"
+            DSL_DEBUG(DSL_DBG_ERR,(pContext, SYS_DBG_ERR
+               "DSL[%02d]: ERROR - Aux Test Parameters get failed (nDirection=%d)"
                DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nDirection));
          }
 
-         /* Get FW version information*/
-         DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.fwFeatures, fwVersion);
-
-         if (((fwVersion.nApplication == 5) || (fwVersion.nApplication == 6)) &&
-              (nDirection == DSL_UPSTREAM))
+         if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2)
+                                               && (nDirection == DSL_UPSTREAM))
          {
-            if (fwVersion.nFeatureSet < 6)
+            nErrCode = DSL_DRV_VRX_TestParamsFeCheck(pContext);
+            if (nErrCode >= DSL_SUCCESS)
             {
-               /* Not supported for the ADSL FW versions with the FS < 6*/
-               nErrCode = DSL_ERR_NOT_SUPPORTED_BY_FIRMWARE;
-            }
-            else
-            {
-               /* ADSL Upstream*/
-               nErrCode = DSL_DRV_VRX_SendMsgSnrGet(pContext, nDirection, &(pData->deltSnr));
-
-               pData->nGroupSize       = (DSL_uint8_t)sAck.SNRG;
-               pData->nMeasurementTime = sAck.SNRMT;
-            }
-         }
-         else
-         {
-            if (nDirection == DSL_DOWNSTREAM)
-            {
-               /* Get SNR values per subcarrier*/
-               nErrCode = DSL_DRV_VRX_SnrAllocationTableNeGet(pContext, &(pData->deltSnr));
-               if( nErrCode != DSL_SUCCESS )
-               {
-                  DSL_DEBUG(DSL_DBG_ERR,
-                     (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - SNR Table get failed!"
-                     DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-               }
-               else
-               {
-                  /* Calculate SNR values per subcarrier group*/
-                  nErrCode = DSL_DRV_VXX_SnrPerGroupCalculate(
-                                pContext, (DSL_uint8_t)sAck.SNRG, &(pData->deltSnr));
-
-                  pData->nGroupSize       = (DSL_uint8_t)sAck.SNRG;
-                  pData->nMeasurementTime = sAck.SNRMT;
-               }
-            }
-            else
-            {
-               if( pContext->DELT_SHOWTIME != DSL_NULL )
+               if(pContext->DELT_SHOWTIME != DSL_NULL)
                {
                   /* Get FE showtime parameters from the internal buffer*/
                   memcpy(pData,(DSL_void_t*)&(pContext->DELT_SHOWTIME->snrDataUsVdsl),
-                     sizeof(pContext->DELT_SHOWTIME->snrDataUsVdsl));
+                               sizeof(pContext->DELT_SHOWTIME->snrDataUsVdsl));
                }
                else
                {
                   nErrCode = DSL_ERR_DELT_DATA_NOT_AVAILABLE;
                }
             }
+         }
+         else
+         {
+            nErrCode = DSL_DRV_VRX_SendMsgSnrGet(pContext, nDirection, &(pData->deltSnr));
+
+            pData->nGroupSize       = (DSL_uint8_t)sAck.SNRG;
+            pData->nMeasurementTime = sAck.SNRMT;
          }
       }
       else
@@ -901,14 +932,13 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltSNRGet(
       /* get the far end data from the internal buffer*/
       if( pContext->DELT != DSL_NULL )
       {
-         memcpy(
-            pData,
-            nDirection == DSL_DOWNSTREAM ?
-            (DSL_void_t*)&(pContext->DELT->snrDataDs) :
-            (DSL_void_t*)&(pContext->DELT->snrDataUs),
-            nDirection == DSL_DOWNSTREAM ?
-            sizeof(pContext->DELT->snrDataDs) :
-            sizeof(pContext->DELT->snrDataUs));
+         memcpy(pData,
+                nDirection == DSL_DOWNSTREAM ?
+                (DSL_void_t*)&(pContext->DELT->snrDataDs) :
+                (DSL_void_t*)&(pContext->DELT->snrDataUs),
+                nDirection == DSL_DOWNSTREAM ?
+                                           sizeof(pContext->DELT->snrDataDs) :
+                                           sizeof(pContext->DELT->snrDataUs));
       }
       else
       {
@@ -945,8 +975,8 @@ DSL_Error_t DSL_DRV_DEV_G997_PowerManagementStateForcedTrigger(
    DSL_int_t nAttempt = 0, i = 0;
    const DSL_int_t nMaxRetry = DSL_LX_TO_L3_TIMEOUT/DSL_L3_WAIT_INTERVAL;
    DSL_G997_PowerManagementStatusData_t PmStatus = {DSL_G997_PMS_NA};
-   DSL_VNX_L3RequestStatus_t L3RequestStatus = DSL_VNX_L3_STATUS_NA;
-   DSL_VNX_L3RequestFailReason_t L3FailReason = DSL_VNX_L3_FAIL_REASON_NA;
+   DSL_VRX_L3RequestStatus_t L3RequestStatus = DSL_VRX_L3_STATUS_NA;
+   DSL_VRX_L3RequestFailReason_t L3FailReason = DSL_VRX_L3_FAIL_REASON_NA;
 
    DSL_CHECK_POINTER(pContext, pData);
    DSL_CHECK_ERR_CODE();
@@ -996,7 +1026,7 @@ DSL_Error_t DSL_DRV_DEV_G997_PowerManagementStateForcedTrigger(
          for (nAttempt = 0; nAttempt < DSL_LX_TO_L3_ATTEMPT_COUNT; nAttempt++)
          {
             /* L3 shutdown request*/
-            nErrCode = DSL_DRV_VRX_SendMsgL3ShutdownRequest(pContext);
+            nErrCode = DSL_DRV_VRX_SendMsgShutdownRequest(pContext);
             if (nErrCode != DSL_SUCCESS)
             {
                DSL_DEBUG( DSL_DBG_ERR,
@@ -1023,17 +1053,17 @@ DSL_Error_t DSL_DRV_DEV_G997_PowerManagementStateForcedTrigger(
                }
 
                /* Check L3 status*/
-               if (L3RequestStatus == DSL_VNX_L3_STATUS_PENDING)
+               if (L3RequestStatus == DSL_VRX_L3_STATUS_PENDING)
                {
                   /* Poll status again until API timeout*/
                   continue;
                }
-               else if (L3RequestStatus == DSL_VNX_L3_STATUS_ACCEPTED)
+               else if (L3RequestStatus == DSL_VRX_L3_STATUS_ACCEPTED)
                {
                   /* L3 request accepted*/
                   break;
                }
-               else if (L3RequestStatus == DSL_VNX_L3_STATUS_REJECTED)
+               else if (L3RequestStatus == DSL_VRX_L3_STATUS_REJECTED)
                {
                   DSL_DEBUG( DSL_DBG_ERR,
                      (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - L3 request rejected!"
@@ -1043,7 +1073,7 @@ DSL_Error_t DSL_DRV_DEV_G997_PowerManagementStateForcedTrigger(
 
                   break;
                }
-               else if (L3RequestStatus == DSL_VNX_L3_STATUS_FAIL)
+               else if (L3RequestStatus == DSL_VRX_L3_STATUS_FAIL)
                {
                   /* Get L3 request fail reason*/
                   nErrCode = DSL_DRV_VRX_SendMsgTxL3RequestFailReasonGet(pContext, &L3FailReason);
@@ -1057,11 +1087,11 @@ DSL_Error_t DSL_DRV_DEV_G997_PowerManagementStateForcedTrigger(
                   }
 
                   /* Check L3 request fail reason*/
-                  if (L3FailReason == DSL_VNX_L3_FAIL_REASON_NOT_L0)
+                  if (L3FailReason == DSL_VRX_L3_FAIL_REASON_NOT_L0)
                   {
                      nErrCode = DSL_ERR_L3_NOT_IN_L0;
                   }
-                  else if (L3FailReason == DSL_VNX_L3_FAIL_REASON_TIMEOUT)
+                  else if (L3FailReason == DSL_VRX_L3_FAIL_REASON_TIMEOUT)
                   {
                      DSL_DEBUG( DSL_DBG_ERR,
                         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - L3 request FW timeout occured!"
@@ -1094,13 +1124,13 @@ DSL_Error_t DSL_DRV_DEV_G997_PowerManagementStateForcedTrigger(
                break;
             }
 
-            if (L3RequestStatus == DSL_VNX_L3_STATUS_ACCEPTED)
+            if (L3RequestStatus == DSL_VRX_L3_STATUS_ACCEPTED)
             {
                /*Set flag*/
                DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bPowerManagementL3Forced, DSL_TRUE);
 
                /* Set Power Management Status*/
-               nErrCode = DSL_DRV_VXX_PowerManagementStatusSet(pContext, DSL_G997_PMS_L3);
+               nErrCode = DSL_DRV_VRX_PowerManagementStatusSet(pContext, DSL_G997_PMS_L3);
                if( nErrCode != DSL_SUCCESS )
                {
                   DSL_DEBUG( DSL_DBG_ERR,
@@ -1115,7 +1145,7 @@ DSL_Error_t DSL_DRV_DEV_G997_PowerManagementStateForcedTrigger(
                /* L3 request accepted, exit any retries*/
                break;
             }
-            else if (L3RequestStatus == DSL_VNX_L3_STATUS_PENDING)
+            else if (L3RequestStatus == DSL_VRX_L3_STATUS_PENDING)
             {
                DSL_DEBUG( DSL_DBG_ERR,
                   (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - L3 request API timeout occured!"

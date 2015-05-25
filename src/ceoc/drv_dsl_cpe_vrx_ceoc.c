@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -31,9 +30,9 @@ DSL_Error_t DSL_CEOC_DEV_Start(DSL_Context_t *pContext)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
    DSL_DEV_Handle_t dev;
-   IOCTL_VINAX_reqCfg_t fioVinaxDrvCfg;
-   IOCTL_VINAX_CEOC_init_t fioVinaxDrvCeocInit;
-   IOCTL_VINAX_CEOC_cntrl_t fioVinaxDrvCeocCntrl;
+   IOCTL_VRX_reqCfg_t fioVrxDrvCfg;
+   IOCTL_VRX_CEOC_init_t fioVrxDrvCeocInit;
+   IOCTL_VRX_CEOC_cntrl_t fioVrxDrvCeocCntrl;
 
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_CEOC_DEV_Start"DSL_DRV_CRLF,
@@ -45,50 +44,50 @@ DSL_Error_t DSL_CEOC_DEV_Start(DSL_Context_t *pContext)
    if( dev == DSL_NULL )
    {
       DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - VINAX driver open failed!"DSL_DRV_CRLF,
+         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - VRX driver open failed!"DSL_DRV_CRLF,
          DSL_DEV_NUM(pContext)));
 
       return DSL_ERROR;
    }
 
-   memset(&fioVinaxDrvCfg, 0x00, sizeof(IOCTL_VINAX_reqCfg_t));
-   /* Request the configuration of the VINAX Driver*/
-   VINAX_InternalRequestConfig( (VINAX_DYN_CNTRL_T*)dev, &fioVinaxDrvCfg );
+   memset(&fioVrxDrvCfg, 0x00, sizeof(IOCTL_VRX_reqCfg_t));
+   /* Request the configuration of the VRX Driver*/
+   VRX_InternalRequestConfig( (VRX_DYN_CNTRL_T*)dev, &fioVrxDrvCfg );
 
    /* Check current driver state*/
-   if( fioVinaxDrvCfg.currDrvState == 0 )
+   if( fioVrxDrvCfg.currDrvState == 0 )
    {
       DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - VINAX driver not initialized!"
+         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - VRX driver not initialized!"
          DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
       return DSL_ERROR;
    }
 
    /* Setup of the ClearEOC feature */
-   if( VINAX_InternalCEocInit( (VINAX_DYN_CNTRL_T*)dev, &fioVinaxDrvCeocInit) != 0 )
+   if( VRX_InternalCEocInit( (VRX_DYN_CNTRL_T*)dev, &fioVrxDrvCeocInit) != 0 )
    {
       DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - VINAX driver CEOC init failed!"
+         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - VRX driver CEOC init failed!"
          DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
       return DSL_ERROR;
    }
 
    /* Apply control settings*/
-   memset(&fioVinaxDrvCeocCntrl, 0x00, sizeof(IOCTL_VINAX_CEOC_cntrl_t));
+   memset(&fioVrxDrvCeocCntrl, 0x00, sizeof(IOCTL_VRX_CEOC_cntrl_t));
    /* Select Auto mode for the CEOC handling*/
-   fioVinaxDrvCeocCntrl.opMode = VINAX_CEOC_OPERATION_MODE_AUTO;
-   if( VINAX_InternalCEocCntrl((VINAX_DYN_CNTRL_T*)dev, &fioVinaxDrvCeocCntrl) != 0 )
+   fioVrxDrvCeocCntrl.opMode = VRX_CEOC_OPERATION_MODE_AUTO;
+   if( VRX_InternalCEocCntrl((VRX_DYN_CNTRL_T*)dev, &fioVrxDrvCeocCntrl) != 0 )
    {
       DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - VINAX driver CEOC control failed!"
+         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - VRX driver CEOC control failed!"
          DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
       return DSL_ERROR;
    }
 
-   /* Copy VINAX driver handle to the internal CEOC context*/
+   /* Copy VRX driver handle to the internal CEOC context*/
    DSL_CEOC_CONTEXT(pContext)->lowHandle = dev;
 
    DSL_DEBUG(DSL_DBG_MSG,
@@ -108,7 +107,7 @@ DSL_Error_t DSL_CEOC_DEV_Stop(DSL_Context_t *pContext)
 
    if( DSL_CEOC_CONTEXT(pContext)->lowHandle != DSL_NULL )
    {
-      /* Close VINAX driver*/
+      /* Close VRX driver*/
       nErrCode = DSL_DRV_DEV_DriverHandleDelete( DSL_CEOC_CONTEXT(pContext)->lowHandle );
    }
 
@@ -142,7 +141,7 @@ DSL_Error_t DSL_CEOC_DEV_MessageSend(
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
    DSL_DEV_Handle_t dev;
-   IOCTL_VINAX_CEOC_frame_t vinaxCeocFrame;
+   IOCTL_VRX_CEOC_frame_t vrxCeocFrame;
 
    DSL_CHECK_POINTER(pContext, pMsg);
    DSL_CHECK_ERR_CODE();
@@ -151,26 +150,26 @@ DSL_Error_t DSL_CEOC_DEV_MessageSend(
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_CEOC_DEV_MessageSend"DSL_DRV_CRLF,
       DSL_DEV_NUM(pContext)));
 
-   if( DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2) )
+   if( DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2) )
    {
-      /* Get VINAX device driver handle*/
+      /* Get VRX device driver handle*/
       dev = DSL_CEOC_CONTEXT(pContext)->lowHandle;
 
       if( dev == DSL_NULL )
       {
          DSL_DEBUG(DSL_DBG_ERR,
-            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - VINAX driver handle is NULL!"
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - VRX driver handle is NULL!"
             DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
          return DSL_ERROR;
       }
 
-      vinaxCeocFrame.protIdent     = protIdent;
-      vinaxCeocFrame.dataSize_byte = pMsg->length;
-      vinaxCeocFrame.pEocData      = pMsg->data;
+      vrxCeocFrame.protIdent     = protIdent;
+      vrxCeocFrame.dataSize_byte = pMsg->length;
+      vrxCeocFrame.pEocData      = pMsg->data;
 
       /* Write CEOC frame data*/
-      if( VINAX_InternalCEocFrameWr( (VINAX_DYN_CNTRL_T*)dev, &vinaxCeocFrame) != 0 )
+      if( VRX_InternalCEocFrameWr( (VRX_DYN_CNTRL_T*)dev, &vrxCeocFrame) != 0 )
       {
          DSL_DEBUG(DSL_DBG_ERR,
             (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - CEOC Frame Write failed!"
@@ -200,7 +199,7 @@ DSL_Error_t DSL_CEOC_DEV_MessageReceive(
    DSL_CEOC_Message_t *pMsg)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
-   IOCTL_VINAX_message_t sMsg;
+   IOCTL_VRX_message_t sMsg;
    DSL_DEV_Handle_t dev;
    DSL_int32_t ret = -1;
 
@@ -214,15 +213,15 @@ DSL_Error_t DSL_CEOC_DEV_MessageReceive(
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_CEOC_DEV_MessageReceive"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-   if( DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_VDSL2) )
+   if( DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2) )
    {
-      /* Get VINAX device driver handle*/
+      /* Get VRX device driver handle*/
       dev = DSL_CEOC_CONTEXT(pContext)->lowHandle;
 
       if( dev == DSL_NULL )
       {
          DSL_DEBUG(DSL_DBG_ERR,
-            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - VINAX driver handle is NULL!"
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - VRX driver handle is NULL!"
             DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
          return DSL_ERROR;
@@ -231,9 +230,9 @@ DSL_Error_t DSL_CEOC_DEV_MessageReceive(
       sMsg.paylSize_byte = sizeof(pMsg->data);
       sMsg.pPayload      = pMsg->data;
 
-      ret = VINAX_InternalNfcMsgRead( (VINAX_DYN_CNTRL_T*)dev, &sMsg);
+      ret = VRX_InternalNfcMsgRead( (VRX_DYN_CNTRL_T*)dev, &sMsg);
 
-      if( ret == (DSL_int32_t)e_VINAX_ERR_INVAL_STATE )
+      if( ret == (DSL_int32_t)e_VRX_ERR_INVAL_STATE )
       {
          DSL_DEBUG(DSL_DBG_WRN,
             (pContext, SYS_DBG_WRN"DSL[%02d]: WRN - NFC Msg read failed, invalid state!"

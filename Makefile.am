@@ -13,13 +13,11 @@ drv_dsl_cpe_api_doc_DATA = \
 
 drv_dsl_cpe_api_doc_DEVICE = \
     doc/doxyconfig.danube \
-    doc/doxyconfig.vinax \
     doc/doxyconfig.vrx
 
 EXTRA_DIST = $(drv_dsl_cpe_api_doc_DATA) \
     $(drv_dsl_cpe_api_doc_DEVICE) \
     build_vxworks/drv_dsl_cpe_api.wpj \
-    build_vxworks/vinax/drv_dsl_cpe_api_config.h \
     README \
     AUTHORS \
     NEWS \

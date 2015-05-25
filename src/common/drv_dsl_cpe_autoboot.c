@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -50,6 +49,17 @@ static DSL_Error_t DSL_DRV_AutobootHandleL3(
 
 static DSL_Error_t DSL_DRV_AutobootHandleTraining(
    DSL_Context_t *pContext);
+
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+static DSL_Error_t DSL_DRV_AutobootHandleOrderlyShutdownRequest(
+   DSL_Context_t *pContext);
+
+static DSL_Error_t DSL_DRV_AutobootHandleOrderlyShutdownWait(
+   DSL_Context_t *pContext);
+
+static DSL_Error_t DSL_DRV_AutobootHandleOrderlyShutdownReached(
+   DSL_Context_t *pContext);
+#endif /* INCLUDE_DSL_CPE_API_VRX */
 
 static DSL_Error_t DSL_DRV_AutobootThreadInit(
    DSL_Context_t *pContext)
@@ -175,7 +185,7 @@ static DSL_int_t DSL_DRV_AutobootThreadMain(
    DSL_Error_t nRet;
    DSL_boolean_t bAutobootThreadShutdown = DSL_FALSE;
    DSL_Error_t nErrCode = DSL_SUCCESS;
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX) || \
+#if defined(INCLUDE_DSL_CPE_API_VRX) || \
    (defined(INCLUDE_DSL_CPE_API_DANUBE) && defined(INCLUDE_DSL_G997_LINE_INVENTORY))
    DSL_int_t nEventType = 0;
    DSL_uint32_t nTimeoutID = 0;
@@ -217,7 +227,7 @@ static DSL_int_t DSL_DRV_AutobootThreadMain(
          break;
       }
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX) || \
+#if defined(INCLUDE_DSL_CPE_API_VRX) || \
    (defined(INCLUDE_DSL_CPE_API_DANUBE) && defined(INCLUDE_DSL_G997_LINE_INVENTORY))
       while( DSL_DRV_Timeout_GetNextActiveEvent(
                 pContext, &nEventType, &nTimeoutID ) >= DSL_SUCCESS)
@@ -309,10 +319,6 @@ DSL_Error_t DSL_DRV_AutobootTimeoutSet(
 
    DSL_DRV_MUTEX_UNLOCK(pContext->dataMutex);
 
-   DSL_DEBUG(DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: Training timeout updated to %u"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nTimeout));
-
    return DSL_SUCCESS;
 }
 
@@ -362,6 +368,7 @@ DSL_Error_t DSL_DRV_AutobootStateCheck(
    DSL_DEV_Handle_t dev;
    DSL_boolean_t bPowerManagementL3Forced = DSL_FALSE, bAutobootContinue = DSL_FALSE,
                  bAutobootRestart = DSL_FALSE, bAutobootReboot = DSL_FALSE;
+
 #if defined (INCLUDE_DSL_CPE_API_DANUBE)
    DSL_LineStateValue_t nCurrentState = DSL_LINESTATE_UNKNOWN;
    DSL_TestModeControlSet_t nTestMode = DSL_TESTMODE_DISABLE;
@@ -380,11 +387,6 @@ DSL_Error_t DSL_DRV_AutobootStateCheck(
    /* Check if MEI reboot event occured*/
    if (pContext->bMeiReboot)
    {
-#if defined(INCLUDE_REAL_TIME_TRACE)
-      /*Update RTT status before rebooting*/
-      DSL_DRV_DEV_RTT_StatusUpdate(pContext);
-#endif /*if defined(INCLUDE_REAL_TIME_TRACE)*/
-
       /* Reset MEI reboot flag*/
       pContext->bMeiReboot = DSL_FALSE;
 
@@ -417,9 +419,16 @@ DSL_Error_t DSL_DRV_AutobootStateCheck(
    /* Check for external restart trigger*/
    if (bAutobootRestart)
    {
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+      /* Set Autoboot state*/
+      nErrCode = DSL_DRV_AutobootStateSet(pContext, DSL_AUTOBOOTSTATE_ORDERLY_SHUTDOWN_REQUEST,
+                    DSL_AUTOBOOT_ORDERLY_SHUTDOWN_POLL_TIME);
+#else
       /* Set Autoboot state*/
       nErrCode = DSL_DRV_AutobootStateSet(pContext, DSL_AUTOBOOTSTATE_RESTART,
                     DSL_AUTOBOOT_RESTART_POLL_TIME);
+#endif /* INCLUDE_DSL_CPE_API_VRX */
+
       if( nErrCode != DSL_SUCCESS )
       {
          DSL_DEBUG( DSL_DBG_ERR,
@@ -595,6 +604,21 @@ DSL_Error_t DSL_DRV_AutobootStateCheck(
       case DSL_AUTOBOOTSTATE_RESTART:
          nErrCode = DSL_DRV_AutobootHandleRestart(pContext);
          break;
+      case DSL_AUTOBOOTSTATE_DISABLED:
+         /* currently do nothing*/
+         break;
+
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+      case DSL_AUTOBOOTSTATE_ORDERLY_SHUTDOWN_REQUEST:
+         nErrCode = DSL_DRV_AutobootHandleOrderlyShutdownRequest(pContext);
+         break;
+      case DSL_AUTOBOOTSTATE_ORDERLY_SHUTDOWN_WAIT:
+         nErrCode = DSL_DRV_AutobootHandleOrderlyShutdownWait(pContext);
+         break;
+      case DSL_AUTOBOOTSTATE_ORDERLY_SHUTDOWN_REACHED:
+         nErrCode = DSL_DRV_AutobootHandleOrderlyShutdownReached(pContext);
+         break;
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX) */
 
       default:
          DSL_DEBUG(DSL_DBG_ERR,
@@ -610,8 +634,21 @@ DSL_Error_t DSL_DRV_AutobootStateCheck(
 
    if (nErrCode != DSL_SUCCESS)
    {
-      nErrCode =  DSL_DRV_AutobootStateSet(pContext, DSL_AUTOBOOTSTATE_RESTART,
-         DSL_AUTOBOOT_RESTART_POLL_TIME);
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+      if (nPrev != DSL_AUTOBOOTSTATE_ORDERLY_SHUTDOWN_REQUEST)
+      {
+         nErrCode = DSL_DRV_AutobootStateSet(pContext, DSL_AUTOBOOTSTATE_ORDERLY_SHUTDOWN_REQUEST,
+                       DSL_AUTOBOOT_ORDERLY_SHUTDOWN_POLL_TIME);
+      }
+      else
+      {
+         nErrCode = DSL_DRV_AutobootStateSet(pContext, DSL_AUTOBOOTSTATE_RESTART,
+                       DSL_AUTOBOOT_RESTART_POLL_TIME);
+      }
+#else
+      nErrCode = DSL_DRV_AutobootStateSet(pContext, DSL_AUTOBOOTSTATE_RESTART,
+                    DSL_AUTOBOOT_RESTART_POLL_TIME);
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX) */
    }
 
 
@@ -670,11 +707,16 @@ static DSL_Error_t DSL_DRV_AutobootHandleStart(
    DSL_boolean_t bWaitBeforeLinkActivation = DSL_FALSE;
    DSL_Autoboot_State_t nState = DSL_AUTOBOOTSTATE_UNKNOWN;
 
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+   DSL_boolean_t bT1_413 = DSL_FALSE;
+   DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.bT1_413, bT1_413);
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX) */
+
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_AutobootHandleStart"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX) || \
+#if defined(INCLUDE_DSL_CPE_API_VRX) || \
    (defined(INCLUDE_DSL_CPE_API_DANUBE) && defined(INCLUDE_DSL_G997_LINE_INVENTORY))
    DSL_DRV_Timeout_RemoveAllEvents(pContext);
 #endif
@@ -682,6 +724,10 @@ static DSL_Error_t DSL_DRV_AutobootHandleStart(
    pContext->bGotShortInitResponse = DSL_FALSE;
    pContext->bGotShowtime = DSL_FALSE;
    pContext->bGotFullInit = DSL_FALSE;
+
+#ifdef INCLUDE_DSL_CPE_API_VRX
+   pContext->eTestParametersFeReady = VRX_FE_TESTPARAMS_NOT_INIT;
+#endif /* INCLUDE_DSL_CPE_API_VRX*/
 
 #ifdef HAS_TO_BE_CLARIFIED
    if ((nErrCode = DSL_DRV_FirmwareStartupInit(pContext)) != DSL_SUCCESS)
@@ -711,7 +757,6 @@ static DSL_Error_t DSL_DRV_AutobootHandleStart(
    }
 #endif /* INCLUDE_DSL_DELT*/
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
 #ifdef INCLUDE_DSL_FILTER_DETECTION
    if (nLoopMode == DSL_G997_FORCE_FILTER_DETECTION)
    {
@@ -722,7 +767,14 @@ static DSL_Error_t DSL_DRV_AutobootHandleStart(
       DSL_CTX_WRITE_SCALAR(pContext, nErrCode, showtimeMeasurement.bFilterDetectionActive, DSL_FALSE);
    }
 #endif /* INCLUDE_DSL_FILTER_DETECTION */
-#endif /* INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_VRX */
+
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+   if (!bT1_413)
+   {
+      DSL_CTX_WRITE_SCALAR(pContext, nErrCode,
+         pDevCtx->data.nActivationCfg.nActivationMode, DSL_ACT_MODE_GHS);
+   }
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX) */
 
    if ((nErrCode = DSL_DRV_DEV_AutobootHandleStart(pContext,
       (nAutoCount > 0) ? DSL_TRUE : DSL_FALSE,
@@ -734,7 +786,7 @@ static DSL_Error_t DSL_DRV_AutobootHandleStart(
          "start!"DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
 #if defined(INCLUDE_DSL_G997_STATUS) || defined(INCLUDE_DSL_G997_ALARM) || \
-    defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+    defined(INCLUDE_DSL_CPE_API_VRX)
       /* Set LINIT value to 'LINIT_UNKNOWN' in case of an error */
       DSL_DRV_HandleLinitValue(pContext, LINIT_UNKNOWN, LINIT_SUB_NONE);
 #endif
@@ -829,22 +881,230 @@ static DSL_Error_t DSL_DRV_AutobootHandleStart(
    return nErrCode;
 }
 
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+static DSL_Error_t DSL_DRV_AutobootHandleOrderlyShutdownRequest(
+   DSL_Context_t *pContext)
+{
+   DSL_Error_t nErrCode = DSL_SUCCESS;
+   DSL_boolean_t bAutobootFwLoadPending = DSL_FALSE, bAutobootRestart = DSL_FALSE;
+#if defined(INCLUDE_DSL_BONDING)
+   DSL_boolean_t bSoftRestart = DSL_FALSE;
+#endif
+
+   DSL_DEBUG(DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+      "DSL[%02d]: IN - DSL_DRV_AutobootHandleOrderlyShutdown"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+#if defined(INCLUDE_DSL_BONDING)
+   DSL_CTX_READ(pContext, nErrCode, bSoftRestart, bSoftRestart);
+#endif
+   DSL_CTX_READ(pContext, nErrCode, bAutobootRestart, bAutobootRestart);
+
+   if (bAutobootRestart)
+   {
+#if defined(INCLUDE_DSL_BONDING)
+      if (!bSoftRestart)
+#endif
+      {
+         nErrCode = DSL_DRV_VRX_CamFsmStateSet(pContext, DSL_CAM_INIT);
+         if( nErrCode != DSL_SUCCESS )
+         {
+            DSL_DEBUG( DSL_DBG_ERR,
+               (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - CAM FSM state set failed!"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+            return nErrCode;
+         }
+      }
+      /* Reset external trigger entering state */
+      DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bAutobootRestart, DSL_FALSE);
+   }
+   else
+   {
+      DSL_DEBUG( DSL_DBG_ERR, (pContext, SYS_DBG_ERR
+         "DSL[%02d]: ERROR - unexpected orderly shutdown entry!"
+         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+      return DSL_ERROR;
+   }
+
+   /* Check for fw ready */
+   DSL_CTX_READ_SCALAR(pContext, nErrCode, bAutobootFwLoadPending, bAutobootFwLoadPending);
+   if (bAutobootFwLoadPending)
+   {
+      DSL_DEBUG(DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+         "DSL[%02d]: modem is not ready, no need for orderly shutdown"
+         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+      nErrCode = DSL_DRV_AutobootStateSet(pContext,
+                    DSL_AUTOBOOTSTATE_RESTART, DSL_AUTOBOOT_RESTART_POLL_TIME);
+   }
+   else
+   {
+      /* Set line state */
+      DSL_DRV_LineStateSet(pContext, DSL_LINESTATE_ORDERLY_SHUTDOWN_REQUEST);
+
+      /* Modem is ready and it is possible to interact via messages */
+      nErrCode = DSL_DRV_VRX_SendMsgOrderlyShutDownRequest(pContext);
+      if( nErrCode != DSL_SUCCESS )
+      {
+         DSL_DEBUG( DSL_DBG_ERR, (pContext, SYS_DBG_ERR
+            "DSL[%02d]: ERROR - orderly shutdown request set failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+         return nErrCode;
+      }
+
+      nErrCode = DSL_DRV_AutobootStateSet(pContext,
+         DSL_AUTOBOOTSTATE_ORDERLY_SHUTDOWN_WAIT, DSL_AUTOBOOT_RESTART_POLL_TIME);
+      /* Activate Autoboot timeout */
+      DSL_DRV_AutobootTimeoutSet(pContext, DSL_AUTOBOOT_ORDERLY_SHUTDOWN_TIMEOUT);
+
+      /* Set orderly shutdown triggered by API flag */
+      DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bOrderlyShutDown, DSL_TRUE);
+   }
+
+   DSL_DEBUG(DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+      "DSL[%02d]: OUT - DSL_DRV_AutobootHandleOrderlyShutdown, retCode=%d"
+      DSL_DRV_CRLF, nErrCode, DSL_DEV_NUM(pContext)));
+
+   return nErrCode;
+}
+
+static DSL_Error_t DSL_DRV_AutobootHandleOrderlyShutdownWait(
+   DSL_Context_t *pContext)
+{
+   DSL_Error_t nErrCode = DSL_SUCCESS;
+   DSL_G997_LineInitStatusData_t lineInitStatus = {LINIT_UNKNOWN, LINIT_SUB_NONE};
+   DSL_boolean_t bForceAutobootRestart = DSL_FALSE;
+   DSL_LineStateValue_t nLineState = DSL_LINESTATE_UNKNOWN;
+   DSL_uint32_t currentTime;
+
+   DSL_DEBUG(DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+      "DSL[%02d]: IN - DSL_DRV_AutobootHandleOrderlyShutdownWait"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   /* Update Line State in the DSL CPE internal memory*/
+   nErrCode = DSL_DRV_LineStateUpdate(pContext);
+   if( nErrCode != DSL_SUCCESS )
+   {
+      return nErrCode;
+   }
+
+   /* Get Line State from the DSL CPE internal memory*/
+   DSL_CTX_READ_SCALAR(pContext, nErrCode, nLineState, nLineState);
+
+   switch (nLineState)
+   {
+      case DSL_LINESTATE_ORDERLY_SHUTDOWN:
+         currentTime = DSL_DRV_TimeMSecGet();
+
+         pContext->autobootStartTime = pContext->autobootStartTime > currentTime ?
+                                       currentTime : pContext->autobootStartTime;
+
+         /* Check for timeout*/
+         if ((pContext->autobootStartTime + (DSL_uint32_t)(pContext->nAutobootTimeoutLimit*1000))
+                  < currentTime )
+         {
+            DSL_DEBUG(DSL_DBG_ERR, (pContext, SYS_DBG_ERR
+               "DSL[%02d]: ERROR - Timeout, FW doesn't enter FAILSTATE"
+                DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+            bForceAutobootRestart = DSL_TRUE;
+         }
+         break;
+
+      case DSL_LINESTATE_EXCEPTION:
+            nErrCode = DSL_DRV_VRX_FailReasonGet(pContext);
+
+            /* Get Line Init info */
+            DSL_CTX_READ(pContext, nErrCode, lineInitStatus, lineInitStatus);
+            if (lineInitStatus.nLineInitSubStatus != LINIT_SUB_S_INTENDED_LOCAL_SHUTDOWN)
+            {
+               DSL_DEBUG(DSL_DBG_WRN, (pContext, SYS_DBG_WRN
+                  "DSL[%02d]: WARNING - Unexpected suberror code"
+                  DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+            }
+
+            bForceAutobootRestart = DSL_TRUE;
+         break;
+
+      default:
+         DSL_DEBUG(DSL_DBG_WRN, (pContext, SYS_DBG_WRN
+            "DSL[%02d]: WARNING - Unexpected line state (0x%08X) for orderly shutdown"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nLineState));
+
+         bForceAutobootRestart = DSL_TRUE;
+         break;
+   }
+
+   if (bForceAutobootRestart)
+   {
+      nErrCode = DSL_DRV_AutobootStateSet(pContext,
+                                    DSL_AUTOBOOTSTATE_ORDERLY_SHUTDOWN_REACHED,
+                                    DSL_AUTOBOOT_RESTART_POLL_TIME);
+   }
+
+   DSL_DEBUG(DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+      "DSL[%02d]: OUT - DSL_DRV_AutobootHandleOrderlyShutdownWait, retCode=%d"
+      DSL_DRV_CRLF, nErrCode, DSL_DEV_NUM(pContext)));
+
+   return nErrCode;
+}
+
+static DSL_Error_t DSL_DRV_AutobootHandleOrderlyShutdownReached(
+   DSL_Context_t *pContext)
+{
+   DSL_Error_t nErrCode = DSL_SUCCESS;
+   DSL_boolean_t bOrderlyShutDown = DSL_FALSE;
+
+   DSL_DEBUG(DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+      "DSL[%02d]: IN - DSL_DRV_AutobootHandleOrderlyShutdownReached"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   /* Get orderly shutdown requested by API flag */
+   DSL_CTX_READ_SCALAR(pContext, nErrCode, bOrderlyShutDown, bOrderlyShutDown);
+
+   if (bOrderlyShutDown)
+   {
+      nErrCode = DSL_DRV_AutobootStateSet(pContext,
+                DSL_AUTOBOOTSTATE_RESTART, DSL_AUTOBOOT_RESTART_POLL_TIME);
+   }
+   else
+   {
+      nErrCode = DSL_DRV_AutobootStateSet(pContext,
+                DSL_AUTOBOOTSTATE_EXCEPTION, DSL_AUTOBOOT_EXCEPTION_POLL_TIME);
+   }
+
+   /* Clear orderly shutdown triggered by API flag */
+   DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bOrderlyShutDown, DSL_FALSE);
+
+   DSL_DEBUG(DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+      "DSL[%02d]: OUT - DSL_DRV_AutobootHandleOrderlyShutdownReached, retCode=%d"
+      DSL_DRV_CRLF, nErrCode, DSL_DEV_NUM(pContext)));
+
+   return nErrCode;
+}
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX) */
+
 static DSL_Error_t DSL_DRV_AutobootHandleRestart(
    DSL_Context_t *pContext)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
    DSL_boolean_t bAutobootFwLoadPending = DSL_FALSE;
    DSL_FirmwareRequestType_t nFwReqType = DSL_FW_REQUEST_NA;
-   DSL_boolean_t bAutobootRestart = DSL_FALSE;
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+   DSL_boolean_t bAutobootRestart = DSL_FALSE, bAutobootDisable = DSL_FALSE;
+#if defined(INCLUDE_DSL_CPE_API_VRX)
    DSL_uint32_t nEapsTimeoutId = 0;
 #endif
+#if defined(INCLUDE_DSL_BONDING)
+   DSL_boolean_t bSoftRestart = DSL_FALSE;
+#endif
+   DSL_uint8_t XTSE[DSL_G997_NUM_XTSE_OCTETS] = {0};
 
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_AutobootHandleRestart"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
    /* Get EAPS timeout ID from the DSL CPE Context*/
    DSL_CTX_READ(pContext, nErrCode, nEapsTimeoutId, nEapsTimeoutId);
    if (nEapsTimeoutId != 0)
@@ -859,32 +1119,24 @@ static DSL_Error_t DSL_DRV_AutobootHandleRestart(
       }
    }
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX)
-   /* Save Clause30 counters*/
-   nErrCode = DSL_DRV_DEV_Clause30CountersSave(pContext);
-   if (nErrCode < DSL_SUCCESS)
-   {
-      DSL_DEBUG( DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Clause30 counters save failed!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-   }
-#endif /* #if defined(INCLUDE_DSL_CPE_API_VINAX)*/
-
    /* Update nLastShowtime value*/
    DSL_CTX_WRITE(pContext, nErrCode, pDevCtx->data.nLastShowtime, pContext->pDevCtx->data.nCurrShowtime);
    /* Reset bPermanentShowtime information*/
    DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.bPermanentShowtime, DSL_FALSE);
-#endif /* defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)*/
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX)*/
 
    DSL_DRV_LineStateSet(pContext, DSL_LINESTATE_NOT_INITIALIZED);
 
    /* Reset the showtime indication flag*/
    DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bShowtimeReached, DSL_FALSE);
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
-   /* Save retransmission counters*/
-   DSL_DRV_DEV_ReTxCountersSave(pContext);
-#endif /* #if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX) */
+   DSL_CTX_READ_SCALAR(pContext, nErrCode, bAutobootFwLoadPending, bAutobootFwLoadPending);
+   /* Check for pending FW download*/
+   if (!bAutobootFwLoadPending)
+   {
+      /* Save retransmission counters (if modem ready)*/
+      DSL_DRV_DEV_ReTxCountersSave(pContext);
+   }
 
    nErrCode = DSL_DRV_AutobootThreadInit(pContext);
    if (nErrCode != DSL_SUCCESS)
@@ -899,7 +1151,6 @@ static DSL_Error_t DSL_DRV_AutobootHandleRestart(
 #ifdef INCLUDE_DSL_PM
    /* Suspend PM module*/
    nErrCode = DSL_DRV_PM_Suspend(pContext);
-
    if (nErrCode != DSL_SUCCESS)
    {
       DSL_DEBUG( DSL_DBG_ERR,
@@ -910,52 +1161,66 @@ static DSL_Error_t DSL_DRV_AutobootHandleRestart(
    }
 #endif /* #ifdef INCLUDE_DSL_PM*/
 
+   /* Save current xTSE octets (before clean up) */
+   DSL_CTX_READ(pContext, nErrCode, xtseCurr, XTSE);
+
    /* Update DSL CPE API Context Data*/
    nErrCode = DSL_DRV_CtxDataUpdate(pContext);
+
+#if defined(INCLUDE_DSL_BONDING)
+   DSL_CTX_READ(pContext, nErrCode, bSoftRestart, bSoftRestart);
+#endif
 
    DSL_CTX_READ(pContext, nErrCode, bAutobootRestart, bAutobootRestart);
    if (bAutobootRestart)
    {
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX)
-      /* Reset nPrevMode value*/
-      DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.nPrevMode, FWMODE_NA);
-#else
-      /* Reset FSM status values*/
-      DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.nCamStatus.nNextMode, DSL_FW_TYPE_NA);
-      DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.bRebootRequested, DSL_FALSE);
+#if defined(INCLUDE_DSL_BONDING)
+      if (!bSoftRestart)
 #endif
-
-      /* Reset CAM state*/
-      nErrCode = DSL_DRV_VXX_CamFsmStateSet(pContext, DSL_CAM_INIT);
-      if( nErrCode != DSL_SUCCESS )
       {
-         DSL_DEBUG( DSL_DBG_ERR,
-            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - CAM FSM state set failed!"
-            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         /* Reset CAM state*/
+         nErrCode = DSL_DRV_VRX_CamFsmStateSet(pContext, DSL_CAM_INIT);
+         if( nErrCode != DSL_SUCCESS )
+         {
+            DSL_DEBUG( DSL_DBG_ERR,
+               (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - CAM FSM state set failed!"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-         return nErrCode;
+            return nErrCode;
+         }
       }
 #endif
       /* Reset external trigger*/
       DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bAutobootRestart, DSL_FALSE);
+
+      /* tear down the link immediately */
+      nErrCode = DSL_DRV_LinkFreeze(pContext, XTSE);
+      if( nErrCode != DSL_SUCCESS )
+      {
+         DSL_DEBUG( DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Link Freeze failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+      }
    }
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX)
-   DSL_CTX_READ_SCALAR(pContext, nErrCode, pDevCtx->data.deviceCfg.nFwType, nFwReqType);
-#elif defined(INCLUDE_DSL_CPE_API_VRX)
-   nFwReqType = DSL_FW_REQUEST_XDSL;
-#else
-   nFwReqType = DSL_FW_REQUEST_ADSL;
-#endif
+   DSL_CTX_READ(pContext, nErrCode, bAutobootDisable, bAutobootDisable);
 
-   DSL_CTX_READ_SCALAR(pContext, nErrCode, bAutobootFwLoadPending, bAutobootFwLoadPending);
-   /* Check for pending FW download*/
-   if( bAutobootFwLoadPending )
+   if (bAutobootDisable)
    {
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 2)
+      /* Reset the LINK*/
+      nErrCode = DSL_DRV_DEV_LinkReset(pContext);
+      if( nErrCode != DSL_SUCCESS )
+      {
+         DSL_DEBUG( DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Link Reset failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+      }
+#endif
       nErrCode = DSL_DRV_AutobootStateSet(
-                    pContext, DSL_AUTOBOOTSTATE_FIRMWARE_WAIT, DSL_AUTOBOOT_FW_WAIT_POLL_TIME);
+                    pContext, DSL_AUTOBOOTSTATE_DISABLED, DSL_AUTOBOOT_DISABLE_POLL_TIME);
       if( nErrCode != DSL_SUCCESS )
       {
          DSL_DEBUG( DSL_DBG_ERR,
@@ -963,10 +1228,9 @@ static DSL_Error_t DSL_DRV_AutobootHandleRestart(
             DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
       }
 
-      /* Set Autoboot Status */
-      nErrCode = DSL_DRV_AutobootStatusSet(pContext, DSL_AUTOBOOT_STATUS_FW_WAIT,
-         nFwReqType);
-
+      /* Set Autoboot Status*/
+      nErrCode = DSL_DRV_AutobootStatusSet(pContext, DSL_AUTOBOOT_STATUS_DISABLED,
+                  DSL_FW_REQUEST_NA);
       if( nErrCode != DSL_SUCCESS )
       {
          DSL_DEBUG( DSL_DBG_ERR,
@@ -974,34 +1238,82 @@ static DSL_Error_t DSL_DRV_AutobootHandleRestart(
             DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
       }
 
-      /* Activate Autoboot timeout for the Firmware Wait state*/
-      DSL_DRV_AutobootTimeoutSet(pContext, 10);
+      DSL_DRV_LineStateSet(pContext, DSL_LINESTATE_DISABLED);
    }
    else
    {
-#if defined (INCLUDE_DSL_CPE_API_DANUBE) && !defined (INCLUDE_DSL_FIRMWARE_MEMORY_FREE)
-      /* Reboot device*/
-      nErrCode = DSL_DRV_DEV_Reboot(pContext);
-      if( nErrCode != DSL_SUCCESS )
-      {
-         DSL_DEBUG( DSL_DBG_ERR,
-            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Device reboot failed, trying to request FW!"
-            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+      nFwReqType = DSL_FW_REQUEST_XDSL;
+#else
+      nFwReqType = DSL_FW_REQUEST_ADSL;
+#endif
 
+      DSL_CTX_READ_SCALAR(pContext, nErrCode, bAutobootFwLoadPending, bAutobootFwLoadPending);
+      /* Check for pending FW download*/
+      if (bAutobootFwLoadPending)
+      {
          nErrCode = DSL_DRV_AutobootStateSet(
-                       pContext, DSL_AUTOBOOTSTATE_FIRMWARE_REQUEST, DSL_AUTOBOOT_FW_REQUEST_POLL_TIME);
+                       pContext, DSL_AUTOBOOTSTATE_FIRMWARE_WAIT, DSL_AUTOBOOT_FW_WAIT_POLL_TIME);
+         if( nErrCode != DSL_SUCCESS )
+         {
+            DSL_DEBUG( DSL_DBG_ERR,
+               (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Autoboot State set failed!"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         }
+
+         /* Set Autoboot Status */
+         nErrCode = DSL_DRV_AutobootStatusSet(pContext, DSL_AUTOBOOT_STATUS_FW_WAIT,
+            nFwReqType);
+
+         if( nErrCode != DSL_SUCCESS )
+         {
+            DSL_DEBUG( DSL_DBG_ERR,
+               (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Autoboot Status set failed!"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         }
+
+         /* Activate Autoboot timeout for the Firmware Wait state*/
+         DSL_DRV_AutobootTimeoutSet(pContext, 10);
       }
       else
       {
-         DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bFwReLoaded, DSL_TRUE);
+#if defined (INCLUDE_DSL_CPE_API_DANUBE) && !defined (INCLUDE_DSL_FIRMWARE_MEMORY_FREE)
+         /* Reboot device*/
+         nErrCode = DSL_DRV_DEV_Reboot(pContext);
+         if( nErrCode != DSL_SUCCESS )
+         {
+            DSL_DEBUG( DSL_DBG_ERR,
+               (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Device reboot failed, trying to request FW!"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-         nErrCode = DSL_DRV_AutobootStateSet(
-            pContext, DSL_AUTOBOOTSTATE_FIRMWARE_READY, DSL_AUTOBOOT_FW_READY_POLL_TIME);
-      }
+            nErrCode = DSL_DRV_AutobootStateSet(
+                          pContext, DSL_AUTOBOOTSTATE_FIRMWARE_REQUEST, DSL_AUTOBOOT_FW_REQUEST_POLL_TIME);
+         }
+         else
+         {
+            DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bFwReLoaded, DSL_TRUE);
+
+            nErrCode = DSL_DRV_AutobootStateSet(
+               pContext, DSL_AUTOBOOTSTATE_FIRMWARE_READY, DSL_AUTOBOOT_FW_READY_POLL_TIME);
+         }
 #else
-      nErrCode = DSL_DRV_AutobootStateSet(
-                    pContext, DSL_AUTOBOOTSTATE_FIRMWARE_REQUEST, DSL_AUTOBOOT_FW_REQUEST_POLL_TIME);
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 2)
+         if (bSoftRestart)
+         {
+            DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bSoftRestart, DSL_FALSE);
+            DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bFwReLoaded, DSL_TRUE);
+
+            nErrCode = DSL_DRV_AutobootStateSet(
+               pContext, DSL_AUTOBOOTSTATE_FIRMWARE_READY,
+               DSL_AUTOBOOT_FW_READY_POLL_TIME);
+         }
+         else
+#endif
+         nErrCode = DSL_DRV_AutobootStateSet(
+                       pContext, DSL_AUTOBOOTSTATE_FIRMWARE_REQUEST,
+                       DSL_AUTOBOOT_FW_REQUEST_POLL_TIME);
 #endif /* defined (INCLUDE_DSL_CPE_API_DANUBE) && !defined (INCLUDE_DSL_FIRMWARE_MEMORY_FREE)*/
+      }
    }
 
    DSL_DEBUG(DSL_DBG_MSG,
@@ -1017,6 +1329,9 @@ static DSL_Error_t DSL_DRV_AutobootHandleTraining(
    DSL_Error_t nErrCode = DSL_SUCCESS;
    DSL_Autoboot_State_t nAutobootState = DSL_AUTOBOOTSTATE_UNKNOWN;
    DSL_TestModeControlSet_t nTestMode = DSL_TESTMODE_DISABLE;
+#if defined(INCLUDE_DSL_BONDING)
+   DSL_PortMode_t nPortMode;
+#endif
 
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_AutobootHandleTraining"DSL_DRV_CRLF,
@@ -1052,42 +1367,39 @@ static DSL_Error_t DSL_DRV_AutobootHandleTraining(
             else
             {
 #if defined(INCLUDE_DSL_G997_STATUS) || defined(INCLUDE_DSL_G997_ALARM) || \
-    defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+    defined(INCLUDE_DSL_CPE_API_VRX)
                /* Generate LINIT event on timeout*/
                DSL_DRV_HandleLinitValue(pContext, LINIT_NO_PEER_XTU, LINIT_SUB_NONE);
 #endif
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX)
-               /* Reset nPrevMode value*/
-               DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.nPrevMode, FWMODE_NA);
-
-               /* Reset CAM state in case of timeout while training*/
-               nErrCode = DSL_DRV_VXX_CamFsmStateSet(pContext, DSL_CAM_INIT);
-               if( nErrCode != DSL_SUCCESS )
-               {
-                  DSL_DEBUG( DSL_DBG_ERR,
-                     (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - CAM FSM state set failed!"
-                     DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-                  return nErrCode;
-               }
-#endif /* #if defined(INCLUDE_DSL_CPE_API_VINAX)*/
-
 #if defined(INCLUDE_DSL_CPE_API_VRX)
-               nErrCode =  DSL_DRV_VXX_CamTrainingTimeoutHandle(pContext);
-               if( nErrCode != DSL_SUCCESS )
+#if defined(INCLUDE_DSL_BONDING)
+               DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.nPortMode, nPortMode);
+               if (nPortMode == DSL_PORT_MODE_DUAL)
                {
-                  DSL_DEBUG( DSL_DBG_ERR,
-                     (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - CAM training timeout handle failed!"
-                     DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-                  return nErrCode;
+                  DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bSoftRestart, DSL_TRUE);
                }
-#endif /* #if defined(INCLUDE_DSL_CPE_API_VRX)*/
+               else
+#endif /* defined(INCLUDE_DSL_BONDING) */
+               {
+                  nErrCode =  DSL_DRV_VRX_CamTrainingTimeoutHandle(pContext);
+                  if( nErrCode != DSL_SUCCESS )
+                  {
+                     DSL_DEBUG( DSL_DBG_ERR, (pContext, SYS_DBG_ERR
+                        "DSL[%02d]: ERROR - CAM training timeout handle failed!"
+                        DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
+                     return nErrCode;
+                  }
+               }
+#endif /* defined(INCLUDE_DSL_CPE_API_VRX)*/
                DSL_DEBUG(DSL_DBG_ERR, (pContext,
                   SYS_DBG_ERR"DSL[%02d]: Reboot on training timeout (%d)!!!"
                   DSL_DRV_CRLF, DSL_DEV_NUM(pContext),
                   pContext->nAutobootTimeoutLimit));
+
+               DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bAutobootRestart, DSL_TRUE);
+
                nErrCode = DSL_DRV_AutobootStateSet(
                              pContext, DSL_AUTOBOOTSTATE_RESTART,
                              DSL_AUTOBOOT_RESTART_POLL_TIME);
@@ -1174,6 +1486,16 @@ static DSL_Error_t DSL_DRV_AutobootHandleShowtime(
             }
             break;
 
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+         case DSL_LINESTATE_ORDERLY_SHUTDOWN:
+            nErrCode = DSL_DRV_AutobootStateSet(pContext,
+                                       DSL_AUTOBOOTSTATE_ORDERLY_SHUTDOWN_WAIT,
+                                       DSL_AUTOBOOT_RESTART_POLL_TIME);
+            /* Activate Autoboot timeout */
+            DSL_DRV_AutobootTimeoutSet(pContext, DSL_AUTOBOOT_ORDERLY_SHUTDOWN_TIMEOUT);
+            break;
+#endif /* INCLUDE_DSL_CPE_API_VRX */
+
          default:
             nErrCode = DSL_DRV_AutobootStateSet(
                           pContext,
@@ -1203,6 +1525,16 @@ static DSL_Error_t DSL_DRV_AutobootHandleException(
          (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Line state set failed!"
          DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
    }
+
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 1)
+      DSL_DRV_MUTEX_LOCK(bndLineLockMutex);
+      if ((nLineLocked != -1) && (nLineLocked != DSL_DEV_NUM(pContext)))
+      {
+         /* No line is lock now */
+         nLineLocked = -1;
+      }
+      DSL_DRV_MUTEX_UNLOCK(bndLineLockMutex);
+#endif
 
    /* Call device specific stuff*/
    nErrCode = DSL_DRV_DEV_AutobootHandleException(pContext);
@@ -1255,7 +1587,10 @@ static DSL_Error_t DSL_DRV_AutobootHandleFwRequest(
 #ifndef INCLUDE_FW_REQUEST_SUPPORT
    DSL_int32_t nOff = 0, nLoff = 0;
 #else
-   DSL_FirmwareRequestData_t fwReqData = { DSL_FW_REQUEST_NA };
+   DSL_FirmwareRequestData_t fwReqData = { DSL_FW_REQUEST_NA, DSL_PORT_MODE_NA };
+#  if defined(INCLUDE_DSL_CPE_API_VRX)
+   DSL_PortMode_t nPortMode;
+#  endif
 #endif /* #ifndef INCLUDE_FW_REQUEST_SUPPORT*/
    DSL_FirmwareRequestType_t nFwType = DSL_FW_REQUEST_NA;
 
@@ -1265,10 +1600,11 @@ static DSL_Error_t DSL_DRV_AutobootHandleFwRequest(
 
    DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bFwReLoaded, DSL_FALSE);
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
    /* Call device specific stuff*/
    nErrCode = DSL_DRV_DEV_AutobootHandleFwRequest(pContext);
-   if( nErrCode != DSL_SUCCESS )
+   /* Stop on errors only */
+   if( nErrCode < DSL_SUCCESS )
    {
       DSL_DEBUG( DSL_DBG_ERR,
          (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Device Specific Firmware request handling failed!"
@@ -1278,10 +1614,9 @@ static DSL_Error_t DSL_DRV_AutobootHandleFwRequest(
    }
 #endif
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX)
-   DSL_CTX_READ_SCALAR(pContext, nErrCode, pDevCtx->data.deviceCfg.nFwType, nFwType);
-#elif defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
    nFwType = DSL_FW_REQUEST_XDSL;
+   DSL_CTX_READ_SCALAR(pContext, nErrCode, pDevCtx->data.nPortMode, nPortMode);
 #elif defined(INCLUDE_DSL_CPE_API_DANUBE)
    nFwType = DSL_FW_REQUEST_ADSL;
 #endif
@@ -1337,7 +1672,9 @@ static DSL_Error_t DSL_DRV_AutobootHandleFwRequest(
       }
 #else /* INCLUDE_FW_REQUEST_SUPPORT */
       fwReqData.nFirmwareRequestType = nFwType;
-
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+      fwReqData.nPortMode = nPortMode;
+#endif
       DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bFwRequestHandled, DSL_FALSE);
 
       nErrCode = DSL_DRV_AutobootStateSet(
@@ -1356,7 +1693,6 @@ static DSL_Error_t DSL_DRV_AutobootHandleFwRequest(
 
          break;
       }
-
       nErrCode = DSL_DRV_EventGenerate( pContext, 0, DSL_ACCESSDIR_NA,
          DSL_XTUDIR_NA, DSL_EVENT_S_FIRMWARE_REQUEST,
          (DSL_EventData_Union_t*)&fwReqData, sizeof(DSL_FirmwareRequestData_t));
@@ -1423,6 +1759,27 @@ static DSL_Error_t DSL_DRV_AutobootHandleFwWait(
          (pContext, SYS_DBG_MSG"DSL[%02d]: Autoboot waiting for the FW..."
          DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
+#if defined(INCLUDE_DSL_BONDING) && defined(INCLUDE_DSL_CPE_API_VRX)
+      {
+         DSL_boolean_t bSlavePort;
+         DSL_PortMode_t nPortMode;
+         DSL_int_t nNum;
+
+         /* get device number*/
+         DSL_CTX_READ_SCALAR(pContext, nErrCode, pDevCtx->nNum, nNum);
+         /* get port mode type*/
+         DSL_CTX_READ_SCALAR(pContext, nErrCode, pDevCtx->data.nPortMode, nPortMode);
+
+         bSlavePort = nNum % DSL_DRV_LINES_PER_DEVICE ? DSL_TRUE : DSL_FALSE;
+
+         if (bSlavePort && nPortMode == DSL_PORT_MODE_SINGLE)
+         {
+            /* skip re-request of the firmware binary*/
+            return nErrCode;
+         }
+      }
+#endif
+
       currentTime = DSL_DRV_TimeMSecGet();
 
       pContext->autobootStartTime = pContext->autobootStartTime > currentTime ?
@@ -1432,7 +1789,7 @@ static DSL_Error_t DSL_DRV_AutobootHandleFwWait(
       if ((pContext->autobootStartTime + (DSL_uint32_t)(pContext->nAutobootTimeoutLimit*1000))
              < currentTime )
       {
-         /* Tru to request FW again */
+         /* Try to request FW again */
          nErrCode = DSL_DRV_AutobootStateSet(
                        pContext, DSL_AUTOBOOTSTATE_FIRMWARE_REQUEST,
                        DSL_AUTOBOOT_FW_REQUEST_POLL_TIME);
@@ -1445,7 +1802,7 @@ static DSL_Error_t DSL_DRV_AutobootHandleFwWait(
 static DSL_Error_t DSL_DRV_AutobootHandleFwReady(
    DSL_Context_t *pContext)
 {
-   DSL_Error_t nErrCode = DSL_SUCCESS;
+   DSL_Error_t nErrCode = DSL_SUCCESS, nRet;
    DSL_boolean_t bPowerManagementL3Forced = DSL_FALSE,
                  bWaitBeforeConfigWrite = DSL_FALSE;
 
@@ -1453,15 +1810,17 @@ static DSL_Error_t DSL_DRV_AutobootHandleFwReady(
    DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bFwRequestHandled, DSL_FALSE);
 
    /* Reset modem*/
-   nErrCode = DSL_DRV_LinkReset(pContext);
-   if( nErrCode != DSL_SUCCESS )
+   nRet = DSL_DRV_LinkReset(pContext);
+   if( nRet != DSL_SUCCESS )
    {
       DSL_DEBUG(DSL_DBG_ERR,
          (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Modem reset failed!"
          DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-      return nErrCode;
+      return nRet;
    }
+
+   DSL_DRV_LineStateSet(pContext, DSL_LINESTATE_IDLE);
 
    DSL_CTX_READ_SCALAR(pContext, nErrCode, bPowerManagementL3Forced,
       bPowerManagementL3Forced);
@@ -1533,4 +1892,5 @@ static DSL_Error_t DSL_DRV_AutobootHandleL3(
 
    return(nErrCode);
 }
+
 /** @} DRV_DSL_CPE_COMMON */

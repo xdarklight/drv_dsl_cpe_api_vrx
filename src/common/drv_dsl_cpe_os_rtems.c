@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -42,7 +41,7 @@ typedef struct DSL_DRV_DevHeader_s
    DSL_OpenContext_t *pOpenCtx;
 } DSL_DRV_DevHeader_t;
 
-DSL_DRV_STATIC DSL_DRV_DevHeader_t DSL_DevHeader[DSL_DRV_MAX_DEVICE_NUMBER];
+DSL_DRV_STATIC DSL_DRV_DevHeader_t DSL_DevHeader[DSL_DRV_MAX_ENTITIES];
 
 DSL_DRV_STATIC IFX_int_t DSL_DRV_DrvNum = -1;
 
@@ -135,7 +134,7 @@ DSL_DRV_STATIC int DSL_DRV_Close(DSL_DRV_DevHeader_t *pDrvHdr)
    DSL_DEBUG(DSL_DBG_MSG,
       (DSL_NULL, SYS_DBG_MSG"Device will be closed..."DSL_DRV_CRLF));
 
-   if (pDrvHdr->deviceNum >= DSL_DRV_MAX_DEVICE_NUMBER)
+   if (pDrvHdr->deviceNum >= DSL_DRV_MAX_ENTITIES)
    {
       return -1;
    }
@@ -264,7 +263,6 @@ DSL_int_t DSL_DRV_Ioctls(DSL_DRV_DevHeader_t *pDrvHdr, DSL_uint_t nCommand, DSL_
    if ( (_IOC_TYPE(nCommand) == DSL_IOC_MAGIC_CPE_API) ||
         (_IOC_TYPE(nCommand) == DSL_IOC_MAGIC_CPE_API_G997) ||
         (_IOC_TYPE(nCommand) == DSL_IOC_MAGIC_CPE_API_PM) ||
-        (_IOC_TYPE(nCommand) == DSL_IOC_MAGIC_CPE_API_SAR) ||
         (_IOC_TYPE(nCommand) == DSL_IOC_MAGIC_CPE_API_DEP) )
    {
       nRetCode = DSL_DRV_IoctlHandle(pOpenCtx, pContext, bIsInKernel, nCommand, nArg);
@@ -616,7 +614,7 @@ int DSL_DRV_DeviceCreate(void)
    printf(DSL_DRV_CRLF DSL_DRV_CRLF "Lantiq CPE API Driver version: %s" DSL_DRV_CRLF,
       &(dsl_cpe_api_version[4]));
 
-   DSL_DRV_MemSet( &ifxDevices, 0, sizeof(DSL_devCtx_t) * DSL_DRV_MAX_DEVICE_NUMBER );
+   DSL_DRV_MemSet( &ifxDevices, 0, sizeof(DSL_devCtx_t) * DSL_DRV_MAX_ENTITIES );
 
    /* Apply initial debug levels. The lines below should be updated in case of
       new modules insert */
@@ -624,19 +622,8 @@ int DSL_DRV_DeviceCreate(void)
    DSL_DRV_DebugInit();
 #endif
 
-#if (defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)) && \
-     defined(INCLUDE_DSL_BONDING)
-   if ( DSL_DRV_Phy2VirtMap(
-           DSL_FPGA_BND_BASE_ADDR, DSL_FPGA_BND_REGS_SZ_BYTE,
-           "BND_FPGA", (DSL_uint8_t**)&g_BndFpgaBase) < 0)
-   {
-      DSL_DEBUG(DSL_DBG_ERR,
-         (DSL_NULL, SYS_DBG_ERR"Bonding FPGA memory mapping failed!"DSL_DRV_CRLF));
-   }
-#endif
-
    /* Get handles for lower level driver */
-   for (i = 0; i < DSL_DRV_MAX_DEVICE_NUMBER; i++)
+   for (i = 0; i < DSL_DRV_MAX_ENTITIES; i++)
    {
       ifxDevices[i].lowHandle = DSL_DRV_DEV_DriverHandleGet(0,i);
       if (ifxDevices[i].lowHandle == DSL_NULL)
@@ -662,13 +649,6 @@ int DSL_DRV_DeviceCreate(void)
 
 void DSL_DRV_DeviceDelete(void)
 {
-#if (defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)) && \
-     defined(INCLUDE_DSL_BONDING)
-   DSL_DRV_Phy2VirtUnmap(
-               (DSL_ulong_t*)DSL_FPGA_BND_BASE_ADDR,
-               DSL_FPGA_BND_REGS_SZ_BYTE,
-               (DSL_uint8_t**)&g_BndFpgaBase);
-#endif
 }
 
 #if 1

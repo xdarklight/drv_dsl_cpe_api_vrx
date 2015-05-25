@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -72,11 +71,11 @@
 
 /* The major number of a CPE API device
       Typically it is a Voodoo 3dfx device (107) for Danube, Amazon-SE, ARX100
-      and logical volume manager (109) for VINAX.
+      and logical volume manager (109) for VRX.
 */
 #if defined (INCLUDE_DSL_CPE_API_DANUBE)
    #define DRV_DSL_CPE_API_DEV_MAJOR 107
-#elif defined (INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#elif defined(INCLUDE_DSL_CPE_API_VRX)
    #define DRV_DSL_CPE_API_DEV_MAJOR 109
 #else
    #error "Device is not defined!"

@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -152,13 +151,6 @@ DSL_Error_t DSL_DRV_G997_LineActivateConfigSet(
          (pContext, "DSL[%02d]: WARNING - Filter Detection not included in the current build,"
                     " nLDSF parameter ignored!"DSL_DRV_CRLF,
          DSL_DEV_NUM(pContext)));
-#else
-      #if !(defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX))
-      DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, "DSL[%02d]: ERROR - Filter Detection not suported in the current build!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-      nErrCode = DSL_ERR_NOT_SUPPORTED_BY_DEVICE;
-      #endif /* !( INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_VRX) */
 #endif /* INCLUDE_DSL_FILTER_DETECTION*/
    }
 
@@ -211,6 +203,10 @@ DSL_Error_t DSL_DRV_G997_XTUSystemEnablingConfigSet(
    DSL_IN_OUT DSL_G997_XTUSystemEnabling_t *pData)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS, nRet = DSL_SUCCESS;
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 2)
+   DSL_uint8_t nLine;
+   DSL_Context_t *pCurrCtx;
+#endif
 
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_G997_XTUSystemEnablingConfigSet"
@@ -224,7 +220,15 @@ DSL_Error_t DSL_DRV_G997_XTUSystemEnablingConfigSet(
 
    if (nRet >= 0)
    {
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 2)
+      for (nLine = 0; nLine < DSL_DRV_LINES_PER_DEVICE; nLine++)
+      {
+         pCurrCtx = pContext->pXDev[nLine].pContext;
+         DSL_CTX_WRITE(pCurrCtx, nErrCode, xtseCfg, pData->data.XTSE);
+      }
+#else
       DSL_CTX_WRITE(pContext, nErrCode, xtseCfg, pData->data.XTSE);
+#endif
    }
 
    DSL_DEBUG(DSL_DBG_MSG,
@@ -283,7 +287,7 @@ DSL_Error_t DSL_DRV_G997_XTUSystemEnablingStatusGet(
    /* Get current line state*/
    DSL_CTX_READ_SCALAR(pContext, nErrCode, nLineState, nCurrentState);
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
    if ( (nCurrentState != DSL_LINESTATE_SHOWTIME_TC_SYNC) &&
         (nCurrentState != DSL_LINESTATE_SHOWTIME_NO_SYNC) &&
         (nCurrentState != DSL_LINESTATE_LOOPDIAGNOSTIC_COMPLETE) &&
@@ -489,6 +493,33 @@ DSL_Error_t DSL_DRV_G997_LineStatusPerBandGet(
 
    return nErrCode;
 }
+
+/*
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_G997_US_POWER_BACK_OFF_STATUS_GET
+*/
+DSL_Error_t DSL_DRV_G997_UsPowerBackOffStatusGet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_G997_UsPowerBackOffStatus_t *pData)
+{
+   DSL_Error_t nErrCode = DSL_SUCCESS;
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_G997_UsPowerBackOffStatusGet"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   DSL_CHECK_POINTER(pContext, pData);
+   DSL_CHECK_ERR_CODE();
+
+   /* Call device specific implementation*/
+   nErrCode = DSL_DRV_DEV_G997_UsPowerBackOffStatusGet(pContext, pData);
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_G997_UsPowerBackOffStatusGet, retCode=%d"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
+
+   return nErrCode;
+}
 #endif /* (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1) */
 
 /*
@@ -574,38 +605,6 @@ DSL_Error_t DSL_DRV_G997_RateAdaptationConfigGet(
    return nErrCode;
 }
 #endif /* INCLUDE_DSL_CONFIG_GET*/
-
-/*
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_G997_RATE_ADAPTATION_STATUS_GET
-*/
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-DSL_Error_t DSL_DRV_G997_RateAdaptationStatusGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_G997_RateAdaptationStatus_t *pData)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-
-   DSL_CHECK_POINTER(pContext, pData);
-   DSL_CHECK_ERR_CODE();
-
-   DSL_CHECK_DIRECTION(pData->nDirection);
-   DSL_CHECK_ERR_CODE();
-
-   DSL_DEBUG(DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_G997_RateAdaptationStatusGet"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-   /* Call device specific implementation*/
-   nErrCode = DSL_DRV_DEV_G997_RateAdaptationStatusGet(pContext, pData);
-
-   DSL_DEBUG(DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_G997_RateAdaptationStatusGet, retCode=%d"
-      DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
-
-   return nErrCode;
-}
-#endif /* INCLUDE_DSL_CPE_API_VINAX*/
 
 /*
    For a detailed description please refer to the equivalent ioctl
@@ -1470,7 +1469,7 @@ DSL_Error_t DSL_DRV_G997_DeltFreeResources(
       DSL_DRV_MemFree(pContext->DELT);
       pContext->DELT = DSL_NULL;
    }
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
    if (pContext->DELT_SHOWTIME != DSL_NULL)
    {
       DSL_DRV_MemFree(pContext->DELT_SHOWTIME);
@@ -1488,6 +1487,73 @@ DSL_Error_t DSL_DRV_G997_DeltFreeResources(
    return nErrCode;
 }
 #endif /* INCLUDE_DSL_DELT*/
+
+#ifdef INCLUDE_DSL_CPE_API_VRX
+/*
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_G997_LOW_POWER_MODE_CONFIG_SET
+*/
+DSL_Error_t DSL_DRV_G997_LowPowerModeConfigSet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_G997_LowPowerModeConfig_t *pData
+)
+{
+   DSL_Error_t nErrCode = DSL_SUCCESS;
+   DSL_CHECK_POINTER(pContext, pData);
+   DSL_CHECK_ERR_CODE();
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_G997_LowPowerModeConfigSet"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   if ((pData->data.PMMode != DSL_G997_PMMODE_BIT_L3_STATE) &&
+      (pData->data.PMMode != DSL_G997_PMMODE_BIT_L2_STATE))
+   {
+      DSL_DEBUG(DSL_DBG_ERR,
+         (pContext, SYS_DBG_MSG"DSL[%02d]: ERROR - invalid PMMode=%d specified!"
+         DSL_DRV_CRLF, DSL_DEV_NUM(pContext), pData->data.PMMode));
+
+      return DSL_ERR_INVALID_PARAMETER;
+   }
+
+   DSL_CTX_WRITE(pContext, nErrCode, PMMode, pData->data.PMMode);
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_G997_LowPowerModeConfigSet,"
+      " retCode=%d" DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
+
+   return nErrCode;
+}
+
+/*
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_G997_LOW_POWER_MODE_CONFIG_GET
+*/
+#ifdef INCLUDE_DSL_CONFIG_GET
+DSL_Error_t DSL_DRV_G997_LowPowerModeConfigGet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_G997_LowPowerModeConfig_t *pData
+)
+{
+   DSL_Error_t nErrCode = DSL_SUCCESS;
+
+   DSL_CHECK_POINTER(pContext, pData);
+   DSL_CHECK_ERR_CODE();
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_G997_LowPowerModeConfigGet"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   DSL_CTX_READ(pContext, nErrCode, PMMode, pData->data.PMMode);
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_G997_LowPowerModeConfigGet,"
+      " retCode=%d" DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
+
+   return nErrCode;
+}
+#endif /* INCLUDE_DSL_CONFIG_GET*/
+#endif /* INCLUDE_DSL_CPE_API_VRX*/
 
 #ifdef __cplusplus
 }

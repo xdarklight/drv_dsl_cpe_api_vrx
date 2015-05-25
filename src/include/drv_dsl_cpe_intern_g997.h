@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -19,7 +18,7 @@
 #include "drv_dsl_cpe_api.h"
 #include "drv_dsl_cpe_api_g997.h"
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
    #define DSL_MAX_HLIN_DS_SCG   512
    #define DSL_MAX_HLIN_US_SCG   512
    #define DSL_MAX_HLOG_DS_SCG   512
@@ -289,8 +288,13 @@ typedef struct
    Subcarrier group size */
    DSL_uint8_t nGroupSize;
    /**
-   Returns the SNR values for the number of subcarriers per group */
+   Returns the SNR values (without Virtual Noise) for the number
+                                                   of subcarriers per group */
    DSL_OUT DSL_G997_SCGSnrDsData8_t deltSnr;
+   /**
+   Returns the SNR values (with Virtual Noise) for the number
+                                                   of subcarriers per group */
+   DSL_OUT DSL_G997_SCGSnrDsData8_t deltSnrVn;
 } DSL_G997_DeltSnrInternalDsData_t;
 
 typedef struct
@@ -298,6 +302,9 @@ typedef struct
    /**
    Number of used data elements */
    DSL_uint16_t nNumData;
+   /**
+   Number of used data elements (previous call) */
+   DSL_uint16_t nNumDataPrev;
    /**
    Data elements */
    DSL_uint8_t nSCGData[DSL_MAX_SNR_US_SCG];
@@ -394,13 +401,11 @@ typedef struct
    /** the room to store QLN data */
    DSL_G997_DeltQlnInternalDsData_t qlnDataDs;
    DSL_G997_DeltQlnInternalUsData_t qlnDataUs;
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
    /** the room to store Line Status data US & DS*/
    DSL_G997_LineStatusData_t lineStatus[DSL_ACCESSDIR_LAST];
-#endif
 } DSL_G997_DeltData_t;
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
 typedef struct
 {
    /** the room to store HLOG data */
@@ -580,6 +585,17 @@ DSL_Error_t DSL_DRV_G997_LineStatusGet(
 #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
 /**
    For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_G997_US_POWER_BACK_OFF_STATUS_GET
+*/
+#ifndef SWIG_TMP
+DSL_Error_t DSL_DRV_G997_UsPowerBackOffStatusGet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_G997_UsPowerBackOffStatus_t *pData
+);
+#endif
+
+/**
+   For a detailed description please refer to the equivalent ioctl
    \ref DSL_FIO_G997_LINE_STATUS_PER_BAND_GET
 */
 #ifndef SWIG_TMP
@@ -613,18 +629,6 @@ DSL_Error_t DSL_DRV_G997_RateAdaptationConfigGet(
 );
 #endif
 #endif /* INCLUDE_DSL_CONFIG_GET*/
-
-/*
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_G997_RATE_ADAPTATION_STATUS_GET
-*/
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_G997_RateAdaptationStatusGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_G997_RateAdaptationStatus_t *pData);
-#endif
-#endif /* INCLUDE_DSL_CPE_API_VINAX*/
 
 /**
    For a detailed description please refer to the equivalent ioctl
@@ -895,6 +899,33 @@ DSL_Error_t DSL_DRV_G997_DeltFreeResources(
 );
 #endif
 #endif /* INCLUDE_DSL_DELT*/
+
+#ifdef INCLUDE_DSL_CPE_API_VRX
+/**
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_G997_LOW_POWER_MODE_CONFIG_SET
+*/
+#ifndef SWIG
+DSL_Error_t DSL_DRV_G997_LowPowerModeConfigSet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_G997_LowPowerModeConfig_t *pData
+);
+#endif
+
+/**
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_G997_LOW_POWER_MODE_CONFIG_GET
+*/
+#ifdef INCLUDE_DSL_CONFIG_GET
+#ifndef SWIG
+DSL_Error_t DSL_DRV_G997_LowPowerModeConfigGet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_G997_LowPowerModeConfig_t *pData
+);
+#endif
+#endif /* INCLUDE_DSL_CONFIG_GET*/
+#endif /* INCLUDE_DSL_CPE_API_VRX*/
+
 /** @} DRV_DSL_CPE_G997 */
 
 #ifdef __cplusplus

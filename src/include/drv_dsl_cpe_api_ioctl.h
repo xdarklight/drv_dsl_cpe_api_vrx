@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -83,23 +82,18 @@ typedef union
    DSL_DBG_ModuleLevel_t             dbg_moduleLevel;
    DSL_ShowtimeLogging_t             showtimeLogging;
 
-#ifdef INCLUDE_DSL_CPE_API_VRX
-   DSL_MultimodeFsmConfig_t          multimodeCfg;
-   DSL_MultimodeFsmStatus_t          multimodeSts;
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VRX*/
-
 #ifdef INCLUDE_DSL_CPE_MISC_LINE_STATUS
    DSL_BandBorderStatus_t            bandBorderStatus;
    DSL_MiscLineStatus_t              miscLineStatus;
 #endif /* INCLUDE_DSL_CPE_MISC_LINE_STATUS*/
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
    DSL_LineOptionsConfig_t           lineOptionsConfig;
-#endif /* defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)*/
+#endif /*  defined(INCLUDE_DSL_CPE_API_VRX)*/
 
-#ifdef INCLUDE_DSL_CPE_API_DANUBE
 #ifdef INCLUDE_DEVICE_EXCEPTION_CODES
-   DSL_DBG_LastExceptionCodes_t      lastExceptionCodes;
+   DSL_LastExceptionCodes_t          lastExceptionCodes;
 #endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
+#ifdef INCLUDE_DSL_CPE_API_DANUBE
 #ifndef DSL_DEBUG_DISABLE
    DSL_DBG_DebugFeatureConfig_t     debugFeatureConfig;
 #endif /* DSL_DEBUG_DISABLE*/
@@ -122,26 +116,12 @@ typedef union
    DSL_AuxLineInventory_t            auxLineInventory;
    DSL_BandPlanSupport_t             bandPlanSupport;
    DSL_BandPlanStatus_t              bandPlanStatus;
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-   DSL_LinePathCounterTotal_t        linePathCountersTotal;
-   DSL_DataPathCounterTotal_t        dataPathCountersTotal;
-   DSL_PhyAddressConfig_t            utopiaPhyAddress;
-   DSL_UtopiaBusWidthConfig_t        utopiaBusWidth;
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX*/
    DSL_EFM_MacConfig_t               efmMacConfig;
 #endif /* #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)*/
 #ifdef INCLUDE_DSL_CPE_API_DANUBE
    DSL_ReTxStatistics_t              reTxStatistics;
 #endif /* INCLUDE_DSL_CPE_API_DANUBE*/
 
-#ifdef INCLUDE_DSL_CPE_API_SAR_SUPPORT
-   /** SAR args*/
-   DSL_SAR_Config_t                  sarConfig;
-   DSL_SAR_SegmentationTable_t       sarSegmentationTable;
-   DSL_SAR_ReassemblyTable_t         sarReassemblyTable;
-   DSL_SAR_SegmentationCounters_t    sarSegmentationCounters;
-   DSL_SAR_ReassemblyCounters_t      sarReassemblyCounters;
-#endif /* #ifdef INCLUDE_DSL_CPE_API_SAR_SUPPORT*/
    /* G997 args */
    DSL_G997_PowerManagementStateForcedTrigger_t g997PowerMgmtStateForcedTrigger;
    DSL_G997_PowerManagementStatus_t    g997PowerMgmtStatus;
@@ -160,9 +140,6 @@ typedef union
    DSL_G997_LineStatusPerBand_t        g997LineStatusPerBand;
    DSL_G997_RateAdaptationConfig_t     g997RateAdaptation;
 #endif /* (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1) */
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-   DSL_G997_RateAdaptationStatus_t     g997RataAdaptationStatus;
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX*/
    DSL_G997_ChannelStatus_t            g997ChannelStatus;
    DSL_G997_DataPathFailures_t         g997DataPathFailures;
    DSL_G997_BitAllocationNsc_t         g997BitAllocationNsc;
@@ -178,14 +155,13 @@ typedef union
 
 #ifdef INCLUDE_DSL_BONDING
    DSL_BND_HwInit_t                    bndHwInit;
-   DSL_BND_Setup_t                     bndSetup;
    DSL_BND_ConfigSet_t                 bndConfigSet;
    DSL_BND_ConfigGet_t                 bndConfigGet;
    DSL_BND_HsStatusGet_t               bndHsStatusGet;
    DSL_BND_HsContinue_t                bndHsContinue;
-   DSL_BND_TearDown_t                  bndTearDown;
    DSL_BND_EthDbgCounters_t            bndEthDbgCounters;
    DSL_BND_EthCounters_t               bndEthCounters;
+   DSL_BND_PortModeSync_t              portModeSync;
 #endif /* INCLUDE_DSL_BONDING*/
 
 #ifdef INCLUDE_PILOT_TONES_STATUS
@@ -309,6 +285,11 @@ typedef union
    DSL_RTT_Statistics_t             rttStatistics;
 #endif /*#ifdef INCLUDE_REAL_TIME_TRACE*/
 
+   DSL_OlrStatistics_t              olrStatistics;
+
+#ifdef INCLUDE_DSL_CPE_API_VRX
+   DSL_G997_LowPowerModeConfig_t    lpmConfig;
+#endif /* INCLUDE_DSL_CPE_API_VRX*/
 } DSL_IOCTL_arg_t;
 
 
@@ -329,15 +310,10 @@ typedef union
 #define DSL_IOC_MAGIC_CPE_API_PM       'p'
 
 /**
-   Magic number for Segmentation and Reassembly related DSL CPE_API ioctls.
-   \note This part is only available for Vinax build type. */
-#define DSL_IOC_MAGIC_CPE_API_SAR      's'
-
-/**
    Magic number for bonding (PAF - PMA Aggregation Function) related DSL CPE_API
    ioctls.
-   \note This part is only available for Vinax build type and if the bonding
-         functionality is included within build. */
+   \note This part is only available for VDSL capable build type and if the
+         bonding functionality is included within build. */
 #define DSL_IOC_MAGIC_CPE_API_BND      'b'
 
 /**
@@ -347,12 +323,13 @@ typedef union
 
 /**
    Magic number for MIB related ioctls of DSL CPE_API.
-   \note This part is only available for Danube Family build type. */
+   \note This part is only available for ADSL only capable platforms. */
 #define DSL_IOC_MAGIC_MIB              'm'
 
 /**
    Magic number for Real Time Trace related DSL CPE_API ioctls.
-   \note This part is currently only available for Danube Family build type. */
+   \note This part is currently only available for ADSL only capable
+         platforms. */
 #define DSL_IOC_MAGIC_CPE_API_RTT      't'
 
 /* ************************************************************************** */
@@ -377,10 +354,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_Init_t init;
@@ -412,10 +386,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_AutobootLoadFirmware_t fw;
@@ -447,10 +418,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_AutobootControl_t ctrl;
@@ -484,10 +452,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_AutobootStatus_t status;
@@ -518,10 +483,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_VersionInformation_t version;
@@ -551,10 +513,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_LineState_t lineState;
@@ -584,13 +543,10 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Please note that a change of this configuration setting(s) will be only
-   effective after restarting the autoboot handling using ioctl
-   \ref DSL_FIO_AUTOBOOT_CONTROL_SET with command \ref DSL_AUTOBOOT_CTRL_RESTART
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   - Supported by all platforms.
+   - Please note that a change of this configuration setting(s) will be only
+     effective after restarting the autoboot handling using ioctl
+     \ref DSL_FIO_AUTOBOOT_CONTROL_SET with command \ref DSL_AUTOBOOT_CTRL_RESTART
 
    \code
       DSL_LineFeature_t lineFeatureConfig;
@@ -621,10 +577,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_LineFeature_t lineFeatureConfig;
@@ -659,10 +612,7 @@ typedef union
    To check if the line is in showtime please use ioctl
    \ref DSL_FIO_LINE_STATE_GET before using this functionality if you are not
    sure about the line state.
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_LineFeatureStatusGet_t lineFeatureConfig;
@@ -698,10 +648,7 @@ typedef union
    To check if the line is in showtime please use ioctl
    \ref DSL_FIO_LINE_STATE_GET before using this functionality if you are not
    sure about the line state.
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_FramingParameterStatus_t framingParam;
@@ -734,10 +681,7 @@ typedef union
       0 if successful and -1 in case of an error/warning
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_DBG_ModuleLevel_t dbgModuleLevel;
@@ -770,10 +714,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_DBG_ModuleLevel_t dbgModuleLevel;
@@ -803,10 +744,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_DeviceMessage_t devMsg;
@@ -850,10 +788,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - Danube: ADSL-CPE
-   - Vinax:  xDSL-CPE
-   - VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_DeviceMessageModify_t devMsg;
@@ -884,10 +819,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_TestModeControl_t testModeCtrl;
@@ -913,8 +845,6 @@ typedef union
    information and self-test results.
    To set this information use \ref DSL_FIO_INIT or
    \ref DSL_FIO_G997_LINE_INVENTORY_SET.
-   \note For Vinax the far end information is available when the callback event
-         DSL_EventType_t::DSL_EVENT_S_FE_INVENTORY_AVAILABLE was indicated.
 
    CLI
    - long command: AuxLineInventoryGet
@@ -930,8 +860,8 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
    - XWAY(TM) VRX200: xDSL-CPE
+   - XWAY(TM) VRX300: xDSL-CPE
 
    \code
       DSL_AuxLineInventory_t auxLineInventory;
@@ -946,7 +876,6 @@ typedef union
    _IOWR(DSL_IOC_MAGIC_CPE_API, 14, DSL_AuxLineInventory_t)
 #endif /* (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1) */
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
 /**
    This function returns the measured loop length for different line types
    in meters.
@@ -965,9 +894,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_LoopLengthStatus_t loopLength;
@@ -981,216 +908,6 @@ typedef union
    \ingroup DRV_DSL_CPE_COMMON */
 #define DSL_FIO_LOOP_LENGTH_STATUS_GET \
    _IOWR(DSL_IOC_MAGIC_CPE_API, 15, DSL_LoopLengthStatus_t)
-#endif /* INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_VRX */
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/**
-   This function writes the UTOPIA address configuration settings.
-
-   CLI
-   - long command: UtopiaAddressConfigSet
-   - short command: uacs
-
-   \param DSL_PhyAddressConfig_t*
-      The parameter points to a \ref DSL_PhyAddressConfig_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
-
-   \code
-      DSL_PhyAddressConfig_t phyCfg;
-      DSL_int_t ret = 0;
-
-      memset(&phyCfg, 0x00, sizeof(DSL_PhyAddressConfig_t));
-      // Set configuration settings here before calling the ioctl...
-      ret = ioctl(fd, DSL_FIO_UTOPIA_ADDRESS_CONFIG_SET, &phyCfg);
-   \endcode
-
-   \ingroup DRV_DSL_CPE_COMMON */
-#define DSL_FIO_UTOPIA_ADDRESS_CONFIG_SET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API, 16, DSL_PhyAddressConfig_t)
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX*/
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/**
-   This function reads the UTOPIA address configuration settings from the
-   DSL CPE API internal configuration memory.
-
-   CLI
-   - long command: UtopiaAddressConfigGet
-   - short command: uacg
-
-   \param DSL_PhyAddressConfig_t*
-      The parameter points to a \ref DSL_PhyAddressConfig_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
-
-   \code
-      DSL_PhyAddressConfig_t phyCfg;
-      DSL_int_t ret = 0;
-
-      memset(&phyCfg, 0x00, sizeof(DSL_PhyAddressConfig_t));
-      ret = ioctl(fd, DSL_FIO_UTOPIA_ADDRESS_CONFIG_GET, &phyCfg);
-      // Read and/or process configuration settings here...
-   \endcode
-
-   \ingroup DRV_DSL_CPE_COMMON */
-#define DSL_FIO_UTOPIA_ADDRESS_CONFIG_GET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API, 17, DSL_PhyAddressConfig_t)
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX*/
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/**
-   This function writes the UTOPIA bus width configuration settings.
-
-   CLI
-   - long command: UtopiaBusWidthConfigSet
-   - short command: ubwcs
-
-   \param DSL_UtopiaBusWidthConfig_t*
-      The parameter points to a \ref DSL_UtopiaBusWidthConfig_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
-
-   \code
-      DSL_UtopiaBusWidthConfig_t busWidth;
-      DSL_int_t ret = 0;
-
-      memset(&phyCfg, 0x00, sizeof(DSL_UtopiaBusWidthConfig_t));
-      // Set configuration settings here before calling the ioctl...
-      ret = ioctl(fd, DSL_FIO_UTOPIA_BUS_WIDTH_CONFIG_SET, &busWidth);
-   \endcode
-
-   \ingroup DRV_DSL_CPE_COMMON */
-#define DSL_FIO_UTOPIA_BUS_WIDTH_CONFIG_SET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API, 18, DSL_UtopiaBusWidthConfig_t)
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX*/
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/**
-   This function reads the UTOPIA bus width configuration settings.
-
-   CLI
-   - long command: UtopiaBusWidthConfigGet
-   - short command: ubwcg
-
-   \param DSL_UtopiaBusWidthConfig_t*
-      The parameter points to a \ref DSL_UtopiaBusWidthConfig_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
-
-   \code
-      DSL_UtopiaBusWidthConfig_t busWidth;
-      DSL_int_t ret = 0;
-
-      memset(&phyCfg, 0x00, sizeof(DSL_UtopiaBusWidthConfig_t));
-      // Set configuration settings here before calling the ioctl...
-      ret = ioctl(fd, DSL_FIO_UTOPIA_BUS_WIDTH_CONFIG_GET, &busWidth);
-   \endcode
-
-   \ingroup DRV_DSL_CPE_COMMON */
-#define DSL_FIO_UTOPIA_BUS_WIDTH_CONFIG_GET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API, 19, DSL_UtopiaBusWidthConfig_t)
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX*/
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/**
-   This function writes the POSPHY address configuration settings.
-   The POSPHY Address assignment will be written
-   automatically before writing the G.997 configuration settings if
-   activating a line.
-
-   CLI
-   - long command: PosphyAddressConfigSet
-   - short command: pacs
-
-   \param DSL_PhyAddressConfig_t*
-      The parameter points to a \ref DSL_PhyAddressConfig_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
-
-   \code
-      DSL_PhyAddressConfig_t phyCfg;
-      DSL_int_t ret = 0;
-
-      memset(&phyCfg, 0x00, sizeof(DSL_PhyAddressConfig_t));
-      // Set configuration settings here before calling the ioctl...
-      ret = ioctl(fd, DSL_FIO_POSPHY_ADDRESS_CONFIG_SET, &phyCfg);
-   \endcode
-
-   \ingroup DRV_DSL_CPE_COMMON */
-#define DSL_FIO_POSPHY_ADDRESS_CONFIG_SET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API, 20, DSL_PhyAddressConfig_t)
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX*/
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/**
-   This function reads the POSPHY address configuration settings from the
-   DSL CPE API internal configuration memory.
-
-   CLI
-   - long command: PosphyAddressConfigGet
-   - short command: pacg
-
-   \param DSL_PhyAddressConfig_t*
-      The parameter points to a \ref DSL_PhyAddressConfig_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
-
-   \code
-      DSL_PhyAddressConfig_t phyCfg;
-      DSL_int_t ret = 0;
-
-      memset(&phyCfg, 0x00, sizeof(DSL_PhyAddressConfig_t));
-      ret = ioctl(fd, DSL_FIO_POSPHY_ADDRESS_CONFIG_GET, &phyCfg);
-      // Read and/or process configuration settings here...
-   \endcode
-
-   \ingroup DRV_DSL_CPE_COMMON */
-#define DSL_FIO_POSPHY_ADDRESS_CONFIG_GET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API, 21, DSL_PhyAddressConfig_t)
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX*/
 
 /**
    This function configures the System Interface.
@@ -1208,10 +925,10 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   - Supported by all platforms.
+   - Please note that a change of this configuration setting(s) will be only
+     effective after restarting the autoboot handling using ioctl
+     \ref DSL_FIO_AUTOBOOT_CONTROL_SET with command \ref DSL_AUTOBOOT_CTRL_RESTART
 
    \code
       DSL_SystemInterfaceConfig_t ifCfg;
@@ -1242,10 +959,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_SystemInterfaceConfig_t ifCfg;
@@ -1279,8 +993,8 @@ typedef union
    Additional Band Plan information is provided by the the following ioctl
    \ref DSL_FIO_BAND_BORDER_STATUS_GET
    Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
    - XWAY(TM) VRX200: xDSL-CPE
+   - XWAY(TM) VRX300: xDSL-CPE
 
    \code
       DSL_BandPlanStatus_t bpCfg;
@@ -1315,8 +1029,8 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
    - XWAY(TM) VRX200: xDSL-CPE
+   - XWAY(TM) VRX300: xDSL-CPE
 
    \code
       DSL_BandPlanSupport_t bpSupport;
@@ -1332,83 +1046,13 @@ typedef union
    _IOWR(DSL_IOC_MAGIC_CPE_API, 25, DSL_BandPlanSupport_t)
 #endif /* (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1) */
 
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/**
-   This function provides configuration options to set MAC related network
-   parameters.
-
-   CLI
-   - long command: EfmMacConfigSet
-   - short command: emcs
-
-   \param DSL_EFM_MacConfig_t*
-      The parameter points to a \ref DSL_EFM_MacConfig_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
-
-   \code
-      DSL_EFM_MacConfig_t macCfg;
-      DSL_int_t ret = 0;
-
-      memset(&macCfg, 0x00, sizeof(DSL_EFM_MacConfig_t));
-      ret = ioctl(fd, DSL_FIO_EFM_MAC_CONFIG_SET, &macCfg);
-      // Read and/or process configuration settings here...
-   \endcode
-
-   \ingroup DRV_DSL_CPE_COMMON */
-#define DSL_FIO_EFM_MAC_CONFIG_SET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API, 26, DSL_EFM_MacConfig_t)
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX */
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/**
-   This function returns current configuration options of MAC related network
-   parameters.
-
-   CLI
-   - long command: EfmMacConfigGet
-   - short command: emcg
-
-   \param DSL_EFM_MacConfig_t*
-      The parameter points to a \ref DSL_EFM_MacConfig_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
-
-   \code
-      DSL_EFM_MacConfig_t macCfg;
-      DSL_int_t ret = 0;
-
-      memset(&macCfg, 0x00, sizeof(DSL_EFM_MacConfig_t));
-      ret = ioctl(fd, DSL_FIO_EFM_MAC_CONFIG_GET, &macCfg);
-      // Read and/or process configuration settings here...
-   \endcode
-
-   \ingroup DRV_DSL_CPE_COMMON */
-#define DSL_FIO_EFM_MAC_CONFIG_GET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API, 27, DSL_EFM_MacConfig_t)
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX */
-
 /**
    This ioctl reads the showtime event logging data.
 
    CLI
    - Not applicable for CLI interface
    - Note: This ioctl is called within context of exception handling in case of
-           Danube Family build. Also refer to the UMPR,
+           ADSL only platform build. Also refer to the UMPR,
            - configure option: --enable-adsl-trace
            - event type: DSL_EVENT_S_SHOWTIME_LOGGING
 
@@ -1422,7 +1066,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100 and XWAY(TM) ARX300)
 
    \code
       DSL_ShowtimeLogging_t data;
@@ -1472,10 +1116,7 @@ typedef union
       lines from the same device will be set automatically to the same value.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_EventStatusMask_t statusEventMaskCfgSet;
@@ -1507,10 +1148,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_EventStatusMask_t statusEventMaskCfgGet;
@@ -1540,10 +1178,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_LowLevelConfiguration_t data;
@@ -1574,10 +1209,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_LowLevelConfiguration_t data;
@@ -1609,10 +1241,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_TestModeStatus_t testModeStatus;
@@ -1643,10 +1272,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_SystemInterfaceStatus_t systemInterfaceStatus;
@@ -1682,10 +1308,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_EventStatus_t eventStatus;
@@ -1724,10 +1347,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_InstanceControl_t instanceControl;
@@ -1760,10 +1380,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_InstanceStatus_t instanceStatus;
@@ -1777,43 +1394,6 @@ typedef union
    \ingroup DRV_DSL_CPE_COMMON */
 #define DSL_FIO_INSTANCE_STATUS_GET \
    _IOWR(DSL_IOC_MAGIC_CPE_API, 37, DSL_InstanceStatus_t)
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/**
-   This function reads several data path counters of the line side since
-   system startup.
-
-   CLI
-   - long command: LinePathCounterTotalGet
-   - short command: lpctg
-
-   \note For Vinax the counters are related to the System Interface.
-
-   \param DSL_LinePathCounterTotal_t*
-      The parameter points to a \ref DSL_LinePathCounterTotal_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
-
-   \code
-      DSL_LinePathCounterTotal_t linePathCounter;
-      DSL_int_t ret = 0;
-
-      memset(&linePathCounter, 0x00, sizeof(DSL_LinePathCounterTotal_t));
-      ret = ioctl(fd, DSL_FIO_LINE_PATH_COUNTER_TOTAL_GET, &linePathCounter);
-      // linePathCounter includes counter values to process
-   \endcode
-
-   \ingroup DRV_DSL_CPE_COMMON */
-#define DSL_FIO_LINE_PATH_COUNTER_TOTAL_GET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API, 38, DSL_LinePathCounterTotal_t)
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX */
 
 /**
    This function has to be used to get the autoboot configuration besides the
@@ -1835,10 +1415,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_AutobootConfig_t autobootConfig;
@@ -1872,10 +1449,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_AutobootConfig_t autobootConfig;
@@ -1908,7 +1482,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
 
    \code
       DSL_InteropFeatureConfig_t interopFeatureConfig;
@@ -1940,7 +1514,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
 
    \code
       DSL_InteropFeatureConfig_t interopFeatureConfig;
@@ -1954,41 +1528,6 @@ typedef union
    \ingroup DRV_DSL_CPE_COMMON */
 #define DSL_FIO_INTEROP_FEATURE_CONFIG_SET \
    _IOWR(DSL_IOC_MAGIC_CPE_API, 42, DSL_InteropFeatureConfig_t)
-
-#ifdef INCLUDE_DSL_CPE_API_VINAX
-/**
-   This function reads several data path counters of the system side since
-   system startup.
-
-   CLI
-   - long command: DataPathCounterTotalGet
-   - short command: dpctg
-
-   \param DSL_DataPathCounterTotal_t*
-   The parameter points to a \ref DSL_DataPathCounterTotal_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
-
-   \code
-      DSL_DataPathCounterTotal_t dataPathCounter;
-      DSL_int_t ret = 0;
-
-      memset(&dataPathCounter, 0x00, sizeof(DSL_DataPathCounterTotal_t));
-      ret = ioctl(fd, DSL_FIO_DATA_PATH_COUNTER_TOTAL_GET, &dataPathCounter);
-      // dataPathCounter includes counter values to process
-   \endcode
-
-   \ingroup DRV_DSL_CPE_COMMON */
-#define DSL_FIO_DATA_PATH_COUNTER_TOTAL_GET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API, 43, DSL_DataPathCounterTotal_t)
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VINAX */
 
 /**
    This function returns DSL CPE API memory consumption statistics for both
@@ -2007,10 +1546,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE, ADSL-CPE
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_ResourceUsageStatistics_t resourceStat;
@@ -2042,7 +1578,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
 
    \code
       DSL_MiscLineStatus_t miscLineStatus;
@@ -2074,9 +1610,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_BandBorderStatus_t bandBoarderStatus;
@@ -2107,9 +1641,10 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
+   - Supported by ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - Please note that a change of this configuration setting(s) will be only
+     effective after restarting the autoboot handling using ioctl
+     \ref DSL_FIO_AUTOBOOT_CONTROL_SET with command \ref DSL_AUTOBOOT_CTRL_RESTART
 
    \code
       DSL_LineOptionsConfig_t lineOptionsConfig;
@@ -2141,8 +1676,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
 
    \code
       DSL_LineOptionsConfig_t lineOptionsConfig;
@@ -2166,8 +1700,8 @@ typedef union
    - long command: LastExceptionCodesGet
    - short command: lecg
 
-   \param DSL_DBG_LastExceptionCodes_t*
-   The parameter points to a \ref DSL_DBG_LastExceptionCodes_t structure
+   \param DSL_LastExceptionCodes_t* The parameter points to a
+          \ref DSL_LastExceptionCodes_t structure
 
    \return
       0 if successful and -1 in case of an error/warning
@@ -2175,23 +1709,20 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
-      DSL_DBG_LastExceptionCodes_t dbgLastExceptionCodes;
+      DSL_LastExceptionCodes_t lastExceptionCodes;
       DSL_int_t ret = 0;
 
-      memset(&dbgLastExceptionCodes, 0x00, sizeof(DSL_DBG_LastExceptionCodes_t));
-      ret = ioctl(fd, DSL_FIO_DBG_LAST_EXCEPTION_CODES_GET, &dbgLastExceptionCodes);
+      memset(&lastExceptionCodes, 0x00, sizeof(DSL_LastExceptionCodes_t));
+      ret = ioctl(fd, DSL_FIO_LAST_EXCEPTION_CODES_GET, &lastExceptionCodes);
       // Read and/or process exception codes here...
    \endcode
 
    \ingroup DRV_DSL_CPE_COMMON */
-#define DSL_FIO_DBG_LAST_EXCEPTION_CODES_GET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API, 49, DSL_DBG_LastExceptionCodes_t)
+#define DSL_FIO_LAST_EXCEPTION_CODES_GET \
+   _IOWR(DSL_IOC_MAGIC_CPE_API, 49, DSL_LastExceptionCodes_t)
 #endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
 
 #ifndef DSL_DEBUG_DISABLE
@@ -2213,7 +1744,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
 
    \code
       DSL_DBG_DebugFeatureConfig_t dbgDebugFeatureConfig;
@@ -2251,7 +1782,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
 
    \code
       DSL_DBG_DebugFeatureConfig_t dbgDebugFeatureConfig;
@@ -2285,10 +1816,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PilotTonesStatus_t pilotTonesStatus;
@@ -2320,10 +1848,10 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   - Supported by all platforms.
+   - Please note that a change of this configuration setting(s) will be only
+     effective after restarting the autoboot handling using ioctl
+     \ref DSL_FIO_AUTOBOOT_CONTROL_SET with command \ref DSL_AUTOBOOT_CTRL_RESTART
 
    \code
       DSL_RebootCriteriaConfig_t rebootCriteriaConfig;
@@ -2355,10 +1883,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_RebootCriteriaConfig_t rebootCriteriaConfig;
@@ -2372,143 +1897,6 @@ typedef union
    \ingroup DRV_DSL_CPE_COMMON */
 #define DSL_FIO_REBOOT_CRITERIA_CONFIG_GET \
    _IOWR(DSL_IOC_MAGIC_CPE_API, 54, DSL_RebootCriteriaConfig_t)
-
-#ifdef INCLUDE_DSL_CPE_API_VRX
-/**
-   This function configures autoboot FSM related options.
-
-   \attention This ioctl is only supported for the VRx.
-      It is intended to be used only in case of activated ADSL/VDSL multimode
-      handling (to be configured by activating ADSL and VDSL modes using ioctl
-      \ref DSL_FIO_G997_XTU_SYSTEM_ENABLING_CONFIG_SET).
-
-   \note It is recommended to configure these parameters at startup of the DSL
-      CPE Control Application instead of using this ioctl at runtime. However if
-      there is a requirement to use it at runtime please note that a restart
-      of the autoboot handling is required directly after this configuration
-      to activate the new configuration.
-      This has to be done by using ioctl DSL_FIO_AUTOBOOT_CONTROL_SET with
-      nCommand = DSL_AUTOBOOT_CTRL_RESTART.
-
-   CLI
-   - long command: MultimodeFsmConfigSet
-   - short command: mfcs
-
-   \param DSL_MultimodeFsmConfig_t*
-   The parameter points to a \ref DSL_MultimodeFsmConfig_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VRX200: xDSL-CPE
-
-   \code
-      DSL_MultimodeFsmConfig_t mulimodeFsmConfig;
-      DSL_int_t ret = 0;
-
-      memset(&mulimodeFsmConfig, 0x00, sizeof(DSL_MultimodeFsmConfig_t));
-      // Set configuration settings here before calling the ioctl...
-      ret = ioctl(fd, DSL_FIO_MULTIMODE_FSM_CONFIG_SET, &mulimodeFsmConfig);
-   \endcode
-
-   \ingroup DRV_DSL_CPE_COMMON */
-#define DSL_FIO_MULTIMODE_FSM_CONFIG_SET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API, 55, DSL_MultimodeFsmConfig_t)
-
-/**
-   This function read the user configuration of autoboot FSM related options.
-
-   \attention This ioctl is only supported for the VRx.
-      It is intended to be used only in case of activated ADSL/VDSL multimode
-      handling (to be configured by activating ADSL and VDSL modes using ioctl
-      \ref DSL_FIO_G997_XTU_SYSTEM_ENABLING_CONFIG_SET).
-
-   \note These configuration values are ALWAYS used in case of activated
-      ADSL/VDSL multimode and performing a restart of the autoboot FSM.
-
-   CLI
-   - long command: MultimodeFsmConfigGet
-   - short command: mfcg
-
-   \param DSL_MultimodeFsmConfig_t*
-   The parameter points to a \ref DSL_MultimodeFsmConfig_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VRX200: xDSL-CPE
-
-   \code
-      DSL_MultimodeFsmConfig_t mulimodeFsmConfig;
-      DSL_int_t ret = 0;
-
-      memset(&mulimodeFsmConfig, 0x00, sizeof(DSL_MultimodeFsmConfig_t));
-      ret = ioctl(fd, DSL_FIO_MULTIMODE_FSM_CONFIG_GET, &mulimodeFsmConfig);
-      // mulimodeFsmConfig includes configuration values to process
-   \endcode
-
-   \ingroup DRV_DSL_CPE_COMMON */
-#define DSL_FIO_MULTIMODE_FSM_CONFIG_GET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API, 56, DSL_MultimodeFsmConfig_t)
-
-/**
-   This function returns the current status from the autoboot FSM.
-
-   \attention This ioctl is only supported for the VRx.
-      It is intended to be used only in case of activated ADSL/VDSL multimode
-      handling (to be configured by activating ADSL and VDSL modes using ioctl
-      \ref DSL_FIO_G997_XTU_SYSTEM_ENABLING_CONFIG_SET) and as an alternative to
-      the event \ref DSL_EVENT_S_MULTIMODE_FSM_STATUS which includes the same
-      information. Therefore it should be only used in case of using polling
-      instead of event handling.
-
-   \note It is expected that this status information is stored within a (power
-      cycle) persistent memory. In case of a needed reboot/system restart
-      (bRebootRequested equals DSL_TRUE) and after system restart these
-      configuration should be passed to the DSL CPE Control Application again.
-      There might be a special use case where this status information is
-      directly passed to the configuration using the ioctl
-      \ref DSL_FIO_MULTIMODE_FSM_CONFIG_SET and a restart of the autoboot is
-      performed without system restart ("shortcut" in case of not needed system
-      restart.
-
-   CLI
-   - long command: MultimodeFsmStatusGet
-   - short command: mfsg
-
-   \param DSL_MultimodeFsmStatus_t*
-   The parameter points to a \ref DSL_MultimodeFsmStatus_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VRX200: xDSL-CPE
-
-   \code
-      DSL_MultimodeFsmStatus_t mulimodeFsmStatus;
-      DSL_int_t ret = 0;
-
-      memset(&mulimodeFsmStatus, 0x00, sizeof(DSL_MultimodeFsmStatus_t));
-      ret = ioctl(fd, DSL_FIO_MULTIMODE_FSM_STATUS_GET, &mulimodeFsmStatus);
-   \endcode
-
-   \ingroup DRV_DSL_CPE_COMMON */
-#define DSL_FIO_MULTIMODE_FSM_STATUS_GET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API, 57, DSL_MultimodeFsmStatus_t)
-
-#endif /* #ifdef INCLUDE_DSL_CPE_API_VRX*/
 
 #ifdef INCLUDE_DSL_CPE_PM_RETX_COUNTERS
 #ifdef INCLUDE_DSL_CPE_PM_RETX_THRESHOLDS
@@ -2529,8 +1917,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_ReTxStatistics_t ReTxStatistics;
@@ -2547,7 +1934,6 @@ typedef union
 #endif /* INCLUDE_DSL_CPE_PM_RETX_THRESHOLDS */
 #endif /* INCLUDE_DSL_CPE_PM_RETX_COUNTERS */
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
 #ifdef INCLUDE_DSL_FILTER_DETECTION
 /**
    This function returns Filter Detection data.
@@ -2561,9 +1947,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_FilterDetection_t filterDetection;
@@ -2578,9 +1962,7 @@ typedef union
    _IOWR(DSL_IOC_MAGIC_CPE_API, 59, \
    DSL_FilterDetection_t)
 #endif /* INCLUDE_DSL_FILTER_DETECTION */
-#endif /* INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_VRX */
 
-#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
 /**
    This function returns AFE hybrid selection data.
 
@@ -2593,9 +1975,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_HybridSelection_t hybridSelection;
@@ -2609,24 +1989,17 @@ typedef union
 #define DSL_FIO_HYBRID_SELECTION_DATA_GET \
    _IOWR(DSL_IOC_MAGIC_CPE_API, 60, \
    DSL_HybridSelection_t)
-#endif /* INCLUDE_DSL_CPE_API_DANUBE || INCLUDE_DSL_CPE_API_VRX */
-
-/* ************************************************************************** */
-/* * Ioctl interface definitions for SAR                                    * */
-/* ************************************************************************** */
-
-#ifdef INCLUDE_DSL_CPE_API_SAR_SUPPORT
 
 /**
-   This function writes the configuration parameter for the SAR
-   to the DSL CPE API internal memory.
+   This function returns counters that are related to OLR statistics.
+   It is direction specific.
 
    CLI
-   - long command: SAR_ConfigSet
-   - short command: sarcs
+   - long command: OlrStatisticsGet
+   - short command: osg
 
-   \param DSL_SAR_Config_t*
-      The parameter points to a \ref DSL_SAR_Config_t structure
+   \param DSL_OlrStatistics_t*
+      The parameter points to a \ref DSL_OlrStatistics_t structure
 
    \return
       0 if successful and -1 in case of an error/warning
@@ -2634,32 +2007,31 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
+   Supported by all platforms.
 
    \code
-      DSL_SAR_Config_t sarCfg;
+      DSL_OlrStatistics_t OlrStatistics;
       DSL_int_t ret = 0;
 
-      memset(&sarCfg, 0x00, sizeof(DSL_SAR_Config_t));
-      // Set configuration settings here before calling the ioctl...
-      ret = ioctl(fd, DSL_FIO_SAR_CONFIG_SET, &sarCfg);
+      memset(&OlrStatistics, 0x00, sizeof(DSL_OlrStatistics_t));
+      ret = ioctl(fd, DSL_FIO_OLR_STATISTICS_GET, &OlrStatistics);
+      // Read statistics here...
    \endcode
 
-   \ingroup DRV_DSL_CPE_SAR */
-#define DSL_FIO_SAR_CONFIG_SET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API_SAR, 0, DSL_SAR_Config_t)
+   \ingroup DRV_DSL_CPE_COMMON */
+#define DSL_FIO_OLR_STATISTICS_GET \
+   _IOWR(DSL_IOC_MAGIC_CPE_API, 61, DSL_OlrStatistics_t)
 
 /**
-   This function reads the configuration parameter for the SAR from the
-   DSL CPE API internal memory.
+   This function returns the Signal to Noise Ratio (SNR) per subcarrier group
+   measured during diagnostic or showtime (including Virtual Noise).
 
    CLI
-   - long command: SAR_ConfigGet
-   - short command: sarcg
+   - long command: DeltSNRGet
+   - short command: dsnrg
 
-   \param DSL_SAR_Config_t*
-      The parameter points to a \ref DSL_SAR_Config_t structure
+   \param DSL_G997_DeltSnr_t*
+      The parameter points to a \ref DSL_G997_DeltSnr_t structure
 
    \return
       0 if successful and -1 in case of an error/warning
@@ -2667,221 +2039,19 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
+   Supported by all platforms (excluding UPSTREAM for ADSL-CPE).
 
    \code
-      DSL_SAR_Config_t sarCfg;
+      DSL_G997_DeltSnr_t deltSnrGet;
       DSL_int_t ret = 0;
 
-      memset(&sarCfg, 0x00, sizeof(DSL_SAR_Config_t));
-      ret = ioctl(fd, DSL_FIO_SAR_CONFIG_GET, &sarCfg);
-      // Read and/or process configuration settings here...
+      memset(&deltSnrGet, 0x00, sizeof(DSL_G997_DeltSnr_t));
+      ret = ioctl(fd, DSL_FIO_DELT_SNR_GET, &deltSnrGet);
    \endcode
 
-   \ingroup DRV_DSL_CPE_SAR */
-#define DSL_FIO_SAR_CONFIG_GET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API_SAR, 1, DSL_SAR_Config_t)
-
-/**
-   This function writes the SAR Segmentation Forwarding table to the
-   DSL CPE API internal memory.
-
-   CLI
-   - long command: SAR_SegmentationTableSet
-   - short command: sarsts
-
-   \param DSL_SAR_SegmentationTable_t*
-      The parameter points to a \ref DSL_SAR_SegmentationTable_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
-
-   \code
-      DSL_SAR_SegmentationTable_t sarSegTab;
-      DSL_int_t ret = 0;
-
-      memset(&sarSegTab, 0x00, sizeof(DSL_SAR_SegmentationTable_t));
-      // Set configuration settings here before calling the ioctl...
-      ret = ioctl(fd, DSL_FIO_SAR_SEGMENTATION_TABLE_SET, &sarSegTab);
-   \endcode
-
-   \ingroup DRV_DSL_CPE_SAR */
-#define DSL_FIO_SAR_SEGMENTATION_TABLE_SET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API_SAR, 2, DSL_SAR_SegmentationTable_t)
-
-/**
-   This function reads the SAR Segmentation Forwarding table from the
-   DSL CPE API internal memory.
-
-   CLI
-   - long command: SAR_SegmentationTableGet
-   - short command: sarstg
-
-   \param DSL_SAR_SegmentationTable_t*
-      The parameter points to a \ref DSL_SAR_SegmentationTable_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
-
-   \code
-      DSL_SAR_SegmentationTable_t sarSegTab;
-      DSL_int_t ret = 0;
-
-      memset(&sarCfg, 0x00, sizeof(DSL_SAR_SegmentationTable_t));
-      ret = ioctl(fd, DSL_FIO_SAR_SEGMENTATION_TABLE_GET, &sarSegTab);
-      // Read and/or process configuration settings here...
-   \endcode
-
-   \ingroup DRV_DSL_CPE_SAR */
-#define DSL_FIO_SAR_SEGMENTATION_TABLE_GET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API_SAR, 3, DSL_SAR_SegmentationTable_t)
-
-/**
-   This function writes the SAR Reassembly Forwarding table to the
-   DSL CPE API internal memory.
-
-   CLI
-   - long command: SAR_ReassemblyTableSet
-   - short command: sarrts
-
-   \param DSL_SAR_ReassemblyTable_t*
-      The parameter points to a \ref DSL_SAR_ReassemblyTable_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
-
-   \code
-      DSL_SAR_ReassemblyTable_t sarReasTab;
-      DSL_int_t ret = 0;
-
-      memset(&sarReasTab, 0x00, sizeof(DSL_SAR_SegmentationTable_t));
-      // Set configuration settings here before calling the ioctl...
-      ret = ioctl(fd, DSL_FIO_SAR_SEGMENTATION_TABLE_SET, &sarReasTab);
-   \endcode
-
-   \ingroup DRV_DSL_CPE_SAR */
-#define DSL_FIO_SAR_REASSEMBLY_TABLE_SET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API_SAR, 4, DSL_SAR_ReassemblyTable_t)
-
-/**
-   This function reads the SAR Reassembly Forwarding table from the
-   DSL CPE API internal memory.
-
-   CLI
-   - long command: SAR_ReassemblyTableGet
-   - short command: sarrtg
-
-   \param DSL_SAR_ReassemblyTable_t*
-      The parameter points to a \ref DSL_SAR_ReassemblyTable_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
-
-   \code
-      DSL_SAR_ReassemblyTable_t sarReasTab;
-      DSL_int_t ret = 0;
-
-      memset(&sarReasTab, 0x00, sizeof(DSL_SAR_SegmentationTable_t));
-      ret = ioctl(fd, DSL_FIO_SAR_SEGMENTATION_TABLE_GET, &sarReasTab);
-      // Read and/or process configuration settings here...
-   \endcode
-
-   \ingroup DRV_DSL_CPE_SAR */
-#define DSL_FIO_SAR_REASSEMBLY_TABLE_GET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API_SAR, 5, DSL_SAR_ReassemblyTable_t)
-
-/**
-   This function requests the current Segmentation-Counters
-   of the AAL5 block (Packets on the system Interface <-> ATM TC-Layer).
-
-   CLI
-   - long command: SAR_SegmentationCountersGet
-   - short command: sarscg
-
-   \param DSL_SAR_SegmentationCounters_t*
-      The parameter points to a \ref DSL_SAR_SegmentationCounters_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
-
-   \code
-      DSL_SAR_SegmentationCounters_t sarSegCount;
-      DSL_int_t ret = 0;
-
-      memset(&sarSegCount, 0x00, sizeof(DSL_SAR_SegmentationCounters_t));
-      ret = ioctl(fd, DSL_FIO_SAR_SEGMENTATION_COUNTERS_GET, &sarSegCount);
-      // Read and/or process configuration settings here...
-   \endcode
-
-   \ingroup DRV_DSL_CPE_SAR */
-#define DSL_FIO_SAR_SEGMENTATION_COUNTERS_GET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API_SAR, 6, DSL_SAR_SegmentationCounters_t)
-
-/**
-   This function requests the current Reassembly-Counters
-   of the device (Packets on the system Interface <-> ATM TC-Layer).
-
-   CLI
-   - long command: SAR_ReassemblyCountersGet
-   - short command: sarrcg
-
-   \param DSL_SAR_ReassemblyCounters_t*
-      The parameter points to a \ref DSL_SAR_ReassemblyCounters_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
-
-   \code
-      DSL_SAR_ReassemblyCounters_t sarReaCount;
-      DSL_int_t ret = 0;
-
-      memset(&sarReaCount, 0x00, sizeof(DSL_SAR_ReassemblyCounters_t));
-      ret = ioctl(fd, DSL_FIO_SAR_REASSEMBLY_COUNTERS_GET, &sarReaCount);
-      // Read and/or process configuration settings here...
-   \endcode
-
-   \ingroup DRV_DSL_CPE_SAR */
-#define DSL_FIO_SAR_REASSEMBLY_COUNTERS_GET \
-   _IOWR(DSL_IOC_MAGIC_CPE_API_SAR, 7, DSL_SAR_ReassemblyCounters_t)
-
-#endif /* #ifdef INCLUDE_DSL_CPE_API_SAR_SUPPORT*/
+   \ingroup DRV_DSL_CPE_COMMON */
+#define DSL_FIO_DELT_SNR_GET \
+   _IOWR(DSL_IOC_MAGIC_CPE_API, 62, DSL_G997_DeltSnr_t)
 
 #ifdef INCLUDE_DSL_BONDING
 /* ************************************************************************** */
@@ -2906,7 +2076,10 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VINAX: VDSL-CPE Bonding
+   - XWAY(TM) VRX200: xDSL-CPE
+
+   \note This ioctl is reserved for future usage on XWAY(TM) VRX200. This means
+         there is currently no functionality included.
 
    \code
       DSL_BND_HwInit_t BND_HwInit;
@@ -2920,41 +2093,6 @@ typedef union
    \ingroup DRV_DSL_CPE_BND */
 #define DSL_FIO_BND_HW_INIT \
    _IOWR(DSL_IOC_MAGIC_CPE_API_BND, 0, DSL_BND_HwInit_t)
-
-/**
-   This ioctl configures the bonding logic.
-   This configuration is done at showtime entry. It configures certain
-   HW register settings to setup bonding logic.
-
-   CLI
-   - n/a
-   - Note: This ioctl is called automatically within context of bonding
-           related autoboot handling.
-
-   \param DSL_BND_Setup_t*
-      The parameter points to a \ref DSL_BND_Setup_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: VDSL-CPE Bonding
-
-   \code
-      DSL_BND_Setup_t BND_Setup;
-      DSL_int_t ret = 0;
-
-      memset(&BND_Setup, 0x00, sizeof(DSL_BND_Setup_t));
-      BND_Setup = ;
-      ret = ioctl(fd, DSL_FIO_BND_SETUP, &BND_Setup);
-   \endcode
-
-   \ingroup DRV_DSL_CPE_BND */
-#define DSL_FIO_BND_SETUP \
-   _IOWR(DSL_IOC_MAGIC_CPE_API_BND, 1, DSL_BND_Setup_t)
 
 /**
    This ioctl configures the bonding handshake configuration.
@@ -2973,7 +2111,12 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VINAX: VDSL-CPE Bonding
+   - XWAY(TM) VRX200: xDSL-CPE
+   - XWAY(TM) VRX300: xDSL-CPE
+   \remarks
+   - Please note that a change of this configuration setting(s) will be only
+     effective after restarting the autoboot handling using ioctl
+     \ref DSL_FIO_AUTOBOOT_CONTROL_SET with command \ref DSL_AUTOBOOT_CTRL_RESTART
 
    \code
       DSL_BND_ConfigSet_t BND_ConfigSet;
@@ -3005,7 +2148,8 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VINAX: VDSL-CPE Bonding
+   - XWAY(TM) VRX200: xDSL-CPE
+   - XWAY(TM) VRX300: xDSL-CPE
 
    \code
       DSL_BND_ConfigGet_t BND_ConfigGet;
@@ -3037,7 +2181,8 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VINAX: VDSL-CPE Bonding
+   - XWAY(TM) VRX200: xDSL-CPE
+   - XWAY(TM) VRX300: xDSL-CPE
 
    \code
       DSL_BND_HsStatusGet_t BND_HsStatusGet;
@@ -3077,7 +2222,8 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VINAX: VDSL-CPE Bonding
+   - XWAY(TM) VRX200: xDSL-CPE
+   - XWAY(TM) VRX300: xDSL-CPE
 
    \code
       DSL_BND_HsContinue_t BND_HsContinue;
@@ -3091,41 +2237,6 @@ typedef union
    \ingroup DRV_DSL_CPE_BND */
 #define DSL_FIO_BND_HS_CONTINUE \
    _IOWR(DSL_IOC_MAGIC_CPE_API_BND, 5, DSL_BND_HsContinue_t)
-
-/**
-   This ioctl tears down a bonded line.
-   Configuration is done at showtime exit. It resets certain HW register
-   settings that are related to the bonding logic.
-
-   CLI
-   - n/a
-   - Note: This ioctl is called automatically within context of bonding
-           related autoboot handling.
-
-   \param DSL_BND_TearDown_t*
-      The parameter points to a \ref DSL_BND_TearDown_t structure
-
-   \return
-      0 if successful and -1 in case of an error/warning
-      In case of an error/warning please refer to the value of 'nReturn' which
-      is included within accessCtl structure of user data.
-
-   \remarks
-   Supported by
-   - XWAY(TM) VINAX: VDSL-CPE Bonding
-
-   \code
-      DSL_BND_TearDown_t BND_TearDown;
-      DSL_int_t ret = 0;
-
-      memset(&BND_TearDown, 0x00, sizeof(DSL_BND_TearDown_t));
-      BND_TearDown = ;
-      ret = ioctl(fd, DSL_FIO_BND_TEAR_DOWN, &BND_TearDown);
-   \endcode
-
-   \ingroup DRV_DSL_CPE_BND */
-#define DSL_FIO_BND_TEAR_DOWN \
-   _IOWR(DSL_IOC_MAGIC_CPE_API_BND, 6, DSL_BND_TearDown_t)
 
 /**
    This ioctl retrieves the bonding control register, fragment counts,
@@ -3147,7 +2258,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VINAX: VDSL-CPE Bonding
+   - Not supported so far
 
    \code
       DSL_BND_EthDbgCounters_t BND_EthDbgCounters;
@@ -3166,10 +2277,10 @@ typedef union
    This ioctl retrieves the bonding error counters
 
    Please note the following important issues
-   - In general there is the possibility within a Vinax system that supports
-     bonding to access this ioctl for each device (from application layer you
-     have multiple file descriptors, at least one for each of the two devices
-     that are currently supported).
+   - In general there is the possibility within a VDSL capable system that
+     supports bonding to access this ioctl for each device (from application
+     layer you have multiple file descriptors, at least one for each of the two
+     devices that are currently supported).
    - Independently from the device which is used to read these counters the API
      always returns the accumulated counter values for both PHY's (devices).
    - The counters are defined as reset on read!
@@ -3194,7 +2305,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VINAX: VDSL-CPE Bonding
+   - Not supported so far
 
    \code
       DSL_BND_EthCounters_t BND_EthCountersGet;
@@ -3208,6 +2319,42 @@ typedef union
    \ingroup DRV_DSL_CPE_BND */
 #define DSL_FIO_BND_ETH_COUNTERS_GET \
    _IOWR(DSL_IOC_MAGIC_CPE_API_BND, 8, DSL_BND_EthCounters_t)
+
+/**
+   This ioctl specifies line Port Mode which will be used after triggering
+   a hard reset.
+
+   CLI
+   - long command: BND_PortModeSyncSet
+   - short command: bndpmss
+
+   \note This ioctl should be called once before running a hard reset to
+         force line into the specified Port Mode.
+
+   \param DSL_BND_PortModeSync_t*
+      The parameter points to a \ref DSL_BND_PortModeSync_t structure
+
+   \return
+      0 if successful and -1 in case of an error/warning
+      In case of an error/warning please refer to the value of 'nReturn' which
+      is included within accessCtl structure of user data.
+
+   \remarks
+   Supported by
+   - XWAY(TM) VRX200: xDSL-CPE
+
+   \code
+      DSL_BND_PortModeSync_t BND_PortModeSync;
+      DSL_int_t ret = 0;
+
+      memset(&BND_PortModeSync, 0x00, sizeof(DSL_BND_PortModeSync_t));
+      BND_PortModeSync. = ;
+      ret = ioctl(fd, DSL_FIO_BND_PORT_MODE_SYNC_SET, &BND_PortModeSync);
+   \endcode
+
+   \ingroup DRV_DSL_CPE_BND */
+#define DSL_FIO_BND_PORT_MODE_SYNC_SET \
+   _IOWR(DSL_IOC_MAGIC_CPE_API_BND, 9, DSL_BND_PortModeSync_t)
 
 #endif /* INCLUDE_DSL_BONDING */
 
@@ -3238,13 +2385,10 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Please note that a change of this configuration setting(s) will be only
-   effective after restarting the autoboot handling using ioctl
-   \ref DSL_FIO_AUTOBOOT_CONTROL_SET with command \ref DSL_AUTOBOOT_CTRL_RESTART
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   - Supported by all platforms.
+   - Please note that a change of this configuration setting(s) will be only
+     effective after restarting the autoboot handling using ioctl
+     \ref DSL_FIO_AUTOBOOT_CONTROL_SET with command \ref DSL_AUTOBOOT_CTRL_RESTART
 
    \code
       DSL_G997_LineActivate_t lineActivate;
@@ -3275,10 +2419,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_LineActivate_t lineActivate;
@@ -3311,10 +2452,10 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   - Supported by all platforms.
+   - Please note that a change of this configuration setting(s) will be only
+     effective after restarting the autoboot handling using ioctl
+     \ref DSL_FIO_AUTOBOOT_CONTROL_SET with command \ref DSL_AUTOBOOT_CTRL_RESTART
 
    \code
       DSL_G997_XTUSystemEnabling_t xtuSystemEnabling;
@@ -3345,13 +2486,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE (XTSE status information is extracted indirectly from the
-             actually used profile. If the profile information is not available,
-             the XTSE8 octet VDSL2 status bits will be set to the Annex A/G by
-             default)
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_XTUSystemEnabling_t xtuSystemEnabling;
@@ -3389,10 +2524,7 @@ typedef union
    To check if the line is in showtime please use ioctl
    \ref DSL_FIO_LINE_STATE_GET before using this functionality if you are not
    sure about the line state.
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_XTUSystemEnabling_t xtuSystemEnabling;
@@ -3423,10 +2555,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_ChannelDataRateThreshold_t chDataRateThres;
@@ -3457,10 +2586,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_ChannelDataRateThreshold_t chDataRateThres;
@@ -3490,10 +2616,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_LineTransmissionStatus_t lineTransStatus;
@@ -3523,10 +2646,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_LineInitStatus_t lineInitStatus;
@@ -3557,10 +2677,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_LineStatus_t lineStatus;
@@ -3592,8 +2709,8 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VINAX: xDSL-CPE
    - XWAY(TM) VRX200: xDSL-CPE
+   - XWAY(TM) VRX300: xDSL-CPE
 
    \code
       DSL_G997_LineStatusPerBand_t lineStatusPerBand;
@@ -3629,10 +2746,7 @@ typedef union
    To check if the line is in showtime please use ioctl
    \ref DSL_FIO_LINE_STATE_GET before using this functionality if you are not
    sure about the line state.
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_ChannelStatus_t channelStatus;
@@ -3662,10 +2776,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_PowerManagementStateForcedTrigger_t pwrMngStateForcedTrigger;
@@ -3695,10 +2806,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_PowerManagementStatus_t pwrMngStatus;
@@ -3730,8 +2838,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
 
    \code
       DSL_G997_LastStateTransmitted_t lastStateTransmitted;
@@ -3762,10 +2869,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_BitAllocationNsc_t bitAllocationNsc;
@@ -3796,10 +2900,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_GainAllocationNsc_t gainAllocationNsc;
@@ -3819,7 +2920,7 @@ typedef union
 
 /**
    This function returns the current SNR allocation per subcarrier table of
-   the line for the specified direction.
+   the line for the specified direction (exluding Virtual Noise).
 
    CLI
    - long command: G997_SnrAllocationNscGet
@@ -3834,10 +2935,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE, only for downstream
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_SnrAllocationNsc_t snrAllocationNsc;
@@ -3868,10 +2966,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_LineFailures_t alarmMaskLineFailuresCfgSet;
@@ -3902,10 +2997,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_LineFailures_t alarmMaskLineFailuresCfgGet;
@@ -3935,10 +3027,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_LineFailures_t lineFailuresStatusGet;
@@ -3970,10 +3059,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_DataPathFailures_t alarmMaskDataPathFailuresCfgSet;
@@ -4005,10 +3091,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_DataPathFailures_t alarmMaskDataPathFailuresCfgGet;
@@ -4039,10 +3122,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_DataPathFailures_t dataPathFailuresStatusGet;
@@ -4077,10 +3157,7 @@ typedef union
    To check if the line is in showtime please use ioctl
    \ref DSL_FIO_LINE_STATE_GET before using this functionality if you are not
    sure about the line state.
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_FramingParameterStatus_t g997FramingParamStatusGet;
@@ -4117,10 +3194,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_LineInventory_t lineInventoryGet;
@@ -4151,10 +3225,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_LineInventoryNe_t lineInventorySet;
@@ -4185,10 +3256,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_DeltHlinScale_t deltHlinScaleGet;
@@ -4219,10 +3287,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_DeltHlin_t deltHlinGet;
@@ -4256,11 +3321,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE (The values are reported per tone group, not per tone),
-             only for the DOWNSTREAM
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_DeltHlog_t deltHlogGet;
@@ -4278,7 +3339,7 @@ typedef union
 
 /**
    This function returns the Signal to Noise Ratio (SNR) per subcarrier group
-   measured during diagnostic or showtime.
+   measured during diagnostic or showtime (excluding Virtual Noise).
 
    CLI
    - long command: G997_DeltSNRGet
@@ -4293,11 +3354,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE, only for the DOWNSTREAM
-   - XWAY(TM) VINAX: xDSL-CPE (The values are reported per tone group, not per tone),
-             only for the DOWNSTREAM
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms (excluding UPSTREAM for ADSL-CPE).
 
    \code
       DSL_G997_DeltSnr_t deltSnrGet;
@@ -4329,11 +3386,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE (The values are reported per tone group, not per tone),
-             only for the DOWNSTREAM
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_DeltQln_t deltQlnGet;
@@ -4365,10 +3418,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       ret = ioctl(fd, DSL_FIO_G997_DELT_FREE_RESOURCES, 0);
@@ -4397,8 +3447,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
 
    \code
       DSL_G997_Snmp_t snmpData;
@@ -4431,8 +3480,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
 
    \code
       DSL_G997_Snmp_t snmpData;
@@ -4464,9 +3512,10 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
+   - Supported by all platforms.
+   - Please note that a change of this configuration setting(s) will be only
+     effective after restarting the autoboot handling using ioctl
+     \ref DSL_FIO_AUTOBOOT_CONTROL_SET with command \ref DSL_AUTOBOOT_CTRL_RESTART
 
    \code
       DSL_G997_RateAdaptationConfig_t sraCfgSet;
@@ -4498,9 +3547,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_G997_RateAdaptationConfig_t sraCfgGet;
@@ -4533,8 +3580,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
 
    \code
       DSL_G997_RateAdaptationStatus_t raStatGet;
@@ -4548,6 +3594,41 @@ typedef union
    \ingroup DRV_DSL_CPE_G997 */
 #define DSL_FIO_G997_RATE_ADAPTATION_STATUS_GET \
    _IOWR(DSL_IOC_MAGIC_CPE_API_G997, 37, DSL_G997_RateAdaptationStatus_t)
+
+/**
+   This function returns Upstream Power Back-Off (UPBO) related status
+   parameters for the alternative electrical length estimation method
+   (AELEM).
+
+   CLI
+   - long command: G997_UsPowerBackOffStatusGet
+   - short command: g997upbosg
+
+   \param DSL_G997_UsPowerBackOffStatus_t*
+   The parameter points to a \ref DSL_G997_UsPowerBackOffStatus_t structure
+
+   \return
+      0 if successful and -1 in case of an error/warning
+      In case of an error/warning please refer to the value of 'nReturn' which
+      is included within accessCtl structure of user data.
+
+   \remarks
+   Supported by
+   - XWAY(TM) VRX200: xDSL-CPE
+   - XWAY(TM) VRX300: xDSL-CPE
+
+   \code
+      DSL_G997_UsPowerBackOffStatus_t upboStatGet;
+      DSL_int_t ret = 0;
+
+      memset(&upboStatGet, 0x00, sizeof(DSL_G997_UsPowerBackOffStatus_t));
+      ret = ioctl(fd, DSL_FIO_G997_US_POWER_BACK_OFF_STATUS_GET, &upboStatGet);
+      // Read UPBO related AELE-Mode status here...
+   \endcode
+
+   \ingroup DRV_DSL_CPE_G997 */
+#define DSL_FIO_G997_US_POWER_BACK_OFF_STATUS_GET \
+   _IOWR(DSL_IOC_MAGIC_CPE_API_G997, 38, DSL_G997_UsPowerBackOffStatus_t)
 
 /* ************************************************************************** */
 /* * Ioctl interface definitions for PM                                     * */
@@ -4569,10 +3650,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_HistoryStatsDir_t pmHistoryStats;
@@ -4602,10 +3680,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_HistoryStatsDir_t pmHistoryStats;
@@ -4636,10 +3711,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineSecCounters_t pmLineSecCounter;
@@ -4670,10 +3742,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineSecCounters_t pmLineSecCounters;
@@ -4704,10 +3773,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineSecCountersTotal_t pmLineSecCountersTotal;
@@ -4737,10 +3803,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineSecThreshold_t pmLineSecThresholds;
@@ -4770,10 +3833,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineSecThreshold_t pmLineSecThresholds;
@@ -4803,10 +3863,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineSecThreshold_t pmLineSecThresholds;
@@ -4836,10 +3893,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineSecThreshold_t pmLineSecThresholds;
@@ -4870,10 +3924,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_HistoryStats_t pmHistoryStats;
@@ -4904,10 +3955,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_HistoryStats_t pmHistoryStats;
@@ -4938,10 +3986,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineInitCounters_t pmLineInitCounters;
@@ -4972,10 +4017,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineInitCounters_t pmLineInitCounters;
@@ -5006,10 +4048,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineInitCountersTotal_t pmLineInitCountersTotal;
@@ -5039,10 +4078,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineInitThreshold_t pmLineInitThresholds;
@@ -5072,10 +4108,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineInitThreshold_t pmLineInitThresholds;
@@ -5105,10 +4138,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineInitThreshold_t pmLineInitThresholds;
@@ -5138,10 +4168,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineInitThreshold_t pmLineInitThresholds;
@@ -5171,10 +4198,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_HistoryStatsChDir_t pmHistoryStats;
@@ -5204,10 +4228,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_HistoryStatsChDir_t pmHistoryStats;
@@ -5237,10 +4258,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ChannelCounters_t pmChannelCounters;
@@ -5270,10 +4288,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ChannelCounters_t pmChannelCounters;
@@ -5303,10 +4318,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ChannelCountersTotal_t pmChannelCountersTotal;
@@ -5336,10 +4348,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ChannelThreshold_t pmChannelThresholds;
@@ -5369,10 +4378,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ChannelThreshold_t pmChannelThresholds;
@@ -5402,10 +4408,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ChannelThreshold_t pmChannelThresholds;
@@ -5435,10 +4438,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ChannelThreshold_t pmChannelThresholds;
@@ -5468,10 +4468,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_HistoryStatsChDir_t pmDataPathHistoryStats;
@@ -5501,10 +4498,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_HistoryStatsChDir_t pmDataPathHistoryStats;
@@ -5535,10 +4529,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_DataPathCounters_t pmDataPathCounters;
@@ -5569,10 +4560,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_DataPathCounters_t pmDataPathCounters;
@@ -5603,10 +4591,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_DataPathCountersTotal_t pmDataPathCountersTotal;
@@ -5636,10 +4621,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_DataPathThreshold_t pmDataPathThresholds;
@@ -5669,10 +4651,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_DataPathThreshold_t pmDataPathThresholds;
@@ -5702,10 +4681,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_DataPathThreshold_t pmDataPathThresholds;
@@ -5735,10 +4711,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_DataPathThreshold_t pmDataPathThresholds;
@@ -5769,10 +4742,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_Reset_t pmReset;
@@ -5809,10 +4779,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ElapsedExtTrigger_t pmTrigger;
@@ -5848,10 +4815,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ElapsedTimeReset_t pmReset;
@@ -5881,10 +4845,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_SyncMode_t pmSyncMode;
@@ -5917,10 +4878,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_BurninMode_t pmBurninMode;
@@ -5955,10 +4913,9 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
+   Supported by all platforms.
    - XWAY(TM) VRX200: xDSL-CPE
+   - XWAY(TM) VRX300: xDSL-CPE
 
    \code
       DSL_PM_Dump_t pmDump;
@@ -5992,10 +4949,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineSecCounters_t pmLineSecCounter;
@@ -6027,10 +4981,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineInitCounters_t pmLineInitCounters;
@@ -6062,10 +5013,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ChannelCounters_t pmChannelCounters;
@@ -6097,10 +5045,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_DataPathCounters_t pmDataPathCounters;
@@ -6131,10 +5076,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_Config_t pmConfig;
@@ -6166,10 +5108,10 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   - Supported by all platforms.
+   - Please note that a change of this configuration setting(s) will be only
+     effective after restarting the autoboot handling using ioctl
+     \ref DSL_FIO_AUTOBOOT_CONTROL_SET with command \ref DSL_AUTOBOOT_CTRL_RESTART
 
    \code
       DSL_PM_Config_t pmConfig;
@@ -6203,7 +5145,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
 
    \code
       DSL_PM_ChannelCountersExt_t pmChannelCountersExt;
@@ -6234,10 +5176,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineEventShowtimeCounters_t pmLineEventShowtimeCounter;
@@ -6268,10 +5207,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineEventShowtimeCounters_t pmLineEventShowtimeCounter;
@@ -6303,10 +5239,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineEventShowtimeCounters_t pmLineEventShowtimeCounter;
@@ -6337,10 +5270,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_LineEventShowtimeCountersTotal_t pmLineEventShowtimeCountersTotal;
@@ -6370,10 +5300,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_HistoryStatsChDir_t pmLineEventShowtimeHistoryStats;
@@ -6403,10 +5330,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_HistoryStatsChDir_t pmLineEventShowtimeHistoryStats;
@@ -6437,10 +5361,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_DataPathFailureCounters_t pmDataPathFailureCounter;
@@ -6471,10 +5392,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_DataPathFailureCounters_t pmDataPathFailureCounter;
@@ -6506,10 +5424,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_DataPathFailureCounters_t pmDataPathFailureCounter;
@@ -6540,10 +5455,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_DataPathFailureCountersTotal_t pmDataPathFailureCountersTotal;
@@ -6573,10 +5485,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_HistoryStatsChDir_t pmDataPathFailureHistoryStats;
@@ -6606,10 +5515,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_HistoryStatsChDir_t pmDataPathFailureHistoryStats;
@@ -6644,8 +5550,7 @@ typedef union
    system (PHY and PPE FW) has a basic influence to the ReTx counters. Current
    implementation expects that the FW ReTx counters are total and never reset
    during FW reboot.
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ReTxCounters_t pmReTxCounter;
@@ -6680,8 +5585,7 @@ typedef union
    system (PHY and PPE FW) has a basic influence to the ReTx counters. Current
    implementation expects that the FW ReTx counters are total and never reset
    during FW reboot.
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ReTxCounters_t pmReTxCounter;
@@ -6712,8 +5616,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ReTxCounters_t pmReTxCounter;
@@ -6744,8 +5647,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ReTxCounters_t pmReTxCounter;
@@ -6775,8 +5677,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_HistoryStatsDir_t pmHistoryStats;
@@ -6806,8 +5707,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_HistoryStatsDir_t pmHistoryStats;
@@ -6837,8 +5737,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ReTxThreshold_t pmReTxThresholds;
@@ -6868,8 +5767,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ReTxThreshold_t pmReTxThresholds;
@@ -6899,8 +5797,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ReTxThreshold_t pmReTxThresholds;
@@ -6930,8 +5827,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_ReTxThreshold_t pmReTxThresholds;
@@ -6961,10 +5857,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
-   - XWAY(TM) VINAX: xDSL-CPE
-   - XWAY(TM) VRX200: xDSL-CPE
+   Supported by all platforms.
 
    \code
       DSL_PM_SyncMode_t pmSyncMode;
@@ -7065,7 +5958,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
 
    \code
       DSL_RTT_Init_t RTT_Init;
@@ -7097,7 +5990,11 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   \remarks
+   - Please note that a change of this configuration setting(s) will be only
+     effective after restarting the autoboot handling using ioctl
+     \ref DSL_FIO_AUTOBOOT_CONTROL_SET with command \ref DSL_AUTOBOOT_CTRL_RESTART
 
    \code
       DSL_RTT_Config_t RTT_Config;
@@ -7132,7 +6029,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
 
    \code
       DSL_RTT_Config_t RTT_Config;
@@ -7164,7 +6061,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
 
    \code
       DSL_RTT_Status_t DSL_RTT_Status;
@@ -7197,7 +6094,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
 
    \code
       DSL_RTT_Control_t RTT_Control;
@@ -7232,7 +6129,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) DANUBE: ADSL-CPE
+   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
 
    \code
       DSL_RTT_Statistics_t RTT_Config;
@@ -7250,6 +6147,75 @@ typedef union
    _IOWR(DSL_IOC_MAGIC_CPE_API_RTT, 5, DSL_RTT_Statistics_t)
 
 #endif /* INCLUDE_REAL_TIME_TRACE */
+
+#ifdef INCLUDE_DSL_CPE_API_VRX
+/**
+   This function writes the Low Power Mode configuration settings.
+
+   CLI
+   - long command: G997_LowPowerModeConfigSet
+   - short command: g997lpmcs
+
+   \param DSL_G997_LowPowerModeConfig_t*
+      The parameter points to a \ref DSL_G997_LowPowerModeConfig_t structure
+
+   \return
+      0 if successful and -1 in case of an error/warning
+      In case of an error/warning please refer to the value of 'nReturn' which
+      is included within accessCtl structure of user data.
+
+   \remarks
+   Supported by
+   - XWAY(TM) VRX200: xDSL-CPE
+   - XWAY(TM) VRX300: xDSL-CPE
+
+   \code
+      DSL_G997_LowPowerModeConfig_t lpmCfgSet;
+      DSL_int_t ret = 0;
+
+      memset(&lpmCfgSet, 0, sizeof(DSL_G997_LowPowerModeConfig_t));
+      // enable the autonomous L2 transition
+      lpmCfgSet.data.PMMode = DSL_G997_PMMODE_BIT_L2_STATE;
+      ret = ioctl(fd, DSL_FIO_G997_LOW_POWER_MODE_CONFIG_SET, &lpmCfgSet);
+   \endcode
+
+   \ingroup DRV_DSL_CPE_G997 */
+#define DSL_FIO_G997_LOW_POWER_MODE_CONFIG_SET \
+   _IOWR(DSL_IOC_MAGIC_CPE_API_G997, 39, DSL_G997_LowPowerModeConfig_t)
+
+/**
+   This function reads the Low Power Mode configuration settings.
+
+   CLI
+   - long command: G997_LowPowerModeConfigGet
+   - short command: g997lpmcg
+
+   \param DSL_G997_LowPowerModeConfig_t*
+      The parameter points to a \ref DSL_G997_LowPowerModeConfig_t structure
+
+   \return
+      0 if successful and -1 in case of an error/warning
+      In case of an error/warning please refer to the value of 'nReturn' which
+      is included within accessCtl structure of user data.
+
+   \remarks
+   Supported by
+   - XWAY(TM) VRX200: xDSL-CPE
+   - XWAY(TM) VRX300: xDSL-CPE
+
+   \code
+      DSL_G997_LowPowerModeConfig_t lpmCfgGet;
+      DSL_int_t ret = 0;
+
+      memset(&lpmCfgGet, 0, sizeof(DSL_G997_LowPowerModeConfig_t));
+      ret = ioctl(fd, DSL_FIO_G997_LOW_POWER_MODE_CONFIG_GET, &lpmCfgGet);
+      // lpmCfgGet includes the current low power mode configuration
+   \endcode
+
+   \ingroup DRV_DSL_CPE_G997 */
+#define DSL_FIO_G997_LOW_POWER_MODE_CONFIG_GET \
+   _IOWR(DSL_IOC_MAGIC_CPE_API_G997, 40, DSL_G997_LowPowerModeConfig_t)
+#endif /* INCLUDE_DSL_CPE_API_VRX*/
 
 #endif /* DSL_CPE_API_USE_KERNEL_INTERFACE */
 

@@ -17,6 +17,7 @@
 
 
 
+
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -41,40 +42,31 @@ POST_UNINSTALL = :
 @DEVICE_DANUBE_TRUE@	$(drv_pm_danube_specific_sources) \
 @DEVICE_DANUBE_TRUE@	$(drv_ceoc_danube_specific_sources)
 
-@DEVICE_VINAX_TRUE@am__append_2 = \
-@DEVICE_VINAX_TRUE@	$(drv_vinax_specific_sources) \
-@DEVICE_VINAX_TRUE@	$(drv_pm_vinax_specific_sources) \
-@DEVICE_VINAX_TRUE@	$(drv_bnd_vinax_specific_sources) \
-@DEVICE_VINAX_TRUE@	$(drv_ceoc_vinax_specific_sources)
-
-@DEVICE_VRX_TRUE@am__append_3 = \
+@DEVICE_VRX_TRUE@am__append_2 = \
 @DEVICE_VRX_TRUE@	$(drv_vrx_specific_sources) \
 @DEVICE_VRX_TRUE@	$(drv_pm_vrx_specific_sources) \
+@DEVICE_VRX_TRUE@	$(drv_bnd_vrx_specific_sources) \
 @DEVICE_VRX_TRUE@	$(drv_ceoc_vrx_specific_sources)
 
-@DEVICE_DANUBE_TRUE@am__append_4 = \
+@DEVICE_DANUBE_TRUE@am__append_3 = \
 @DEVICE_DANUBE_TRUE@	$(drv_danube_specific_sources) \
 @DEVICE_DANUBE_TRUE@	$(drv_pm_danube_specific_sources) \
 @DEVICE_DANUBE_TRUE@	$(drv_ceoc_danube_specific_sources)
 
-@DEVICE_VINAX_TRUE@am__append_5 = \
-@DEVICE_VINAX_TRUE@	$(drv_vinax_specific_sources) \
-@DEVICE_VINAX_TRUE@	$(drv_pm_vinax_specific_sources) \
-@DEVICE_VINAX_TRUE@	$(drv_bnd_vinax_specific_sources) \
-@DEVICE_VINAX_TRUE@	$(drv_ceoc_vinax_specific_sources)
-
-@DEVICE_VRX_TRUE@am__append_6 = \
+@DEVICE_VRX_TRUE@am__append_4 = \
 @DEVICE_VRX_TRUE@	$(drv_vrx_specific_sources) \
 @DEVICE_VRX_TRUE@	$(drv_pm_vrx_specific_sources) \
+@DEVICE_VRX_TRUE@	$(drv_bnd_vrx_specific_sources) \
 @DEVICE_VRX_TRUE@	$(drv_ceoc_vrx_specific_sources)
 
-@DSL_DBG_MAX_LEVEL_SET_TRUE@am__append_7 = -DDSL_DBG_MAX_LEVEL=$(DSL_DBG_MAX_LEVEL_PRE)
+@DSL_DBG_MAX_LEVEL_SET_TRUE@am__append_5 = -DDSL_DBG_MAX_LEVEL=$(DSL_DBG_MAX_LEVEL_PRE)
 
 # the headerfile of linux kernels 2.6.x contain to much arithmetic
 # with void pointers (which is allowed for gcc!)
-@KERNEL_2_6_FALSE@am__append_8 = -Wpointer-arith
+@KERNEL_2_6_FALSE@am__append_6 = -Wpointer-arith
 subdir = src
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(drv_dsl_cpe_api_include_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -92,29 +84,21 @@ am__lib_dsl_cpe_api_a_SOURCES_DIST = common/drv_dsl_cpe_api.c \
 	common/drv_dsl_cpe_fifo.c common/drv_dsl_cpe_autoboot.c \
 	common/drv_dsl_cpe_debug.c common/drv_dsl_cpe_os_linux.c \
 	common/drv_dsl_cpe_timeout.c g997/drv_dsl_cpe_api_g997.c \
-	led/drv_dsl_cpe_led.c pm/drv_dsl_cpe_api_pm.c \
-	pm/drv_dsl_cpe_pm_core.c ceoc/drv_dsl_cpe_ceoc.c \
-	ceoc/drv_dsl_cpe_intern_ceoc.c mib/drv_dsl_cpe_adslmib.c \
-	device/drv_dsl_cpe_device_danube.c \
+	pm/drv_dsl_cpe_api_pm.c pm/drv_dsl_cpe_pm_core.c \
+	ceoc/drv_dsl_cpe_ceoc.c ceoc/drv_dsl_cpe_intern_ceoc.c \
+	mib/drv_dsl_cpe_adslmib.c device/drv_dsl_cpe_device_danube.c \
 	g997/drv_dsl_cpe_api_g997_danube.c \
 	pm/drv_dsl_cpe_api_pm_danube.c ceoc/drv_dsl_cpe_danube_ceoc.c \
-	device/drv_dsl_cpe_device_vxx.c \
-	device/drv_dsl_cpe_device_vinax.c \
-	device/drv_dsl_cpe_msg_vinax.c \
-	g997/drv_dsl_cpe_api_g997_vinax.c sar/drv_dsl_cpe_sar.c \
-	pm/drv_dsl_cpe_api_pm_vinax.c bnd/drv_dsl_cpe_api_bnd_vinax.c \
-	bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c \
-	ceoc/drv_dsl_cpe_vinax_ceoc.c device/drv_dsl_cpe_device_vrx.c \
-	device/drv_dsl_cpe_msg_vrx.c g997/drv_dsl_cpe_api_g997_vrx.c \
-	pm/drv_dsl_cpe_api_pm_vrx.c ceoc/drv_dsl_cpe_vrx_ceoc.c
+	device/drv_dsl_cpe_device_vrx.c device/drv_dsl_cpe_msg_vrx.c \
+	g997/drv_dsl_cpe_api_g997_vrx.c pm/drv_dsl_cpe_api_pm_vrx.c \
+	bnd/drv_dsl_cpe_api_bnd_vrx.c ceoc/drv_dsl_cpe_vrx_ceoc.c
 am__objects_1 = lib_dsl_cpe_api_a-drv_dsl_cpe_api.$(OBJEXT) \
 	lib_dsl_cpe_api_a-drv_dsl_cpe_fifo.$(OBJEXT) \
 	lib_dsl_cpe_api_a-drv_dsl_cpe_autoboot.$(OBJEXT) \
 	lib_dsl_cpe_api_a-drv_dsl_cpe_debug.$(OBJEXT) \
 	lib_dsl_cpe_api_a-drv_dsl_cpe_os_linux.$(OBJEXT) \
 	lib_dsl_cpe_api_a-drv_dsl_cpe_timeout.$(OBJEXT) \
-	lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997.$(OBJEXT) \
-	lib_dsl_cpe_api_a-drv_dsl_cpe_led.$(OBJEXT)
+	lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997.$(OBJEXT)
 am__objects_2 = lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm.$(OBJEXT) \
 	lib_dsl_cpe_api_a-drv_dsl_cpe_pm_core.$(OBJEXT)
 @INCLUDE_DSL_PM_TRUE@am__objects_3 = $(am__objects_2)
@@ -129,100 +113,68 @@ am__objects_8 = lib_dsl_cpe_api_a-drv_dsl_cpe_device_danube.$(OBJEXT) \
 @INCLUDE_DSL_CEOC_TRUE@am__objects_10 = lib_dsl_cpe_api_a-drv_dsl_cpe_danube_ceoc.$(OBJEXT)
 @DEVICE_DANUBE_TRUE@am__objects_11 = $(am__objects_8) $(am__objects_9) \
 @DEVICE_DANUBE_TRUE@	$(am__objects_10)
-am__objects_12 = lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.$(OBJEXT) \
-	lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.$(OBJEXT) \
-	lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.$(OBJEXT) \
-	lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.$(OBJEXT) \
-	lib_dsl_cpe_api_a-drv_dsl_cpe_sar.$(OBJEXT)
-@INCLUDE_DSL_PM_TRUE@am__objects_13 = lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.$(OBJEXT)
-@INCLUDE_DSL_BONDING_TRUE@am__objects_14 = lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.$(OBJEXT) \
-@INCLUDE_DSL_BONDING_TRUE@	lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.$(OBJEXT)
-@INCLUDE_DSL_CEOC_TRUE@am__objects_15 = lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.$(OBJEXT)
-@DEVICE_VINAX_TRUE@am__objects_16 = $(am__objects_12) \
-@DEVICE_VINAX_TRUE@	$(am__objects_13) $(am__objects_14) \
-@DEVICE_VINAX_TRUE@	$(am__objects_15)
-am__objects_17 = lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.$(OBJEXT) \
-	lib_dsl_cpe_api_a-drv_dsl_cpe_device_vrx.$(OBJEXT) \
+am__objects_12 = lib_dsl_cpe_api_a-drv_dsl_cpe_device_vrx.$(OBJEXT) \
 	lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vrx.$(OBJEXT) \
-	lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vrx.$(OBJEXT) \
-	lib_dsl_cpe_api_a-drv_dsl_cpe_sar.$(OBJEXT)
-@INCLUDE_DSL_PM_TRUE@am__objects_18 = lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vrx.$(OBJEXT)
-@INCLUDE_DSL_CEOC_TRUE@am__objects_19 = lib_dsl_cpe_api_a-drv_dsl_cpe_vrx_ceoc.$(OBJEXT)
-@DEVICE_VRX_TRUE@am__objects_20 = $(am__objects_17) $(am__objects_18) \
-@DEVICE_VRX_TRUE@	$(am__objects_19)
+	lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vrx.$(OBJEXT)
+@INCLUDE_DSL_PM_TRUE@am__objects_13 = lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vrx.$(OBJEXT)
+@INCLUDE_DSL_BONDING_TRUE@am__objects_14 = lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.$(OBJEXT)
+@INCLUDE_DSL_CEOC_TRUE@am__objects_15 = lib_dsl_cpe_api_a-drv_dsl_cpe_vrx_ceoc.$(OBJEXT)
+@DEVICE_VRX_TRUE@am__objects_16 = $(am__objects_12) $(am__objects_13) \
+@DEVICE_VRX_TRUE@	$(am__objects_14) $(am__objects_15)
 am_lib_dsl_cpe_api_a_OBJECTS = $(am__objects_1) $(am__objects_3) \
 	$(am__objects_5) $(am__objects_7) $(am__objects_11) \
-	$(am__objects_16) $(am__objects_20)
+	$(am__objects_16)
 lib_dsl_cpe_api_a_OBJECTS = $(am_lib_dsl_cpe_api_a_OBJECTS)
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)" \
+	"$(DESTDIR)$(drv_dsl_cpe_api_includedir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__drv_dsl_cpe_api_SOURCES_DIST = common/drv_dsl_cpe_api.c \
 	common/drv_dsl_cpe_fifo.c common/drv_dsl_cpe_autoboot.c \
 	common/drv_dsl_cpe_debug.c common/drv_dsl_cpe_os_linux.c \
 	common/drv_dsl_cpe_timeout.c g997/drv_dsl_cpe_api_g997.c \
-	led/drv_dsl_cpe_led.c pm/drv_dsl_cpe_api_pm.c \
-	pm/drv_dsl_cpe_pm_core.c bnd/drv_dsl_cpe_api_bnd.c \
-	ceoc/drv_dsl_cpe_ceoc.c ceoc/drv_dsl_cpe_intern_ceoc.c \
-	mib/drv_dsl_cpe_adslmib.c device/drv_dsl_cpe_device_danube.c \
+	pm/drv_dsl_cpe_api_pm.c pm/drv_dsl_cpe_pm_core.c \
+	bnd/drv_dsl_cpe_api_bnd.c ceoc/drv_dsl_cpe_ceoc.c \
+	ceoc/drv_dsl_cpe_intern_ceoc.c mib/drv_dsl_cpe_adslmib.c \
+	device/drv_dsl_cpe_device_danube.c \
 	g997/drv_dsl_cpe_api_g997_danube.c \
 	pm/drv_dsl_cpe_api_pm_danube.c ceoc/drv_dsl_cpe_danube_ceoc.c \
-	device/drv_dsl_cpe_device_vxx.c \
-	device/drv_dsl_cpe_device_vinax.c \
-	device/drv_dsl_cpe_msg_vinax.c \
-	g997/drv_dsl_cpe_api_g997_vinax.c sar/drv_dsl_cpe_sar.c \
-	pm/drv_dsl_cpe_api_pm_vinax.c bnd/drv_dsl_cpe_api_bnd_vinax.c \
-	bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c \
-	ceoc/drv_dsl_cpe_vinax_ceoc.c device/drv_dsl_cpe_device_vrx.c \
-	device/drv_dsl_cpe_msg_vrx.c g997/drv_dsl_cpe_api_g997_vrx.c \
-	pm/drv_dsl_cpe_api_pm_vrx.c ceoc/drv_dsl_cpe_vrx_ceoc.c
-am__objects_21 = drv_dsl_cpe_api-drv_dsl_cpe_api.$(OBJEXT) \
+	device/drv_dsl_cpe_device_vrx.c device/drv_dsl_cpe_msg_vrx.c \
+	g997/drv_dsl_cpe_api_g997_vrx.c pm/drv_dsl_cpe_api_pm_vrx.c \
+	bnd/drv_dsl_cpe_api_bnd_vrx.c ceoc/drv_dsl_cpe_vrx_ceoc.c
+am__objects_17 = drv_dsl_cpe_api-drv_dsl_cpe_api.$(OBJEXT) \
 	drv_dsl_cpe_api-drv_dsl_cpe_fifo.$(OBJEXT) \
 	drv_dsl_cpe_api-drv_dsl_cpe_autoboot.$(OBJEXT) \
 	drv_dsl_cpe_api-drv_dsl_cpe_debug.$(OBJEXT) \
 	drv_dsl_cpe_api-drv_dsl_cpe_os_linux.$(OBJEXT) \
 	drv_dsl_cpe_api-drv_dsl_cpe_timeout.$(OBJEXT) \
-	drv_dsl_cpe_api-drv_dsl_cpe_api_g997.$(OBJEXT) \
-	drv_dsl_cpe_api-drv_dsl_cpe_led.$(OBJEXT)
-am__objects_22 = drv_dsl_cpe_api-drv_dsl_cpe_api_pm.$(OBJEXT) \
+	drv_dsl_cpe_api-drv_dsl_cpe_api_g997.$(OBJEXT)
+am__objects_18 = drv_dsl_cpe_api-drv_dsl_cpe_api_pm.$(OBJEXT) \
 	drv_dsl_cpe_api-drv_dsl_cpe_pm_core.$(OBJEXT)
-@INCLUDE_DSL_PM_TRUE@am__objects_23 = $(am__objects_22)
-am__objects_24 = drv_dsl_cpe_api-drv_dsl_cpe_api_bnd.$(OBJEXT)
-@INCLUDE_DSL_BONDING_TRUE@am__objects_25 = $(am__objects_24)
-am__objects_26 = drv_dsl_cpe_api-drv_dsl_cpe_ceoc.$(OBJEXT) \
+@INCLUDE_DSL_PM_TRUE@am__objects_19 = $(am__objects_18)
+am__objects_20 = drv_dsl_cpe_api-drv_dsl_cpe_api_bnd.$(OBJEXT)
+@INCLUDE_DSL_BONDING_TRUE@am__objects_21 = $(am__objects_20)
+am__objects_22 = drv_dsl_cpe_api-drv_dsl_cpe_ceoc.$(OBJEXT) \
 	drv_dsl_cpe_api-drv_dsl_cpe_intern_ceoc.$(OBJEXT)
-@INCLUDE_DSL_CEOC_TRUE@am__objects_27 = $(am__objects_26)
-am__objects_28 = drv_dsl_cpe_api-drv_dsl_cpe_adslmib.$(OBJEXT)
-@INCLUDE_DSL_ADSL_MIB_TRUE@am__objects_29 = $(am__objects_28)
-am__objects_30 = drv_dsl_cpe_api-drv_dsl_cpe_device_danube.$(OBJEXT) \
+@INCLUDE_DSL_CEOC_TRUE@am__objects_23 = $(am__objects_22)
+am__objects_24 = drv_dsl_cpe_api-drv_dsl_cpe_adslmib.$(OBJEXT)
+@INCLUDE_DSL_ADSL_MIB_TRUE@am__objects_25 = $(am__objects_24)
+am__objects_26 = drv_dsl_cpe_api-drv_dsl_cpe_device_danube.$(OBJEXT) \
 	drv_dsl_cpe_api-drv_dsl_cpe_api_g997_danube.$(OBJEXT)
-@INCLUDE_DSL_PM_TRUE@am__objects_31 = drv_dsl_cpe_api-drv_dsl_cpe_api_pm_danube.$(OBJEXT)
-@INCLUDE_DSL_CEOC_TRUE@am__objects_32 = drv_dsl_cpe_api-drv_dsl_cpe_danube_ceoc.$(OBJEXT)
-@DEVICE_DANUBE_TRUE@am__objects_33 = $(am__objects_30) \
-@DEVICE_DANUBE_TRUE@	$(am__objects_31) $(am__objects_32)
-am__objects_34 = drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.$(OBJEXT) \
-	drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.$(OBJEXT) \
-	drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.$(OBJEXT) \
-	drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.$(OBJEXT) \
-	drv_dsl_cpe_api-drv_dsl_cpe_sar.$(OBJEXT)
-@INCLUDE_DSL_PM_TRUE@am__objects_35 = drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.$(OBJEXT)
-@INCLUDE_DSL_BONDING_TRUE@am__objects_36 = drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.$(OBJEXT) \
-@INCLUDE_DSL_BONDING_TRUE@	drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.$(OBJEXT)
-@INCLUDE_DSL_CEOC_TRUE@am__objects_37 = drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.$(OBJEXT)
-@DEVICE_VINAX_TRUE@am__objects_38 = $(am__objects_34) \
-@DEVICE_VINAX_TRUE@	$(am__objects_35) $(am__objects_36) \
-@DEVICE_VINAX_TRUE@	$(am__objects_37)
-am__objects_39 = drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.$(OBJEXT) \
-	drv_dsl_cpe_api-drv_dsl_cpe_device_vrx.$(OBJEXT) \
+@INCLUDE_DSL_PM_TRUE@am__objects_27 = drv_dsl_cpe_api-drv_dsl_cpe_api_pm_danube.$(OBJEXT)
+@INCLUDE_DSL_CEOC_TRUE@am__objects_28 = drv_dsl_cpe_api-drv_dsl_cpe_danube_ceoc.$(OBJEXT)
+@DEVICE_DANUBE_TRUE@am__objects_29 = $(am__objects_26) \
+@DEVICE_DANUBE_TRUE@	$(am__objects_27) $(am__objects_28)
+am__objects_30 = drv_dsl_cpe_api-drv_dsl_cpe_device_vrx.$(OBJEXT) \
 	drv_dsl_cpe_api-drv_dsl_cpe_msg_vrx.$(OBJEXT) \
-	drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vrx.$(OBJEXT) \
-	drv_dsl_cpe_api-drv_dsl_cpe_sar.$(OBJEXT)
-@INCLUDE_DSL_PM_TRUE@am__objects_40 = drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vrx.$(OBJEXT)
-@INCLUDE_DSL_CEOC_TRUE@am__objects_41 = drv_dsl_cpe_api-drv_dsl_cpe_vrx_ceoc.$(OBJEXT)
-@DEVICE_VRX_TRUE@am__objects_42 = $(am__objects_39) $(am__objects_40) \
-@DEVICE_VRX_TRUE@	$(am__objects_41)
-am_drv_dsl_cpe_api_OBJECTS = $(am__objects_21) $(am__objects_23) \
-	$(am__objects_25) $(am__objects_27) $(am__objects_29) \
-	$(am__objects_33) $(am__objects_38) $(am__objects_42)
+	drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vrx.$(OBJEXT)
+@INCLUDE_DSL_PM_TRUE@am__objects_31 = drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vrx.$(OBJEXT)
+@INCLUDE_DSL_BONDING_TRUE@am__objects_32 = drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.$(OBJEXT)
+@INCLUDE_DSL_CEOC_TRUE@am__objects_33 = drv_dsl_cpe_api-drv_dsl_cpe_vrx_ceoc.$(OBJEXT)
+@DEVICE_VRX_TRUE@am__objects_34 = $(am__objects_30) $(am__objects_31) \
+@DEVICE_VRX_TRUE@	$(am__objects_32) $(am__objects_33)
+am_drv_dsl_cpe_api_OBJECTS = $(am__objects_17) $(am__objects_19) \
+	$(am__objects_21) $(am__objects_23) $(am__objects_25) \
+	$(am__objects_29) $(am__objects_34)
 drv_dsl_cpe_api_OBJECTS = $(am_drv_dsl_cpe_api_OBJECTS)
 drv_dsl_cpe_api_LDADD = $(LDADD)
 drv_dsl_cpe_api_LINK = $(CCLD) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) \
@@ -265,6 +217,7 @@ SOURCES = $(lib_dsl_cpe_api_a_SOURCES) $(drv_dsl_cpe_api_SOURCES) \
 DIST_SOURCES = $(am__lib_dsl_cpe_api_a_SOURCES_DIST) \
 	$(am__drv_dsl_cpe_api_SOURCES_DIST) \
 	$(drv_dsl_cpe_api_ko_SOURCES)
+HEADERS = $(drv_dsl_cpe_api_include_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -288,20 +241,20 @@ DSL_CHANNELS_PER_LINE = @DSL_CHANNELS_PER_LINE@
 DSL_CONFIG_MODEL_TYPE = @DSL_CONFIG_MODEL_TYPE@
 DSL_CPE_API_LIBRARY_BUILD_2_6 = @DSL_CPE_API_LIBRARY_BUILD_2_6@
 DSL_CPE_STATIC_DELT_DATA = @DSL_CPE_STATIC_DELT_DATA@
-DSL_DATA_LED_FLASH_FREQUENCY = @DSL_DATA_LED_FLASH_FREQUENCY@
 DSL_DBG_MAX_LEVEL_PRE = @DSL_DBG_MAX_LEVEL_PRE@
 DSL_DBG_MAX_LEVEL_SET = @DSL_DBG_MAX_LEVEL_SET@
 DSL_DEBUG_DISABLE = @DSL_DEBUG_DISABLE@
 DSL_DEVICE_NAME = @DSL_DEVICE_NAME@
 DSL_DRIVER_INCL_PATH = @DSL_DRIVER_INCL_PATH@
+DSL_DRV_LINES_PER_DEVICE = @DSL_DRV_LINES_PER_DEVICE@
 DSL_DRV_MAX_DEVICE_NUMBER = @DSL_DRV_MAX_DEVICE_NUMBER@
+DSL_VRX_DEVICE_NAME = @DSL_VRX_DEVICE_NAME@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EXEEXT = @EXEEXT@
 EXTRA_DRV_CFLAGS = @EXTRA_DRV_CFLAGS@
 IFXOS_INCLUDE_PATH = @IFXOS_INCLUDE_PATH@
-INCLUDE_ADSL_LED = @INCLUDE_ADSL_LED@
 INCLUDE_DEPRECATED = @INCLUDE_DEPRECATED@
 INCLUDE_DEVICE_EXCEPTION_CODES = @INCLUDE_DEVICE_EXCEPTION_CODES@
 INCLUDE_DSL_ADSL_MIB = @INCLUDE_DSL_ADSL_MIB@
@@ -320,7 +273,6 @@ INCLUDE_DSL_CPE_PM_DATA_PATH_THRESHOLDS = @INCLUDE_DSL_CPE_PM_DATA_PATH_THRESHOL
 INCLUDE_DSL_CPE_PM_HISTORY = @INCLUDE_DSL_CPE_PM_HISTORY@
 INCLUDE_DSL_CPE_PM_LINE_COUNTERS = @INCLUDE_DSL_CPE_PM_LINE_COUNTERS@
 INCLUDE_DSL_CPE_PM_LINE_EVENT_SHOWTIME_COUNTERS = @INCLUDE_DSL_CPE_PM_LINE_EVENT_SHOWTIME_COUNTERS@
-INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS = @INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS@
 INCLUDE_DSL_CPE_PM_LINE_THRESHOLDS = @INCLUDE_DSL_CPE_PM_LINE_THRESHOLDS@
 INCLUDE_DSL_CPE_PM_OPTIONAL_PARAMETERS = @INCLUDE_DSL_CPE_PM_OPTIONAL_PARAMETERS@
 INCLUDE_DSL_CPE_PM_RETX_COUNTERS = @INCLUDE_DSL_CPE_PM_RETX_COUNTERS@
@@ -416,14 +368,14 @@ top_srcdir = @top_srcdir@
 @DSL_CPE_API_LIBRARY_BUILD_2_6_TRUE@@KERNEL_2_6_TRUE@noinst_LIBRARIES = lib_dsl_cpe_api.a
 @KERNEL_2_6_FALSE@noinst_LIBRARIES = lib_dsl_cpe_api.a
 @DEVICE_DANUBE_TRUE@bin_SCRIPTS = ../scripts/inst_drv_dsl_cpe_api_danube.sh
-@DEVICE_VINAX_TRUE@bin_SCRIPTS = ../scripts/inst_drv_dsl_cpe_api_vinax.sh
+drv_dsl_cpe_api_includedir = $(includedir)
+drv_dsl_cpe_api_include_HEADERS = include/drv_dsl_cpe*.h
 drv_bnd_sources = \
 	bnd/drv_dsl_cpe_api_bnd.c
 
 drv_bnd_extra = \
 	include/drv_dsl_cpe_api_bnd.h \
-	include/drv_dsl_cpe_api_bnd_vinax.h \
-	include/drv_dsl_cpe_api_bnd_vinax_fpga.h
+   include/drv_dsl_cpe_api_bnd_vrx.h
 
 drv_pm_sources = \
 	pm/drv_dsl_cpe_api_pm.c \
@@ -459,8 +411,7 @@ drv_common_sources = \
 	common/drv_dsl_cpe_debug.c \
 	common/drv_dsl_cpe_os_linux.c \
 	common/drv_dsl_cpe_timeout.c \
-	g997/drv_dsl_cpe_api_g997.c \
-	led/drv_dsl_cpe_led.c
+	g997/drv_dsl_cpe_api_g997.c
 
 drv_common_extra = \
 	include/drv_dsl_cpe_api.h \
@@ -468,7 +419,6 @@ drv_common_extra = \
 	include/drv_dsl_cpe_api_error.h \
 	include/drv_dsl_cpe_api_g997.h \
 	include/drv_dsl_cpe_api_ioctl.h \
-	include/drv_dsl_cpe_api_sar.h \
 	include/drv_dsl_cpe_api_types.h \
 	include/drv_dsl_cpe_autoboot.h \
 	include/drv_dsl_cpe_debug.h \
@@ -477,9 +427,7 @@ drv_common_extra = \
 	include/drv_dsl_cpe_intern.h \
 	include/drv_dsl_cpe_intern_g997.h \
 	include/drv_dsl_cpe_device_g997.h \
-	include/drv_dsl_cpe_intern_led.h \
 	include/drv_dsl_cpe_intern_mib.h \
-	include/drv_dsl_cpe_intern_sar.h \
 	include/drv_dsl_cpe_os_lint_map.h \
 	include/drv_dsl_cpe_os.h \
 	include/drv_dsl_cpe_os_linux.h \
@@ -506,61 +454,25 @@ drv_danube_specific_extra = \
 	include/drv_dsl_cpe_danube_ctx.h \
 	../scripts/inst_drv_dsl_cpe_api_danube.sh
 
-drv_vinax_specific_sources = \
-	device/drv_dsl_cpe_device_vxx.c \
-	device/drv_dsl_cpe_device_vinax.c \
-	device/drv_dsl_cpe_msg_vinax.c \
-	g997/drv_dsl_cpe_api_g997_vinax.c \
-	sar/drv_dsl_cpe_sar.c
-
 drv_vrx_specific_sources = \
-	device/drv_dsl_cpe_device_vxx.c \
 	device/drv_dsl_cpe_device_vrx.c \
 	device/drv_dsl_cpe_msg_vrx.c \
-	g997/drv_dsl_cpe_api_g997_vrx.c \
-	sar/drv_dsl_cpe_sar.c
-
-@INCLUDE_DSL_PM_TRUE@drv_pm_vinax_specific_sources = \
-@INCLUDE_DSL_PM_TRUE@	pm/drv_dsl_cpe_api_pm_vinax.c
+	g997/drv_dsl_cpe_api_g997_vrx.c
 
 @INCLUDE_DSL_PM_TRUE@drv_pm_vrx_specific_sources = \
 @INCLUDE_DSL_PM_TRUE@	pm/drv_dsl_cpe_api_pm_vrx.c
 
-@INCLUDE_DSL_BONDING_TRUE@drv_bnd_vinax_specific_sources = \
-@INCLUDE_DSL_BONDING_TRUE@	bnd/drv_dsl_cpe_api_bnd_vinax.c \
-@INCLUDE_DSL_BONDING_TRUE@	bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c
-
-@INCLUDE_DSL_CEOC_TRUE@drv_ceoc_vinax_specific_sources = \
-@INCLUDE_DSL_CEOC_TRUE@	ceoc/drv_dsl_cpe_vinax_ceoc.c
+@INCLUDE_DSL_BONDING_TRUE@drv_bnd_vrx_specific_sources = \
+@INCLUDE_DSL_BONDING_TRUE@	bnd/drv_dsl_cpe_api_bnd_vrx.c
 
 @INCLUDE_DSL_CEOC_TRUE@drv_ceoc_vrx_specific_sources = \
 @INCLUDE_DSL_CEOC_TRUE@	ceoc/drv_dsl_cpe_vrx_ceoc.c
 
-drv_vinax_specific_extra = \
-	include/drv_dsl_cpe_msg_vinax.h \
-	include/drv_dsl_cpe_device_vinax.h \
-	include/drv_dsl_cpe_device_vxx.h \
-	include/drv_dsl_cpe_vinax_msg_config_pmd.h \
-	include/drv_dsl_cpe_vinax_msg_const.h \
-	include/drv_dsl_cpe_vinax_msg_debug.h \
-	include/drv_dsl_cpe_vinax_msg_dmt_scope.h \
-	include/drv_dsl_cpe_vinax_msg_ghs_status.h \
-	include/drv_dsl_cpe_vinax_msg_olr.h \
-	include/drv_dsl_cpe_vinax_msg_perf_pmd.h \
-	include/drv_dsl_cpe_vinax_msg_tc_counters.h \
-	include/drv_dsl_cpe_vinax_msg_utopia_posphy.h \
-	include/drv_dsl_cpe_vinax_msg_xtc.h \
-	include/drv_dsl_cpe_vinax_ctx.h \
-	include/drv_dsl_cpe_vinax_mdio.h \
-	../scripts/inst_drv_dsl_cpe_api_vinax.sh
-
 drv_vrx_specific_extra = \
 	include/drv_dsl_cpe_msg_vrx.h \
 	include/drv_dsl_cpe_device_vrx.h \
-	include/drv_dsl_cpe_device_vxx.h \
 	include/drv_dsl_cpe_vrx_msg_config_pmd.h \
 	include/drv_dsl_cpe_vrx_msg_const.h \
-	include/drv_dsl_cpe_vrx_msg_debug.h \
 	include/drv_dsl_cpe_vrx_msg_dmt_scope.h \
 	include/drv_dsl_cpe_vrx_msg_ghs_status.h \
 	include/drv_dsl_cpe_vrx_msg_olr.h \
@@ -575,21 +487,16 @@ drv_vrx_specific_extra = \
 @INCLUDE_DSL_ADSL_MIB_TRUE@drv_mib_specific = $(drv_adsl_mib_sources)
 drv_dsl_cpe_api_SOURCES = $(drv_common_sources) $(drv_pm_specific) \
 	$(drv_bnd_specific) $(drv_ceoc_specific) $(drv_mib_specific) \
-	$(drv_specific_sources) $(am__append_1) $(am__append_2) \
-	$(am__append_3)
+	$(drv_specific_sources) $(am__append_1) $(am__append_2)
 lib_dsl_cpe_api_a_SOURCES = $(drv_common_sources) $(drv_pm_specific) \
 	$(drv_ceoc_specific) $(drv_mib_specific) \
-	$(drv_specific_sources) $(am__append_4) $(am__append_5) \
-	$(am__append_6)
+	$(drv_specific_sources) $(am__append_3) $(am__append_4)
 EXTRA_DIST = \
 	../LICENSE \
 	$(drv_danube_specific_sources) \
 	$(drv_pm_danube_specific_sources) \
 	$(drv_ceoc_danube_specific_sources) \
-	$(drv_vinax_specific_sources) \
-	$(drv_pm_vinax_specific_sources) \
-	$(drv_bnd_vinax_specific_sources) \
-	$(drv_ceoc_vinax_specific_sources) \
+	$(drv_bnd_vrx_specific_sources) \
 	$(drv_vrx_specific_sources) \
 	$(drv_pm_vrx_specific_sources) \
 	$(drv_ceoc_vrx_specific_sources) \
@@ -599,8 +506,7 @@ EXTRA_DIST = \
 	$(drv_ceoc_extra) \
 	$(drv_adsl_mib_extra) \
 	$(drv_danube_specific_extra) \
-	$(drv_vinax_specific_extra) \
-        $(drv_vrx_specific_extra)
+   $(drv_vrx_specific_extra)
 
 @DSL_CPE_API_LIBRARY_BUILD_2_6_FALSE@drv_dsl_cpe_api_common_mod_cflags = 
 
@@ -611,7 +517,7 @@ drv_dsl_cpe_api_common_cflags = -DLINUX -D__LINUX__ -D__KERNEL__ \
 	-Wswitch -Wcomment -Winline -Wuninitialized -Wparentheses \
 	-Wsign-compare -Wreturn-type -Wstrict-prototypes \
 	-Wno-trigraphs -fno-strict-aliasing -fno-common \
-	$(am__append_7) $(am__append_8)
+	$(am__append_5) $(am__append_6)
 
 # target cflags, specified by configure options
 drv_dsl_cpe_api_target_cflags = $(ADD_DRV_CFLAGS)
@@ -769,65 +675,47 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_adslmib.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_g997.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_g997_danube.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vrx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_pm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_pm_danube.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vrx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_autoboot.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_ceoc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_danube_ceoc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_debug.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_danube.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vrx.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_fifo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_intern_ceoc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_led.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_msg_vrx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_os_linux.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_pm_core.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_sar.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_timeout.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_vrx_ceoc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_adslmib.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_danube.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vrx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_danube.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vrx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_autoboot.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_ceoc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_danube_ceoc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_debug.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_danube.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vrx.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_fifo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_intern_ceoc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_led.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vrx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_os_linux.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_pm_core.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_sar.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_timeout.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_vrx_ceoc.Po@am__quote@
 
 .c.o:
@@ -941,20 +829,6 @@ lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997.obj: g997/drv_dsl_cpe_api_g997.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='g997/drv_dsl_cpe_api_g997.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997.obj `if test -f 'g997/drv_dsl_cpe_api_g997.c'; then $(CYGPATH_W) 'g997/drv_dsl_cpe_api_g997.c'; else $(CYGPATH_W) '$(srcdir)/g997/drv_dsl_cpe_api_g997.c'; fi`
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_led.o: led/drv_dsl_cpe_led.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_led.o -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_led.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_led.o `test -f 'led/drv_dsl_cpe_led.c' || echo '$(srcdir)/'`led/drv_dsl_cpe_led.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_led.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_led.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='led/drv_dsl_cpe_led.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_led.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_led.o `test -f 'led/drv_dsl_cpe_led.c' || echo '$(srcdir)/'`led/drv_dsl_cpe_led.c
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_led.obj: led/drv_dsl_cpe_led.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_led.obj -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_led.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_led.obj `if test -f 'led/drv_dsl_cpe_led.c'; then $(CYGPATH_W) 'led/drv_dsl_cpe_led.c'; else $(CYGPATH_W) '$(srcdir)/led/drv_dsl_cpe_led.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_led.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_led.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='led/drv_dsl_cpe_led.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_led.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_led.obj `if test -f 'led/drv_dsl_cpe_led.c'; then $(CYGPATH_W) 'led/drv_dsl_cpe_led.c'; else $(CYGPATH_W) '$(srcdir)/led/drv_dsl_cpe_led.c'; fi`
 
 lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm.o: pm/drv_dsl_cpe_api_pm.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm.o -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm.o `test -f 'pm/drv_dsl_cpe_api_pm.c' || echo '$(srcdir)/'`pm/drv_dsl_cpe_api_pm.c
@@ -1082,132 +956,6 @@ lib_dsl_cpe_api_a-drv_dsl_cpe_danube_ceoc.obj: ceoc/drv_dsl_cpe_danube_ceoc.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_danube_ceoc.obj `if test -f 'ceoc/drv_dsl_cpe_danube_ceoc.c'; then $(CYGPATH_W) 'ceoc/drv_dsl_cpe_danube_ceoc.c'; else $(CYGPATH_W) '$(srcdir)/ceoc/drv_dsl_cpe_danube_ceoc.c'; fi`
 
-lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.o: device/drv_dsl_cpe_device_vxx.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.o -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.o `test -f 'device/drv_dsl_cpe_device_vxx.c' || echo '$(srcdir)/'`device/drv_dsl_cpe_device_vxx.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='device/drv_dsl_cpe_device_vxx.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.o `test -f 'device/drv_dsl_cpe_device_vxx.c' || echo '$(srcdir)/'`device/drv_dsl_cpe_device_vxx.c
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.obj: device/drv_dsl_cpe_device_vxx.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.obj -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.obj `if test -f 'device/drv_dsl_cpe_device_vxx.c'; then $(CYGPATH_W) 'device/drv_dsl_cpe_device_vxx.c'; else $(CYGPATH_W) '$(srcdir)/device/drv_dsl_cpe_device_vxx.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='device/drv_dsl_cpe_device_vxx.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_device_vxx.obj `if test -f 'device/drv_dsl_cpe_device_vxx.c'; then $(CYGPATH_W) 'device/drv_dsl_cpe_device_vxx.c'; else $(CYGPATH_W) '$(srcdir)/device/drv_dsl_cpe_device_vxx.c'; fi`
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.o: device/drv_dsl_cpe_device_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.o -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.o `test -f 'device/drv_dsl_cpe_device_vinax.c' || echo '$(srcdir)/'`device/drv_dsl_cpe_device_vinax.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='device/drv_dsl_cpe_device_vinax.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.o `test -f 'device/drv_dsl_cpe_device_vinax.c' || echo '$(srcdir)/'`device/drv_dsl_cpe_device_vinax.c
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.obj: device/drv_dsl_cpe_device_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.obj -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.obj `if test -f 'device/drv_dsl_cpe_device_vinax.c'; then $(CYGPATH_W) 'device/drv_dsl_cpe_device_vinax.c'; else $(CYGPATH_W) '$(srcdir)/device/drv_dsl_cpe_device_vinax.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='device/drv_dsl_cpe_device_vinax.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_device_vinax.obj `if test -f 'device/drv_dsl_cpe_device_vinax.c'; then $(CYGPATH_W) 'device/drv_dsl_cpe_device_vinax.c'; else $(CYGPATH_W) '$(srcdir)/device/drv_dsl_cpe_device_vinax.c'; fi`
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.o: device/drv_dsl_cpe_msg_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.o -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.o `test -f 'device/drv_dsl_cpe_msg_vinax.c' || echo '$(srcdir)/'`device/drv_dsl_cpe_msg_vinax.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='device/drv_dsl_cpe_msg_vinax.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.o `test -f 'device/drv_dsl_cpe_msg_vinax.c' || echo '$(srcdir)/'`device/drv_dsl_cpe_msg_vinax.c
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.obj: device/drv_dsl_cpe_msg_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.obj -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.obj `if test -f 'device/drv_dsl_cpe_msg_vinax.c'; then $(CYGPATH_W) 'device/drv_dsl_cpe_msg_vinax.c'; else $(CYGPATH_W) '$(srcdir)/device/drv_dsl_cpe_msg_vinax.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='device/drv_dsl_cpe_msg_vinax.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_msg_vinax.obj `if test -f 'device/drv_dsl_cpe_msg_vinax.c'; then $(CYGPATH_W) 'device/drv_dsl_cpe_msg_vinax.c'; else $(CYGPATH_W) '$(srcdir)/device/drv_dsl_cpe_msg_vinax.c'; fi`
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.o: g997/drv_dsl_cpe_api_g997_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.o -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.o `test -f 'g997/drv_dsl_cpe_api_g997_vinax.c' || echo '$(srcdir)/'`g997/drv_dsl_cpe_api_g997_vinax.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='g997/drv_dsl_cpe_api_g997_vinax.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.o `test -f 'g997/drv_dsl_cpe_api_g997_vinax.c' || echo '$(srcdir)/'`g997/drv_dsl_cpe_api_g997_vinax.c
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.obj: g997/drv_dsl_cpe_api_g997_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.obj -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.obj `if test -f 'g997/drv_dsl_cpe_api_g997_vinax.c'; then $(CYGPATH_W) 'g997/drv_dsl_cpe_api_g997_vinax.c'; else $(CYGPATH_W) '$(srcdir)/g997/drv_dsl_cpe_api_g997_vinax.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='g997/drv_dsl_cpe_api_g997_vinax.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_g997_vinax.obj `if test -f 'g997/drv_dsl_cpe_api_g997_vinax.c'; then $(CYGPATH_W) 'g997/drv_dsl_cpe_api_g997_vinax.c'; else $(CYGPATH_W) '$(srcdir)/g997/drv_dsl_cpe_api_g997_vinax.c'; fi`
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_sar.o: sar/drv_dsl_cpe_sar.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_sar.o -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_sar.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_sar.o `test -f 'sar/drv_dsl_cpe_sar.c' || echo '$(srcdir)/'`sar/drv_dsl_cpe_sar.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_sar.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_sar.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sar/drv_dsl_cpe_sar.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_sar.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_sar.o `test -f 'sar/drv_dsl_cpe_sar.c' || echo '$(srcdir)/'`sar/drv_dsl_cpe_sar.c
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_sar.obj: sar/drv_dsl_cpe_sar.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_sar.obj -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_sar.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_sar.obj `if test -f 'sar/drv_dsl_cpe_sar.c'; then $(CYGPATH_W) 'sar/drv_dsl_cpe_sar.c'; else $(CYGPATH_W) '$(srcdir)/sar/drv_dsl_cpe_sar.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_sar.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_sar.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sar/drv_dsl_cpe_sar.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_sar.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_sar.obj `if test -f 'sar/drv_dsl_cpe_sar.c'; then $(CYGPATH_W) 'sar/drv_dsl_cpe_sar.c'; else $(CYGPATH_W) '$(srcdir)/sar/drv_dsl_cpe_sar.c'; fi`
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.o: pm/drv_dsl_cpe_api_pm_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.o -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.o `test -f 'pm/drv_dsl_cpe_api_pm_vinax.c' || echo '$(srcdir)/'`pm/drv_dsl_cpe_api_pm_vinax.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pm/drv_dsl_cpe_api_pm_vinax.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.o `test -f 'pm/drv_dsl_cpe_api_pm_vinax.c' || echo '$(srcdir)/'`pm/drv_dsl_cpe_api_pm_vinax.c
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.obj: pm/drv_dsl_cpe_api_pm_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.obj -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.obj `if test -f 'pm/drv_dsl_cpe_api_pm_vinax.c'; then $(CYGPATH_W) 'pm/drv_dsl_cpe_api_pm_vinax.c'; else $(CYGPATH_W) '$(srcdir)/pm/drv_dsl_cpe_api_pm_vinax.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pm/drv_dsl_cpe_api_pm_vinax.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vinax.obj `if test -f 'pm/drv_dsl_cpe_api_pm_vinax.c'; then $(CYGPATH_W) 'pm/drv_dsl_cpe_api_pm_vinax.c'; else $(CYGPATH_W) '$(srcdir)/pm/drv_dsl_cpe_api_pm_vinax.c'; fi`
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.o: bnd/drv_dsl_cpe_api_bnd_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.o -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.o `test -f 'bnd/drv_dsl_cpe_api_bnd_vinax.c' || echo '$(srcdir)/'`bnd/drv_dsl_cpe_api_bnd_vinax.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bnd/drv_dsl_cpe_api_bnd_vinax.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.o `test -f 'bnd/drv_dsl_cpe_api_bnd_vinax.c' || echo '$(srcdir)/'`bnd/drv_dsl_cpe_api_bnd_vinax.c
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.obj: bnd/drv_dsl_cpe_api_bnd_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.obj -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.obj `if test -f 'bnd/drv_dsl_cpe_api_bnd_vinax.c'; then $(CYGPATH_W) 'bnd/drv_dsl_cpe_api_bnd_vinax.c'; else $(CYGPATH_W) '$(srcdir)/bnd/drv_dsl_cpe_api_bnd_vinax.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bnd/drv_dsl_cpe_api_bnd_vinax.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax.obj `if test -f 'bnd/drv_dsl_cpe_api_bnd_vinax.c'; then $(CYGPATH_W) 'bnd/drv_dsl_cpe_api_bnd_vinax.c'; else $(CYGPATH_W) '$(srcdir)/bnd/drv_dsl_cpe_api_bnd_vinax.c'; fi`
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.o: bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.o -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.o `test -f 'bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c' || echo '$(srcdir)/'`bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.o `test -f 'bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c' || echo '$(srcdir)/'`bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.obj: bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.obj -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.obj `if test -f 'bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c'; then $(CYGPATH_W) 'bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c'; else $(CYGPATH_W) '$(srcdir)/bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vinax_fpga.obj `if test -f 'bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c'; then $(CYGPATH_W) 'bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c'; else $(CYGPATH_W) '$(srcdir)/bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c'; fi`
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.o: ceoc/drv_dsl_cpe_vinax_ceoc.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.o -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.o `test -f 'ceoc/drv_dsl_cpe_vinax_ceoc.c' || echo '$(srcdir)/'`ceoc/drv_dsl_cpe_vinax_ceoc.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ceoc/drv_dsl_cpe_vinax_ceoc.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.o `test -f 'ceoc/drv_dsl_cpe_vinax_ceoc.c' || echo '$(srcdir)/'`ceoc/drv_dsl_cpe_vinax_ceoc.c
-
-lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.obj: ceoc/drv_dsl_cpe_vinax_ceoc.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.obj -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.obj `if test -f 'ceoc/drv_dsl_cpe_vinax_ceoc.c'; then $(CYGPATH_W) 'ceoc/drv_dsl_cpe_vinax_ceoc.c'; else $(CYGPATH_W) '$(srcdir)/ceoc/drv_dsl_cpe_vinax_ceoc.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ceoc/drv_dsl_cpe_vinax_ceoc.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_vinax_ceoc.obj `if test -f 'ceoc/drv_dsl_cpe_vinax_ceoc.c'; then $(CYGPATH_W) 'ceoc/drv_dsl_cpe_vinax_ceoc.c'; else $(CYGPATH_W) '$(srcdir)/ceoc/drv_dsl_cpe_vinax_ceoc.c'; fi`
-
 lib_dsl_cpe_api_a-drv_dsl_cpe_device_vrx.o: device/drv_dsl_cpe_device_vrx.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_device_vrx.o -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vrx.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_device_vrx.o `test -f 'device/drv_dsl_cpe_device_vrx.c' || echo '$(srcdir)/'`device/drv_dsl_cpe_device_vrx.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vrx.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_device_vrx.Po
@@ -1263,6 +1011,20 @@ lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vrx.obj: pm/drv_dsl_cpe_api_pm_vrx.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pm/drv_dsl_cpe_api_pm_vrx.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vrx.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_pm_vrx.obj `if test -f 'pm/drv_dsl_cpe_api_pm_vrx.c'; then $(CYGPATH_W) 'pm/drv_dsl_cpe_api_pm_vrx.c'; else $(CYGPATH_W) '$(srcdir)/pm/drv_dsl_cpe_api_pm_vrx.c'; fi`
+
+lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.o: bnd/drv_dsl_cpe_api_bnd_vrx.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.o -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.o `test -f 'bnd/drv_dsl_cpe_api_bnd_vrx.c' || echo '$(srcdir)/'`bnd/drv_dsl_cpe_api_bnd_vrx.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bnd/drv_dsl_cpe_api_bnd_vrx.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.o `test -f 'bnd/drv_dsl_cpe_api_bnd_vrx.c' || echo '$(srcdir)/'`bnd/drv_dsl_cpe_api_bnd_vrx.c
+
+lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.obj: bnd/drv_dsl_cpe_api_bnd_vrx.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.obj -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.obj `if test -f 'bnd/drv_dsl_cpe_api_bnd_vrx.c'; then $(CYGPATH_W) 'bnd/drv_dsl_cpe_api_bnd_vrx.c'; else $(CYGPATH_W) '$(srcdir)/bnd/drv_dsl_cpe_api_bnd_vrx.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.Tpo $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bnd/drv_dsl_cpe_api_bnd_vrx.c' object='lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_api_bnd_vrx.obj `if test -f 'bnd/drv_dsl_cpe_api_bnd_vrx.c'; then $(CYGPATH_W) 'bnd/drv_dsl_cpe_api_bnd_vrx.c'; else $(CYGPATH_W) '$(srcdir)/bnd/drv_dsl_cpe_api_bnd_vrx.c'; fi`
 
 lib_dsl_cpe_api_a-drv_dsl_cpe_vrx_ceoc.o: ceoc/drv_dsl_cpe_vrx_ceoc.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_dsl_cpe_api_a_CFLAGS) $(CFLAGS) -MT lib_dsl_cpe_api_a-drv_dsl_cpe_vrx_ceoc.o -MD -MP -MF $(DEPDIR)/lib_dsl_cpe_api_a-drv_dsl_cpe_vrx_ceoc.Tpo -c -o lib_dsl_cpe_api_a-drv_dsl_cpe_vrx_ceoc.o `test -f 'ceoc/drv_dsl_cpe_vrx_ceoc.c' || echo '$(srcdir)/'`ceoc/drv_dsl_cpe_vrx_ceoc.c
@@ -1375,20 +1137,6 @@ drv_dsl_cpe_api-drv_dsl_cpe_api_g997.obj: g997/drv_dsl_cpe_api_g997.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='g997/drv_dsl_cpe_api_g997.c' object='drv_dsl_cpe_api-drv_dsl_cpe_api_g997.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_g997.obj `if test -f 'g997/drv_dsl_cpe_api_g997.c'; then $(CYGPATH_W) 'g997/drv_dsl_cpe_api_g997.c'; else $(CYGPATH_W) '$(srcdir)/g997/drv_dsl_cpe_api_g997.c'; fi`
-
-drv_dsl_cpe_api-drv_dsl_cpe_led.o: led/drv_dsl_cpe_led.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_led.o -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_led.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_led.o `test -f 'led/drv_dsl_cpe_led.c' || echo '$(srcdir)/'`led/drv_dsl_cpe_led.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_led.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_led.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='led/drv_dsl_cpe_led.c' object='drv_dsl_cpe_api-drv_dsl_cpe_led.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_led.o `test -f 'led/drv_dsl_cpe_led.c' || echo '$(srcdir)/'`led/drv_dsl_cpe_led.c
-
-drv_dsl_cpe_api-drv_dsl_cpe_led.obj: led/drv_dsl_cpe_led.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_led.obj -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_led.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_led.obj `if test -f 'led/drv_dsl_cpe_led.c'; then $(CYGPATH_W) 'led/drv_dsl_cpe_led.c'; else $(CYGPATH_W) '$(srcdir)/led/drv_dsl_cpe_led.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_led.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_led.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='led/drv_dsl_cpe_led.c' object='drv_dsl_cpe_api-drv_dsl_cpe_led.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_led.obj `if test -f 'led/drv_dsl_cpe_led.c'; then $(CYGPATH_W) 'led/drv_dsl_cpe_led.c'; else $(CYGPATH_W) '$(srcdir)/led/drv_dsl_cpe_led.c'; fi`
 
 drv_dsl_cpe_api-drv_dsl_cpe_api_pm.o: pm/drv_dsl_cpe_api_pm.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_api_pm.o -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_pm.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_pm.o `test -f 'pm/drv_dsl_cpe_api_pm.c' || echo '$(srcdir)/'`pm/drv_dsl_cpe_api_pm.c
@@ -1530,132 +1278,6 @@ drv_dsl_cpe_api-drv_dsl_cpe_danube_ceoc.obj: ceoc/drv_dsl_cpe_danube_ceoc.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_danube_ceoc.obj `if test -f 'ceoc/drv_dsl_cpe_danube_ceoc.c'; then $(CYGPATH_W) 'ceoc/drv_dsl_cpe_danube_ceoc.c'; else $(CYGPATH_W) '$(srcdir)/ceoc/drv_dsl_cpe_danube_ceoc.c'; fi`
 
-drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.o: device/drv_dsl_cpe_device_vxx.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.o -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.o `test -f 'device/drv_dsl_cpe_device_vxx.c' || echo '$(srcdir)/'`device/drv_dsl_cpe_device_vxx.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='device/drv_dsl_cpe_device_vxx.c' object='drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.o `test -f 'device/drv_dsl_cpe_device_vxx.c' || echo '$(srcdir)/'`device/drv_dsl_cpe_device_vxx.c
-
-drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.obj: device/drv_dsl_cpe_device_vxx.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.obj -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.obj `if test -f 'device/drv_dsl_cpe_device_vxx.c'; then $(CYGPATH_W) 'device/drv_dsl_cpe_device_vxx.c'; else $(CYGPATH_W) '$(srcdir)/device/drv_dsl_cpe_device_vxx.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='device/drv_dsl_cpe_device_vxx.c' object='drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_device_vxx.obj `if test -f 'device/drv_dsl_cpe_device_vxx.c'; then $(CYGPATH_W) 'device/drv_dsl_cpe_device_vxx.c'; else $(CYGPATH_W) '$(srcdir)/device/drv_dsl_cpe_device_vxx.c'; fi`
-
-drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.o: device/drv_dsl_cpe_device_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.o -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.o `test -f 'device/drv_dsl_cpe_device_vinax.c' || echo '$(srcdir)/'`device/drv_dsl_cpe_device_vinax.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='device/drv_dsl_cpe_device_vinax.c' object='drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.o `test -f 'device/drv_dsl_cpe_device_vinax.c' || echo '$(srcdir)/'`device/drv_dsl_cpe_device_vinax.c
-
-drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.obj: device/drv_dsl_cpe_device_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.obj -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.obj `if test -f 'device/drv_dsl_cpe_device_vinax.c'; then $(CYGPATH_W) 'device/drv_dsl_cpe_device_vinax.c'; else $(CYGPATH_W) '$(srcdir)/device/drv_dsl_cpe_device_vinax.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='device/drv_dsl_cpe_device_vinax.c' object='drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_device_vinax.obj `if test -f 'device/drv_dsl_cpe_device_vinax.c'; then $(CYGPATH_W) 'device/drv_dsl_cpe_device_vinax.c'; else $(CYGPATH_W) '$(srcdir)/device/drv_dsl_cpe_device_vinax.c'; fi`
-
-drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.o: device/drv_dsl_cpe_msg_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.o -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.o `test -f 'device/drv_dsl_cpe_msg_vinax.c' || echo '$(srcdir)/'`device/drv_dsl_cpe_msg_vinax.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='device/drv_dsl_cpe_msg_vinax.c' object='drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.o `test -f 'device/drv_dsl_cpe_msg_vinax.c' || echo '$(srcdir)/'`device/drv_dsl_cpe_msg_vinax.c
-
-drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.obj: device/drv_dsl_cpe_msg_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.obj -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.obj `if test -f 'device/drv_dsl_cpe_msg_vinax.c'; then $(CYGPATH_W) 'device/drv_dsl_cpe_msg_vinax.c'; else $(CYGPATH_W) '$(srcdir)/device/drv_dsl_cpe_msg_vinax.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='device/drv_dsl_cpe_msg_vinax.c' object='drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_msg_vinax.obj `if test -f 'device/drv_dsl_cpe_msg_vinax.c'; then $(CYGPATH_W) 'device/drv_dsl_cpe_msg_vinax.c'; else $(CYGPATH_W) '$(srcdir)/device/drv_dsl_cpe_msg_vinax.c'; fi`
-
-drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.o: g997/drv_dsl_cpe_api_g997_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.o -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.o `test -f 'g997/drv_dsl_cpe_api_g997_vinax.c' || echo '$(srcdir)/'`g997/drv_dsl_cpe_api_g997_vinax.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='g997/drv_dsl_cpe_api_g997_vinax.c' object='drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.o `test -f 'g997/drv_dsl_cpe_api_g997_vinax.c' || echo '$(srcdir)/'`g997/drv_dsl_cpe_api_g997_vinax.c
-
-drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.obj: g997/drv_dsl_cpe_api_g997_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.obj -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.obj `if test -f 'g997/drv_dsl_cpe_api_g997_vinax.c'; then $(CYGPATH_W) 'g997/drv_dsl_cpe_api_g997_vinax.c'; else $(CYGPATH_W) '$(srcdir)/g997/drv_dsl_cpe_api_g997_vinax.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='g997/drv_dsl_cpe_api_g997_vinax.c' object='drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_g997_vinax.obj `if test -f 'g997/drv_dsl_cpe_api_g997_vinax.c'; then $(CYGPATH_W) 'g997/drv_dsl_cpe_api_g997_vinax.c'; else $(CYGPATH_W) '$(srcdir)/g997/drv_dsl_cpe_api_g997_vinax.c'; fi`
-
-drv_dsl_cpe_api-drv_dsl_cpe_sar.o: sar/drv_dsl_cpe_sar.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_sar.o -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_sar.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_sar.o `test -f 'sar/drv_dsl_cpe_sar.c' || echo '$(srcdir)/'`sar/drv_dsl_cpe_sar.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_sar.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_sar.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sar/drv_dsl_cpe_sar.c' object='drv_dsl_cpe_api-drv_dsl_cpe_sar.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_sar.o `test -f 'sar/drv_dsl_cpe_sar.c' || echo '$(srcdir)/'`sar/drv_dsl_cpe_sar.c
-
-drv_dsl_cpe_api-drv_dsl_cpe_sar.obj: sar/drv_dsl_cpe_sar.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_sar.obj -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_sar.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_sar.obj `if test -f 'sar/drv_dsl_cpe_sar.c'; then $(CYGPATH_W) 'sar/drv_dsl_cpe_sar.c'; else $(CYGPATH_W) '$(srcdir)/sar/drv_dsl_cpe_sar.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_sar.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_sar.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sar/drv_dsl_cpe_sar.c' object='drv_dsl_cpe_api-drv_dsl_cpe_sar.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_sar.obj `if test -f 'sar/drv_dsl_cpe_sar.c'; then $(CYGPATH_W) 'sar/drv_dsl_cpe_sar.c'; else $(CYGPATH_W) '$(srcdir)/sar/drv_dsl_cpe_sar.c'; fi`
-
-drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.o: pm/drv_dsl_cpe_api_pm_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.o -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.o `test -f 'pm/drv_dsl_cpe_api_pm_vinax.c' || echo '$(srcdir)/'`pm/drv_dsl_cpe_api_pm_vinax.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pm/drv_dsl_cpe_api_pm_vinax.c' object='drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.o `test -f 'pm/drv_dsl_cpe_api_pm_vinax.c' || echo '$(srcdir)/'`pm/drv_dsl_cpe_api_pm_vinax.c
-
-drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.obj: pm/drv_dsl_cpe_api_pm_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.obj -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.obj `if test -f 'pm/drv_dsl_cpe_api_pm_vinax.c'; then $(CYGPATH_W) 'pm/drv_dsl_cpe_api_pm_vinax.c'; else $(CYGPATH_W) '$(srcdir)/pm/drv_dsl_cpe_api_pm_vinax.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pm/drv_dsl_cpe_api_pm_vinax.c' object='drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vinax.obj `if test -f 'pm/drv_dsl_cpe_api_pm_vinax.c'; then $(CYGPATH_W) 'pm/drv_dsl_cpe_api_pm_vinax.c'; else $(CYGPATH_W) '$(srcdir)/pm/drv_dsl_cpe_api_pm_vinax.c'; fi`
-
-drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.o: bnd/drv_dsl_cpe_api_bnd_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.o -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.o `test -f 'bnd/drv_dsl_cpe_api_bnd_vinax.c' || echo '$(srcdir)/'`bnd/drv_dsl_cpe_api_bnd_vinax.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bnd/drv_dsl_cpe_api_bnd_vinax.c' object='drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.o `test -f 'bnd/drv_dsl_cpe_api_bnd_vinax.c' || echo '$(srcdir)/'`bnd/drv_dsl_cpe_api_bnd_vinax.c
-
-drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.obj: bnd/drv_dsl_cpe_api_bnd_vinax.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.obj -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.obj `if test -f 'bnd/drv_dsl_cpe_api_bnd_vinax.c'; then $(CYGPATH_W) 'bnd/drv_dsl_cpe_api_bnd_vinax.c'; else $(CYGPATH_W) '$(srcdir)/bnd/drv_dsl_cpe_api_bnd_vinax.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bnd/drv_dsl_cpe_api_bnd_vinax.c' object='drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax.obj `if test -f 'bnd/drv_dsl_cpe_api_bnd_vinax.c'; then $(CYGPATH_W) 'bnd/drv_dsl_cpe_api_bnd_vinax.c'; else $(CYGPATH_W) '$(srcdir)/bnd/drv_dsl_cpe_api_bnd_vinax.c'; fi`
-
-drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.o: bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.o -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.o `test -f 'bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c' || echo '$(srcdir)/'`bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c' object='drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.o `test -f 'bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c' || echo '$(srcdir)/'`bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c
-
-drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.obj: bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.obj -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.obj `if test -f 'bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c'; then $(CYGPATH_W) 'bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c'; else $(CYGPATH_W) '$(srcdir)/bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c' object='drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vinax_fpga.obj `if test -f 'bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c'; then $(CYGPATH_W) 'bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c'; else $(CYGPATH_W) '$(srcdir)/bnd/drv_dsl_cpe_api_bnd_vinax_fpga.c'; fi`
-
-drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.o: ceoc/drv_dsl_cpe_vinax_ceoc.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.o -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.o `test -f 'ceoc/drv_dsl_cpe_vinax_ceoc.c' || echo '$(srcdir)/'`ceoc/drv_dsl_cpe_vinax_ceoc.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ceoc/drv_dsl_cpe_vinax_ceoc.c' object='drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.o `test -f 'ceoc/drv_dsl_cpe_vinax_ceoc.c' || echo '$(srcdir)/'`ceoc/drv_dsl_cpe_vinax_ceoc.c
-
-drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.obj: ceoc/drv_dsl_cpe_vinax_ceoc.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.obj -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.obj `if test -f 'ceoc/drv_dsl_cpe_vinax_ceoc.c'; then $(CYGPATH_W) 'ceoc/drv_dsl_cpe_vinax_ceoc.c'; else $(CYGPATH_W) '$(srcdir)/ceoc/drv_dsl_cpe_vinax_ceoc.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ceoc/drv_dsl_cpe_vinax_ceoc.c' object='drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_vinax_ceoc.obj `if test -f 'ceoc/drv_dsl_cpe_vinax_ceoc.c'; then $(CYGPATH_W) 'ceoc/drv_dsl_cpe_vinax_ceoc.c'; else $(CYGPATH_W) '$(srcdir)/ceoc/drv_dsl_cpe_vinax_ceoc.c'; fi`
-
 drv_dsl_cpe_api-drv_dsl_cpe_device_vrx.o: device/drv_dsl_cpe_device_vrx.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_device_vrx.o -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vrx.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_device_vrx.o `test -f 'device/drv_dsl_cpe_device_vrx.c' || echo '$(srcdir)/'`device/drv_dsl_cpe_device_vrx.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vrx.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_device_vrx.Po
@@ -1712,6 +1334,20 @@ drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vrx.obj: pm/drv_dsl_cpe_api_pm_vrx.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_pm_vrx.obj `if test -f 'pm/drv_dsl_cpe_api_pm_vrx.c'; then $(CYGPATH_W) 'pm/drv_dsl_cpe_api_pm_vrx.c'; else $(CYGPATH_W) '$(srcdir)/pm/drv_dsl_cpe_api_pm_vrx.c'; fi`
 
+drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.o: bnd/drv_dsl_cpe_api_bnd_vrx.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.o -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.o `test -f 'bnd/drv_dsl_cpe_api_bnd_vrx.c' || echo '$(srcdir)/'`bnd/drv_dsl_cpe_api_bnd_vrx.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bnd/drv_dsl_cpe_api_bnd_vrx.c' object='drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.o `test -f 'bnd/drv_dsl_cpe_api_bnd_vrx.c' || echo '$(srcdir)/'`bnd/drv_dsl_cpe_api_bnd_vrx.c
+
+drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.obj: bnd/drv_dsl_cpe_api_bnd_vrx.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.obj -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.obj `if test -f 'bnd/drv_dsl_cpe_api_bnd_vrx.c'; then $(CYGPATH_W) 'bnd/drv_dsl_cpe_api_bnd_vrx.c'; else $(CYGPATH_W) '$(srcdir)/bnd/drv_dsl_cpe_api_bnd_vrx.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bnd/drv_dsl_cpe_api_bnd_vrx.c' object='drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_api_bnd_vrx.obj `if test -f 'bnd/drv_dsl_cpe_api_bnd_vrx.c'; then $(CYGPATH_W) 'bnd/drv_dsl_cpe_api_bnd_vrx.c'; else $(CYGPATH_W) '$(srcdir)/bnd/drv_dsl_cpe_api_bnd_vrx.c'; fi`
+
 drv_dsl_cpe_api-drv_dsl_cpe_vrx_ceoc.o: ceoc/drv_dsl_cpe_vrx_ceoc.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -MT drv_dsl_cpe_api-drv_dsl_cpe_vrx_ceoc.o -MD -MP -MF $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_vrx_ceoc.Tpo -c -o drv_dsl_cpe_api-drv_dsl_cpe_vrx_ceoc.o `test -f 'ceoc/drv_dsl_cpe_vrx_ceoc.c' || echo '$(srcdir)/'`ceoc/drv_dsl_cpe_vrx_ceoc.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_vrx_ceoc.Tpo $(DEPDIR)/drv_dsl_cpe_api-drv_dsl_cpe_vrx_ceoc.Po
@@ -1725,6 +1361,26 @@ drv_dsl_cpe_api-drv_dsl_cpe_vrx_ceoc.obj: ceoc/drv_dsl_cpe_vrx_ceoc.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ceoc/drv_dsl_cpe_vrx_ceoc.c' object='drv_dsl_cpe_api-drv_dsl_cpe_vrx_ceoc.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(drv_dsl_cpe_api_CFLAGS) $(CFLAGS) -c -o drv_dsl_cpe_api-drv_dsl_cpe_vrx_ceoc.obj `if test -f 'ceoc/drv_dsl_cpe_vrx_ceoc.c'; then $(CYGPATH_W) 'ceoc/drv_dsl_cpe_vrx_ceoc.c'; else $(CYGPATH_W) '$(srcdir)/ceoc/drv_dsl_cpe_vrx_ceoc.c'; fi`
+install-drv_dsl_cpe_api_includeHEADERS: $(drv_dsl_cpe_api_include_HEADERS)
+	@$(NORMAL_INSTALL)
+	test -z "$(drv_dsl_cpe_api_includedir)" || $(MKDIR_P) "$(DESTDIR)$(drv_dsl_cpe_api_includedir)"
+	@list='$(drv_dsl_cpe_api_include_HEADERS)'; test -n "$(drv_dsl_cpe_api_includedir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(drv_dsl_cpe_api_includedir)'"; \
+	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(drv_dsl_cpe_api_includedir)" || exit $$?; \
+	done
+
+uninstall-drv_dsl_cpe_api_includeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(drv_dsl_cpe_api_include_HEADERS)'; test -n "$(drv_dsl_cpe_api_includedir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(drv_dsl_cpe_api_includedir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(drv_dsl_cpe_api_includedir)" && rm -f $$files
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -1810,9 +1466,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LIBRARIES) $(PROGRAMS) $(SCRIPTS)
+all-am: Makefile $(LIBRARIES) $(PROGRAMS) $(SCRIPTS) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(drv_dsl_cpe_api_includedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -1863,7 +1519,7 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-drv_dsl_cpe_api_includeHEADERS
 
 install-dvi: install-dvi-am
 
@@ -1908,7 +1564,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-binSCRIPTS
+uninstall-am: uninstall-binPROGRAMS uninstall-binSCRIPTS \
+	uninstall-drv_dsl_cpe_api_includeHEADERS
 
 .MAKE: install-am install-strip
 
@@ -1917,14 +1574,15 @@ uninstall-am: uninstall-binPROGRAMS uninstall-binSCRIPTS
 	distclean-compile distclean-generic distclean-tags distdir dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-binPROGRAMS install-binSCRIPTS install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-binPROGRAMS uninstall-binSCRIPTS
+	install-data-am install-drv_dsl_cpe_api_includeHEADERS \
+	install-dvi install-dvi-am install-exec install-exec-am \
+	install-html install-html-am install-info install-info-am \
+	install-man install-pdf install-pdf-am install-ps \
+	install-ps-am install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic pdf pdf-am \
+	ps ps-am tags uninstall uninstall-am uninstall-binPROGRAMS \
+	uninstall-binSCRIPTS uninstall-drv_dsl_cpe_api_includeHEADERS
 
 
 @KERNEL_2_6_TRUE@drv_dsl_cpe_api.ko: $(drv_dsl_cpe_api_SOURCES)

@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -4094,7 +4093,7 @@ DSL_Error_t DSL_DRV_PM_LineSecCountersHistoryIntervalGet(
 
    if ( (nErrCode == DSL_SUCCESS) && (DSL_DRV_PM_CONTEXT(pContext)->bPmDataValid != DSL_TRUE))
    {
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
       /* Report all counters as "0" except UAS*/
       pCounters->data.nES   = 0;
       pCounters->data.nLOFS = 0;
@@ -5638,6 +5637,9 @@ static DSL_Error_t DSL_DRV_PM_ReTxCountersUpdate(
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_ReTxCountersUpdate"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
+   /* save new counters value to the PM module context */
+   DSL_DRV_PM_PTR_RETX_COUNTERS_CURR(nDirection)->nEftrMin = pNewCounters->nEftrMin;
+
 #ifdef INCLUDE_DSL_CPE_PM_HISTORY
    nErrCode = DSL_DRV_PM_HistoryItemIdxGet(
                  pContext, DSL_DRV_PM_PTR_RETX_HISTORY_15MIN(),
@@ -5957,7 +5959,7 @@ DSL_Error_t DSL_DRV_PM_CountersUpdate(
 #ifdef INCLUDE_DSL_CPE_PM_RETX_COUNTERS
    /* Reset ReTx counters structure*/
    memset(&reTxData, 0, sizeof(DSL_PM_ReTxData_t));
-   reTxData.nEftrMin = 0xffffffff;
+   reTxData.nEftrMin = DSL_DRV_PM_PTR_RETX_COUNTERS_CURR(nDirection)->nEftrMin;
 #endif /* INCLUDE_DSL_CPE_PM_RETX_COUNTERS*/
 
    /* Lock PM module Mutex*/

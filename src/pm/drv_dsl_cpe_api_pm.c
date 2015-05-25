@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -477,6 +476,36 @@ DSL_Error_t DSL_DRV_PM_Start(
    DSL_DRV_PM_CONTEXT(pContext)->pCounters->reTxCounters.nShowtimeInvalidHist[0] =
       DSL_PM_INTERVAL_FAILURE_NOT_COMPLETE;
    #endif /* INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS*/
+
+   /* Set default current counters*/
+   DSL_DRV_MemSet(
+      &(DSL_DRV_PM_CONTEXT(pContext)->pCounters->reTxCounters.recCurr),
+      0xFF,
+      sizeof(DSL_pmReTxData_t));
+
+   /* Set default 15 min counters*/
+   DSL_DRV_MemSet(
+      &(DSL_DRV_PM_CONTEXT(pContext)->pCounters->reTxCounters.rec15min[0]),
+      0xFF,
+      sizeof(DSL_pmReTxData_t));
+
+   /* Set default 1 day counters*/
+   DSL_DRV_MemSet(
+      &(DSL_DRV_PM_CONTEXT(pContext)->pCounters->reTxCounters.rec1day[0]),
+      0xFF,
+      sizeof(DSL_pmReTxData_t));
+
+   /* Set default showtime counters*/
+   DSL_DRV_MemSet(
+      &(DSL_DRV_PM_CONTEXT(pContext)->pCounters->reTxCounters.recShowtime[0]),
+      0xFF,
+      sizeof(DSL_pmReTxData_t));
+
+   /* Set default total counters*/
+   DSL_DRV_MemSet(
+      &(DSL_DRV_PM_CONTEXT(pContext)->pCounters->reTxCounters.recTotal),
+      0xFF,
+      sizeof(DSL_pmReTxData_t));
 #endif /* INCLUDE_DSL_CPE_PM_RETX_COUNTERS*/
 
    /* Initialize PM module device specific parameters*/
@@ -2395,9 +2424,9 @@ DSL_Error_t DSL_DRV_PM_DataPathCounters15MinGet(
    nErrCode = DSL_DRV_PM_DataPathCountersHistoryIntervalGet(
                  pContext, DSL_PM_HISTORY_INTERVAL_15MIN, pCounters);
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
    /* Temporary check for fw supporting FE counters in ADSL mode*/
-   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL))
    {
        if (pCounters->nDirection == DSL_FAR_END)
       {
@@ -2441,9 +2470,9 @@ DSL_Error_t DSL_DRV_PM_DataPathCounters1DayGet(
    nErrCode = DSL_DRV_PM_DataPathCountersHistoryIntervalGet(
                  pContext, DSL_PM_HISTORY_INTERVAL_1DAY, pCounters);
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
    /* Temporary check for fw supporting FE counters in ADSL mode*/
-   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL))
    {
        if (pCounters->nDirection == DSL_FAR_END)
       {
@@ -2515,9 +2544,9 @@ DSL_Error_t DSL_DRV_PM_DataPathCountersTotalGet(
       nErrCode = DSL_WRN_INCOMPLETE_RETURN_VALUES;
    }
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
    /* Temporary check for fw supporting FE counters in ADSL mode*/
-   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL))
    {
        if (pCounters->nDirection == DSL_FAR_END)
       {
@@ -3013,9 +3042,9 @@ DSL_Error_t DSL_DRV_PM_DataPathCountersShowtimeGet(
       nErrCode = DSL_WRN_INCOMPLETE_RETURN_VALUES;
    }
 
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
    /* Temporary check for fw supporting FE counters in ADSL mode*/
-   if (DSL_DRV_VXX_FwFeatureCheck(pContext, DSL_VXX_FW_ADSL))
+   if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL))
    {
        if (pCounters->nDirection == DSL_FAR_END)
       {
@@ -4124,7 +4153,7 @@ DSL_Error_t DSL_DRV_PM_LineSecCountersTotalGet(
 
    if ( (nErrCode == DSL_SUCCESS) && (DSL_DRV_PM_CONTEXT(pContext)->bPmDataValid != DSL_TRUE))
    {
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
       /* Report all counters as "0" except UAS*/
       pCounters->data.nES   = 0;
       pCounters->data.nLOFS = 0;
@@ -4292,7 +4321,7 @@ DSL_Error_t DSL_DRV_PM_LineSecCountersShowtimeGet(
 
    if ( (nErrCode == DSL_SUCCESS) && (DSL_DRV_PM_CONTEXT(pContext)->bPmDataValid != DSL_TRUE))
    {
-#if defined(INCLUDE_DSL_CPE_API_VINAX) || defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_CPE_API_VRX)
       /* Report all counters as "0" except UAS*/
       pCounters->data.nES   = 0;
       pCounters->data.nLOFS = 0;
@@ -5032,26 +5061,6 @@ DSL_Error_t DSL_DRV_PM_LineEventShowtimeHistoryStats15MinGet(
    return nErrCode;
 }
 
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_Error_t DSL_DRV_PM_LineFailureHistoryStats15MinGet(
-   DSL_Context_t *pContext,
-   DSL_PM_HistoryStatsChDir_t *pStats)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-
-   nErrCode = DSL_DRV_PM_LineEventShowtimeHistoryStats15MinGet(pContext, pStats);
-
-   if (nErrCode >= DSL_SUCCESS)
-   {
-      nErrCode = DSL_WRN_DEPRECATED;
-   }
-
-   return nErrCode;
-}
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /* INCLUDE_DEPRECATED */
-
 /*
    For a detailed description of the function, its arguments and return value
    please refer to the description in the header file 'drv_dsl_cpe_intern_pm.h'
@@ -5149,25 +5158,6 @@ DSL_Error_t DSL_DRV_PM_LineEventShowtimeHistoryStats1DayGet(
    return nErrCode;
 }
 
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_Error_t DSL_DRV_PM_LineFailureHistoryStats1DayGet(
-   DSL_Context_t *pContext,
-   DSL_PM_HistoryStatsChDir_t *pStats)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-
-   nErrCode = DSL_DRV_PM_LineEventShowtimeHistoryStats1DayGet(pContext, pStats);
-
-   if (nErrCode >= DSL_SUCCESS)
-   {
-      nErrCode = DSL_WRN_DEPRECATED;
-   }
-
-   return nErrCode;
-}
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /* INCLUDE_DEPRECATED */
 #endif /* INCLUDE_DSL_CPE_PM_OPTIONAL_PARAMETERS*/
 
 /*
@@ -5198,27 +5188,6 @@ DSL_Error_t DSL_DRV_PM_LineEventShowtimeCounters15MinGet(
    return nErrCode;
 }
 
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_Error_t DSL_DRV_PM_LineFailureCounters15MinGet(
-   DSL_Context_t *pContext,
-   DSL_PM_LineFailureCounters_t *pCounters)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-
-   nErrCode = DSL_DRV_PM_LineEventShowtimeCounters15MinGet(
-      pContext, (DSL_PM_LineEventShowtimeCounters_t *)pCounters);
-
-   if (nErrCode >= DSL_SUCCESS)
-   {
-      nErrCode = DSL_WRN_DEPRECATED;
-   }
-
-   return nErrCode;
-}
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /* INCLUDE_DEPRECATED */
-
 /*
    For a detailed description of the function, its arguments and return value
    please refer to the description in the header file 'drv_dsl_cpe_intern_pm.h'
@@ -5247,26 +5216,6 @@ DSL_Error_t DSL_DRV_PM_LineEventShowtimeCounters1DayGet(
    return nErrCode;
 }
 
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_Error_t DSL_DRV_PM_LineFailureCounters1DayGet(
-   DSL_Context_t *pContext,
-   DSL_PM_LineFailureCounters_t *pCounters)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-
-   nErrCode = DSL_DRV_PM_LineEventShowtimeCounters1DayGet(
-      pContext, (DSL_PM_LineEventShowtimeCounters_t *)pCounters);
-
-   if (nErrCode >= DSL_SUCCESS)
-   {
-      nErrCode = DSL_WRN_DEPRECATED;
-   }
-
-   return nErrCode;
-}
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /* INCLUDE_DEPRECATED */
 #endif /* INCLUDE_DSL_CPE_PM_HISTORY*/
 
 #ifdef INCLUDE_DSL_CPE_PM_TOTAL_COUNTERS
@@ -5321,26 +5270,6 @@ DSL_Error_t DSL_DRV_PM_LineEventShowtimeCountersTotalGet(
    return nErrCode;
 }
 
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_Error_t DSL_DRV_PM_LineFailureCountersTotalGet(
-   DSL_Context_t *pContext,
-   DSL_PM_LineFailureCountersTotal_t *pCounters)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-
-   nErrCode = DSL_DRV_PM_LineEventShowtimeCountersTotalGet(
-      pContext, (DSL_PM_LineEventShowtimeCountersTotal_t *)pCounters);
-
-   if (nErrCode >= DSL_SUCCESS)
-   {
-      nErrCode = DSL_WRN_DEPRECATED;
-   }
-
-   return nErrCode;
-}
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /* INCLUDE_DEPRECATED */
 #endif /* INCLUDE_DSL_CPE_PM_TOTAL_COUNTERS*/
 
 #ifdef INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS
@@ -5502,26 +5431,6 @@ DSL_Error_t DSL_DRV_PM_LineEventShowtimeCountersShowtimeGet(
    return nErrCode;
 }
 
-#ifdef INCLUDE_DEPRECATED
-#ifdef INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS
-DSL_Error_t DSL_DRV_PM_LineFailureCountersShowtimeGet(
-   DSL_Context_t *pContext,
-   DSL_PM_LineFailureCounters_t *pCounters)
-{
-   DSL_Error_t nErrCode = DSL_SUCCESS;
-
-   nErrCode = DSL_DRV_PM_LineEventShowtimeCountersShowtimeGet(
-      pContext, (DSL_PM_LineEventShowtimeCounters_t *)pCounters);
-
-   if (nErrCode >= DSL_SUCCESS)
-   {
-      nErrCode = DSL_WRN_DEPRECATED;
-   }
-
-   return nErrCode;
-}
-#endif /* INCLUDE_DSL_CPE_PM_LINE_FAILURE_COUNTERS*/
-#endif /* INCLUDE_DEPRECATED */
 #endif /* INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS*/
 #endif /* INCLUDE_DSL_CPE_PM_LINE_EVENT_SHOWTIME_COUNTERS*/
 

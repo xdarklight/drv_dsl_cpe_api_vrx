@@ -1,8 +1,7 @@
 /******************************************************************************
 
-                               Copyright (c) 2011
+                              Copyright (c) 2013
                             Lantiq Deutschland GmbH
-                     Am Campeon 3; 85579 Neubiberg, Germany
 
   For licensing information, see the file 'LICENSE' in the root folder of
   this software module.
@@ -59,6 +58,11 @@ DSL_Error_t DSL_DRV_DEV_G997_LineStatusGet(
 DSL_Error_t DSL_DRV_DEV_G997_LineStatusPerBandGet(
    DSL_IN DSL_Context_t *pContext,
    DSL_IN_OUT DSL_G997_LineStatusPerBand_t *pData
+);
+
+DSL_Error_t DSL_DRV_DEV_G997_UsPowerBackOffStatusGet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_G997_UsPowerBackOffStatus_t *pData
 );
 #endif /* (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1) */
 
