@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -413,6 +413,41 @@ typedef struct CMD_ShutdownRequest CMD_ShutdownRequest_t;
    Acknowledgement for CMD_ShutdownRequest.
 */
 typedef struct ACK_ShutdownRequest ACK_ShutdownRequest_t;
+
+/** Message ID for CMD_PrefailConfigure */
+#define CMD_PREFAILCONFIGURE 0x384A
+
+/**
+   For a "locally forced shutdown" (see CMD_ShutdownRequest) the time is set
+   that the modem state machine will wait in PRE_FAIL state before entering FAIL
+   state.
+*/
+typedef struct CMD_PrefailConfigure CMD_PrefailConfigure_t;
+
+/** Message ID for ACK_PrefailConfigure */
+#define ACK_PREFAILCONFIGURE 0x384A
+
+/**
+   Acknowledgement for CMD_PrefailConfigure.
+*/
+typedef struct ACK_PrefailConfigure ACK_PrefailConfigure_t;
+
+/** Message ID for CMD_PrefailDataGet */
+#define CMD_PREFAILDATAGET 0x390A
+
+/**
+   Requests information about PRE_FAIL state data.
+*/
+typedef struct CMD_PrefailDataGet CMD_PrefailDataGet_t;
+
+/** Message ID for ACK_PrefailDataGet */
+#define ACK_PREFAILDATAGET 0x390A
+
+/**
+   Acknowledgement for CMD_PrefailDataGet. It provides information about
+   PRE_FAIL state data.
+*/
+typedef struct ACK_PrefailDataGet ACK_PrefailDataGet_t;
 
 /** Message ID for CMD_RxL3RequestStatusGet */
 #define CMD_RXL3REQUESTSTATUSGET 0x0402
@@ -1713,6 +1748,93 @@ struct ACK_ShutdownRequest
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   For a "locally forced shutdown" (see CMD_ShutdownRequest) the time is set
+   that the modem state machine will wait in PRE_FAIL state before entering FAIL
+   state.
+*/
+struct CMD_PrefailConfigure
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** PRE_FAIL Duration */
+   DSL_uint16_t PrefailTime;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** PRE_FAIL Duration */
+   DSL_uint16_t PrefailTime;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Acknowledgement for CMD_PrefailConfigure.
+*/
+struct ACK_PrefailConfigure
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Requests information about PRE_FAIL state data.
+*/
+struct CMD_PrefailDataGet
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Acknowledgement for CMD_PrefailDataGet. It provides information about
+   PRE_FAIL state data.
+*/
+struct ACK_PrefailDataGet
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** PDB RAM Acquirement Time */
+   DSL_uint16_t AquireTime;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** PDB RAM Acquirement Time */
+   DSL_uint16_t AquireTime;
 #endif
 } __PACKED__ ;
 

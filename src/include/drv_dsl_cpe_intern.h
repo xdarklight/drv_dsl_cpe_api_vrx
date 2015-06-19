@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -167,7 +167,6 @@ typedef struct
    DSL_uint32_t nRxCorrected;
 #ifdef INCLUDE_DSL_CPE_API_VRX
    DSL_uint32_t nTxRetransmitted;
-   DSL_uint32_t nErrorFreeBits;
 #endif
 } DSL_ReTxCounters_t;
 
@@ -220,6 +219,10 @@ struct DSL_Context
    DSL_uint8_t *pFirmware2;
    /** Size of the 2nd stored firmware binary*/
    DSL_uint32_t nFirmwareSize2;
+   /** Includes information about xDSL modes supported by the firmware2.
+   \note This information is used only in case pFirmware2 pointer is NOT equal
+         to DSL_NULL. In this case it is mandatory to be provided. */
+   DSL_FirmwareFeatures_t nFwFeatures2;
    /** Autoboot thread control structure */
    DSL_DRV_ThreadCtrl_t AutobootControl;
 #if defined(INCLUDE_DSL_CPE_API_DANUBE)
@@ -363,7 +366,9 @@ struct DSL_Context
 #endif /* #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1) */
    /**
       G997 Rate Adaptation Mode*/
-   DSL_G997_RA_MODE_t rateAdaptationMode[DSL_ACCESSDIR_LAST];
+   DSL_G997_RA_MODE_t rateAdaptationMode[DSL_MODE_LAST][DSL_ACCESSDIR_LAST];
+   /** Used for special handling for DSLCPE_SW-768 (VRX only) */
+   DSL_boolean_t bDefaultRaModeSet;
 
    /** Line activation configuration. It will be applied during next
        link activation */
@@ -1214,32 +1219,6 @@ DSL_Error_t DSL_DRV_LoopLengthStatusGet(
    DSL_IN_OUT DSL_LoopLengthStatus_t *pData
 );
 #endif
-
-#if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
-/**
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_POSPHY_ADDRESS_CONFIG_SET
-*/
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_PosphyAddressConfigSet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_PhyAddressConfig_t *pData
-);
-#endif
-#endif /* #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1) */
-
-#if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
-/**
-   For a detailed description please refer to the equivalent ioctl
-   \ref DSL_FIO_POSPHY_ADDRESS_CONFIG_GET
-*/
-#ifndef SWIG_TMP
-DSL_Error_t DSL_DRV_PosphyAddressConfigGet(
-   DSL_IN DSL_Context_t *pContext,
-   DSL_IN_OUT DSL_PhyAddressConfig_t *pData
-);
-#endif
-#endif /* #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1) */
 
 #ifndef SWIG_TMP
 DSL_Error_t DSL_DRV_SystemInterfaceConfigCheck(

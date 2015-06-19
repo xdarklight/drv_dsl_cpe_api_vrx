@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -27,6 +27,7 @@ VRX_MsgId_t DSL_DRV_VRX_g_MsgDumpBlacklist[]=
    {(DSL_uint16_t)(CMD_LINEPERFCOUNTFE_GET)  },
    {(DSL_uint16_t)(CMD_PTM_BC0_STATSNE_GET)  },
    {(DSL_uint16_t)(CMD_ATM_BC0_STATSNE_GET)  },
+   {(DSL_uint16_t)(CMD_ATM_BC0_STATSFE_GET)  },
    {(DSL_uint16_t)(CMD_CRC_STATSNE_GET)      },
    {(DSL_uint16_t)(CMD_FEC_STATSNE_GET)      },
    {(DSL_uint16_t)(CMD_CRC_STATSFE_GET)      },
@@ -88,6 +89,7 @@ static DSL_uint16_t g_VRxMsgWhitelist[] =
    CMD_LINEPERFCOUNTNE_SET,         /*     +     :      +      :      +       */
    CMD_PTM_BC0_STATSNE_GET,         /*     +     :      +      :      +/-     */
    CMD_ATM_BC0_STATSNE_GET,         /*     +     :      +      :      +       */
+   CMD_ATM_BC0_STATSFE_GET,         /*     +     :      +      :      +       */
    CMD_ATM_BC0_STATSNE_SET,         /*     +     :      +      :      +       */
    CMD_PTM_BC0_STATSNE_SET,         /*     +     :      +      :      +       */
    CMD_DATAPATHFAILURESGET,         /*     +     :      +      :      +       */
@@ -128,11 +130,14 @@ static DSL_uint16_t g_VRxMsgWhitelist[] =
    CMD_BEARERCH0_DS_SET,            /*     +     :      +      :      +       */
    CMD_BEARERCH0_US_SET,            /*     +     :      +      :      +       */
    CMD_TC_STATUSGET,                /*     +     :      +      :      +       */
-   CMD_BEARERCHSDS_RTX_GET,         /*     +     :      +      :      +       */
-   CMD_RTX_DS_CONFIGURE,            /*     +     :      +      :      +       */
+   CMD_RTX_BEARERCHSDS_GET,         /*     +     :      +      :      +       */
+   CMD_RTX_BEARERCHSUS_GET,         /*     +     :      +      :      +       */
+   CMD_RTX_CONTROL,                 /*     +     :      +      :      +       */
    CMD_RTX_STATUSGET,               /*     +     :      +      :      +       */
    CMD_RTX_DS_STATSGET,             /*     +     :      +      :      +       */
+   CMD_RTX_US_STATSGET,             /*     +     :      +      :      +       */
    CMD_RTX_PM_DS_GET,               /*     +     :      +      :      +       */
+   CMD_RTX_PM_US_GET,               /*     +     :      +      :      -/+     */
    CMD_PAF_HS_CONTROL,              /*     +     :      +      :      -/+     */
    CMD_PAF_HS_STATUSGET,            /*     +     :      +      :      -/+     */
    CMD_PAF_HS_CONTINUE,             /*     +     :      +      :      -/+     */
@@ -144,7 +149,9 @@ static DSL_uint16_t g_VRxMsgWhitelist[] =
    CMD_MODEMFSM_OPTIONS2SET,        /*     +     :      +      :      +       */
    CMD_FREEZE_TX,/*missed in MCAT*/ /*     +     :      +      :      +/+     */
    CMD_FREEZE_RX,/*missed in MCAT*/ /*     +     :      +      :      +/+     */
-   CMD_SHUTDOWNREQUEST,             /*     +     :      +      :      -/+     */
+   CMD_SHUTDOWNREQUEST,             /*     +     :      +      :      +       */
+   CMD_TXL3REQUESTSTATUSGET,        /*     +     :      +      :      +       */
+   CMD_TXL3REQFAILREASONGET,        /*     +     :      +      :      +       */
    CMD_ATM_BC0_TXSTATSNE_GET,       /*     +     :      +      :      +/+     */
    CMD_PBO_AELEM_STATUS_GET,        /*     +     :      +      :      -/+     */
    CMD_TESTPARAMSFE_REQUEST,        /*     +     :      +      :      -/+     */
@@ -3661,18 +3668,16 @@ DSL_Error_t DSL_DRV_VRX_SendMsgInventoryNeSet(
    please refer to the description in the header file 'drv_dsl_cpe_msg_vrx.h'
 */
 DSL_Error_t DSL_DRV_VRX_SendMsgOlrControl(
-   DSL_Context_t *pContext,
-   DSL_boolean_t bAutoSRA_DS,
-   DSL_boolean_t bAutoSRA_US,
-   DSL_boolean_t bSos_DS,
-   DSL_boolean_t bSos_US)
+   DSL_Context_t *pContext)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
+   DSL_G997_RA_MODE_t raMode_US, raMode_DS = DSL_G997_RA_MODE_AT_INIT;
    DSL_VRX_FwVersion_t sFwVersion = {0};
    CMD_OLR_Control_t sCmd;
    ACK_OLR_Control_t sAck;
    DSL_boolean_t bTmpVal = DSL_FALSE;
    DSL_DEV_VersionCheck_t nVerCheck = 0;
+   DSL_int_t nDlsModeIdx = -1;
 
    /* Get FW information*/
    DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.fwFeatures, sFwVersion);
@@ -3694,12 +3699,36 @@ DSL_Error_t DSL_DRV_VRX_SendMsgOlrControl(
       return nErrCode;
    }
 
+   /* Set Rate Adaptation Configuration */
    if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL) ||
                  (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2)
                                           && (nVerCheck >= DSL_VERSION_EQUAL)))
    {
-      sCmd.autoSRA_DS = bAutoSRA_DS ? VRX_ENABLE : VRX_DISABLE;
-      sCmd.autoSRA_US = bAutoSRA_US ? VRX_ENABLE : VRX_DISABLE;
+      nDlsModeIdx = DSL_DRV_VRX_DslModeIndexGet(pContext);
+
+      if ((nDlsModeIdx < 0) || (nDlsModeIdx >= DSL_MODE_LAST))
+      {
+         return DSL_ERROR;
+      }
+
+      DSL_CTX_READ(pContext, nErrCode,
+         rateAdaptationMode[nDlsModeIdx][DSL_UPSTREAM], raMode_US);
+
+      sCmd.autoSRA_US =
+         (raMode_US >= DSL_G997_RA_MODE_DYNAMIC) ? VRX_ENABLE : VRX_DISABLE;
+
+      sCmd.SOS_US =
+         (raMode_US >= DSL_G997_RA_MODE_DYNAMIC_SOS) ? VRX_ENABLE : VRX_DISABLE;
+
+
+      DSL_CTX_READ(pContext, nErrCode,
+         rateAdaptationMode[nDlsModeIdx][DSL_DOWNSTREAM], raMode_DS);
+
+      sCmd.autoSRA_DS =
+         (raMode_DS >= DSL_G997_RA_MODE_DYNAMIC) ? VRX_ENABLE : VRX_DISABLE;
+
+      sCmd.SOS_DS =
+         (raMode_DS >= DSL_G997_RA_MODE_DYNAMIC_SOS) ? VRX_ENABLE : VRX_DISABLE;
    }
 
    /* Rx Bitswap */
@@ -3726,20 +3755,26 @@ DSL_Error_t DSL_DRV_VRX_SendMsgOlrControl(
    For a detailed description of the function, its arguments and return value
    please refer to the description in the header file 'drv_dsl_cpe_msg_vrx.h'
 */
-DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsConfigure(
-   DSL_Context_t *pContext,
-   DSL_boolean_t bReTxEnable)
+DSL_Error_t DSL_DRV_VRX_SendMsgRtxControl(
+   DSL_Context_t *pContext)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
-   CMD_RTX_DS_Configure_t sCmd;
-   ACK_RTX_DS_Configure_t sAck;
-   DSL_DEV_VersionCheck_t nVerCheck = DSL_VERSION_ERROR;
+   DSL_boolean_t bReTxEnableDs = DSL_FALSE, bReTxEnableUs = DSL_FALSE;
+   CMD_RTX_Control_t sCmd;
+   ACK_RTX_Control_t sAck;
+   DSL_DEV_VersionCheck_t nVerCheckDs = DSL_VERSION_ERROR,
+                          nVerCheckUs = DSL_VERSION_ERROR,
+                          nVerCheckAmd2 = DSL_VERSION_ERROR;
 
    if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2))
    {
       /* Get FW information */
       nErrCode = DSL_DRV_VRX_FirmwareVersionCheck(pContext,
-                  DSL_MIN_FW_VERSION_RETX_VDSL, &nVerCheck);
+                  DSL_MIN_FW_VERSION_RETX_VDSL_DS, &nVerCheckDs);
+
+      nErrCode |= DSL_DRV_VRX_FirmwareVersionCheck(pContext,
+                  DSL_MIN_FW_VERSION_RETX_VDSL_US, &nVerCheckUs);
+
       if (nErrCode != DSL_SUCCESS)
       {
          DSL_DEBUG(DSL_DBG_ERR,
@@ -3750,9 +3785,10 @@ DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsConfigure(
    }
    else if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL))
    {
-      /* Get FW information */
+      /* Get FW information (US not supported for ADSL, use initial value
+         (nVerCheckUs equals DSL_VERSION_ERROR) indicating missing support. */
       nErrCode = DSL_DRV_VRX_FirmwareVersionCheck(pContext,
-                  DSL_MIN_FW_VERSION_RETX_ADSL, &nVerCheck);
+                  DSL_MIN_FW_VERSION_RETX_ADSL_DS, &nVerCheckDs);
       if (nErrCode != DSL_SUCCESS)
       {
          DSL_DEBUG(DSL_DBG_ERR,
@@ -3762,25 +3798,76 @@ DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsConfigure(
       }
    }
 
-   if (nVerCheck >= DSL_VERSION_EQUAL)
-   {
-      memset(&sCmd, 0, sizeof(sCmd));
-      memset(&sAck, 0, sizeof(sAck));
+   /* Get user configuration for ReTx control configuration */
+   DSL_CTX_READ_SCALAR(pContext, nErrCode,
+         lineFeatureDataCfg[DSL_DOWNSTREAM].bReTxEnable, bReTxEnableDs);
+   DSL_CTX_READ_SCALAR(pContext, nErrCode,
+         lineFeatureDataCfg[DSL_UPSTREAM].bReTxEnable, bReTxEnableUs);
 
-      sCmd.Length = 0x1;
-      sCmd.RtxMode = bReTxEnable ? VRX_ENABLE : VRX_DISABLE;
-
-      nErrCode = DSL_DRV_VRX_SendMessage(
-                 pContext, CMD_RTX_DS_CONFIGURE,
-                 sizeof(CMD_RTX_DS_Configure_t), (DSL_uint8_t*)&sCmd,
-                 sizeof(ACK_RTX_DS_Configure_t), (DSL_uint8_t*)&sAck);
-   }
-   else
+   /* In case of ReTx is not supported for one or both directions overwrite the
+     user config enable flags here. */
+   if ((nVerCheckDs < DSL_VERSION_EQUAL) && (bReTxEnableDs == DSL_TRUE))
    {
+      bReTxEnableDs = DSL_FALSE;
       DSL_DEBUG(DSL_DBG_WRN, (pContext,
-         SYS_DBG_WRN"DSL[%02d]: WARNING - ReTx not supported by the FW!"
+         SYS_DBG_WRN"DSL[%02d]: WARNING - ReTx for DS not supported by FW!"
          DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
    }
+
+   if ((nVerCheckUs < DSL_VERSION_EQUAL) && (bReTxEnableUs == DSL_TRUE))
+   {
+      bReTxEnableUs = DSL_FALSE;
+      DSL_DEBUG(DSL_DBG_WRN, (pContext,
+         SYS_DBG_WRN"DSL[%02d]: WARNING - ReTx for US not supported by FW!"
+         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+   }
+
+   /* Skip further message handling if FW does not support it. */
+   if ((nVerCheckDs < DSL_VERSION_EQUAL) && (nVerCheckUs < DSL_VERSION_EQUAL))
+   {
+      return nErrCode;
+   }
+
+   memset(&sCmd, 0, sizeof(sCmd));
+   memset(&sAck, 0, sizeof(sAck));
+   sCmd.RtxMode = VRX_DISABLE;
+
+   if ((bReTxEnableDs == DSL_TRUE) && (bReTxEnableUs == DSL_TRUE))
+   {
+      sCmd.RtxMode = CMD_RTX_Control_RTX_DSUS_ENABLE;
+   }
+   else if (bReTxEnableDs == DSL_TRUE)
+   {
+      sCmd.RtxMode = CMD_RTX_Control_RTX_DS_ENABLE;
+   }
+
+   /* Get G.998.4 Amendment 2 support */
+   nErrCode = DSL_DRV_VRX_FirmwareVersionCheck(pContext,
+                  DSL_MIN_FW_VERSION_RTXAMD2, &nVerCheckAmd2);
+   if (nErrCode != DSL_SUCCESS)
+   {
+      DSL_DEBUG(DSL_DBG_ERR,
+         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         return nErrCode;
+   }
+
+   sCmd.RtxModeAmd2 = VRX_DISABLE;
+   if (nVerCheckAmd2 >= DSL_VERSION_EQUAL)
+   {
+      if ((sCmd.RtxMode == CMD_RTX_Control_RTX_DS_ENABLE) ||
+          (sCmd.RtxMode == CMD_RTX_Control_RTX_DSUS_ENABLE))
+      {
+         sCmd.RtxModeAmd2 = VRX_ENABLE;
+      }
+   }
+
+   sCmd.Length = DSL_VRX_16BIT_RD_MSG_LEN_GET(sCmd);
+
+   nErrCode = DSL_DRV_VRX_SendMessage(
+              pContext, CMD_RTX_CONTROL,
+              sizeof(sCmd), (DSL_uint8_t*)&sCmd,
+              sizeof(sAck), (DSL_uint8_t*)&sAck);
 
    return nErrCode;
 }
@@ -4568,47 +4655,37 @@ DSL_Error_t DSL_DRV_VRX_SendMsgTxL3RequestFailReasonGet(
       SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_VRX_SendMsgTxL3RequestFailReasonGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-   if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL))
+   memset(&sCmd, 0, sizeof(sCmd));
+   sCmd.Length = 0x1;
+
+   nErrCode = DSL_DRV_VRX_SendMessage(
+                 pContext, CMD_TXL3REQFAILREASONGET,
+                 sizeof(sCmd), (DSL_uint8_t*)&sCmd,
+                 sizeof(sAck), (DSL_uint8_t*)&sAck);
+
+   if (nErrCode == DSL_SUCCESS)
    {
-      memset(&sCmd, 0, sizeof(sCmd));
-      sCmd.Length = 0x1;
-
-      nErrCode = DSL_DRV_VRX_SendMessage(
-                    pContext, CMD_TXL3REQFAILREASONGET,
-                    sizeof(sCmd), (DSL_uint8_t*)&sCmd,
-                    sizeof(sAck), (DSL_uint8_t*)&sAck);
-
-      if (nErrCode == DSL_SUCCESS)
+      switch (sAck.L3FailReason)
       {
-         switch (sAck.L3FailReason)
-         {
-         case ACK_TxL3ReqFailReasonGet_NOT_L0:
-            *pFailReason = DSL_VRX_L3_FAIL_REASON_NOT_L0;
-            break;
-         case ACK_TxL3ReqFailReasonGet_TIMEOUT:
-            *pFailReason = DSL_VRX_L3_FAIL_REASON_TIMEOUT;
-            break;
-         default:
-            *pFailReason = DSL_VRX_L3_FAIL_REASON_NA;
-            DSL_DEBUG( DSL_DBG_ERR,
-               (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Unknown L3 "
-               "fail reason status (%d) received!"DSL_DRV_CRLF,
-               DSL_DEV_NUM(pContext), sAck.L3FailReason));
-            break;
-         }
-      }
-      else
-      {
+      case ACK_TxL3ReqFailReasonGet_NOT_L0:
+         *pFailReason = DSL_VRX_L3_FAIL_REASON_NOT_L0;
+         break;
+      case ACK_TxL3ReqFailReasonGet_TIMEOUT:
+         *pFailReason = DSL_VRX_L3_FAIL_REASON_TIMEOUT;
+         break;
+      default:
          *pFailReason = DSL_VRX_L3_FAIL_REASON_NA;
+         DSL_DEBUG( DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Unknown L3 "
+            "fail reason status (%d) received!"DSL_DRV_CRLF,
+            DSL_DEV_NUM(pContext), sAck.L3FailReason));
+         break;
       }
    }
    else
    {
-      DSL_DEBUG( DSL_DBG_ERR,(pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - L3 mode not supported by the FW"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-      nErrCode = DSL_ERR_NOT_SUPPORTED_BY_FIRMWARE;
+      *pFailReason = DSL_VRX_L3_FAIL_REASON_NA;
    }
-
 
    DSL_DEBUG( DSL_DBG_MSG,(pContext,
       SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_VRX_SendMsgTxL3RequestFailReasonGet"
@@ -4636,51 +4713,41 @@ DSL_Error_t DSL_DRV_VRX_SendMsgTxL3RequestStatusGet(
       SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_VRX_SendMsgTxL3RequestStatusGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-   if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL))
+   memset(&sCmd, 0, sizeof(sCmd));
+   sCmd.Length = 0x1;
+
+   nErrCode = DSL_DRV_VRX_SendMessage(
+                 pContext, CMD_TXL3REQUESTSTATUSGET,
+                 sizeof(sCmd), (DSL_uint8_t*)&sCmd,
+                 sizeof(sAck), (DSL_uint8_t*)&sAck);
+
+   if (nErrCode == DSL_SUCCESS)
    {
-      memset(&sCmd, 0, sizeof(sCmd));
-      sCmd.Length = 0x1;
-
-      nErrCode = DSL_DRV_VRX_SendMessage(
-                    pContext, CMD_TXL3REQUESTSTATUSGET,
-                    sizeof(sCmd), (DSL_uint8_t*)&sCmd,
-                    sizeof(sAck), (DSL_uint8_t*)&sAck);
-
-      if (nErrCode == DSL_SUCCESS)
+      switch (sAck.L3ReqStatus)
       {
-         switch (sAck.L3ReqStatus)
-         {
-         case ACK_TxL3RequestStatusGet_L3PENDING:
-            *pStatus = DSL_VRX_L3_STATUS_PENDING;
-            break;
-         case ACK_TxL3RequestStatusGet_L3REJECTED:
-            *pStatus = DSL_VRX_L3_STATUS_REJECTED;
-            break;
-         case ACK_TxL3RequestStatusGet_L3ACCEPTED:
-            *pStatus = DSL_VRX_L3_STATUS_ACCEPTED;
-            break;
-         case ACK_TxL3RequestStatusGet_L3FAIL:
-            *pStatus = DSL_VRX_L3_STATUS_FAIL;
-            break;
-         default:
-            *pStatus = DSL_VRX_L3_STATUS_NA;
-            DSL_DEBUG( DSL_DBG_ERR,(pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Unknown L3 request status (%d) received!"
-               DSL_DRV_CRLF, DSL_DEV_NUM(pContext), sAck.L3ReqStatus));
-            break;
-         }
-      }
-      else
-      {
+      case ACK_TxL3RequestStatusGet_L3PENDING:
+         *pStatus = DSL_VRX_L3_STATUS_PENDING;
+         break;
+      case ACK_TxL3RequestStatusGet_L3REJECTED:
+         *pStatus = DSL_VRX_L3_STATUS_REJECTED;
+         break;
+      case ACK_TxL3RequestStatusGet_L3ACCEPTED:
+         *pStatus = DSL_VRX_L3_STATUS_ACCEPTED;
+         break;
+      case ACK_TxL3RequestStatusGet_L3FAIL:
+         *pStatus = DSL_VRX_L3_STATUS_FAIL;
+         break;
+      default:
          *pStatus = DSL_VRX_L3_STATUS_NA;
+         DSL_DEBUG( DSL_DBG_ERR,(pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Unknown L3 request status (%d) received!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext), sAck.L3ReqStatus));
+         break;
       }
    }
    else
    {
-      DSL_DEBUG( DSL_DBG_ERR,(pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - L3 mode not supported by the FW"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-      nErrCode = DSL_ERR_NOT_SUPPORTED_BY_FIRMWARE;
+      *pStatus = DSL_VRX_L3_STATUS_NA;
    }
-
 
    DSL_DEBUG( DSL_DBG_MSG,(pContext,
       SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_VRX_SendMsgTxL3RequestStatusGet"
@@ -4704,23 +4771,13 @@ DSL_Error_t DSL_DRV_VRX_SendMsgShutdownRequest(
       SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_VRX_SendMsgShutdownRequest"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-   if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSLA))
-   {
-      memset(&sCmd, 0, sizeof(sCmd));
-      sCmd.Length = 0x1;
-      sCmd.L3shutdown = VRX_ENABLE;
-
-      nErrCode = DSL_DRV_VRX_SendMessage(
-                    pContext, CMD_SHUTDOWNREQUEST,
-                    sizeof(sCmd), (DSL_uint8_t*)&sCmd,
-                    sizeof(sAck), (DSL_uint8_t*)&sAck);
-   }
-   else
-   {
-      DSL_DEBUG( DSL_DBG_ERR,(pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - L3 mode not supported by the FW"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-      nErrCode = DSL_ERR_NOT_SUPPORTED_BY_FIRMWARE;
-   }
+   memset(&sCmd, 0, sizeof(sCmd));
+   sCmd.Length = 0x1;
+   sCmd.L3shutdown = VRX_ENABLE;
+   nErrCode = DSL_DRV_VRX_SendMessage(
+                 pContext, CMD_SHUTDOWNREQUEST,
+                 sizeof(sCmd), (DSL_uint8_t*)&sCmd,
+                 sizeof(sAck), (DSL_uint8_t*)&sAck);
 
    DSL_DEBUG( DSL_DBG_MSG,(pContext,
       SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_VRX_SendMsgShutdownRequest"
@@ -4733,21 +4790,26 @@ DSL_Error_t DSL_DRV_VRX_SendMsgShutdownRequest(
    For a detailed description of the function, its arguments and return value
    please refer to the description in the header file 'drv_dsl_cpe_msg_vrx.h'
 */
-DSL_Error_t DSL_DRV_VRX_SendMsgBearerChsDsRtxGet(
+DSL_Error_t DSL_DRV_VRX_SendMsgBearerChsRtxGet(
    DSL_Context_t *pContext,
+   DSL_AccessDir_t nDirection,
    DSL_uint8_t *pAck)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
-   DSL_uint32_t   nMsgId;
-   CMD_BearerChsDS_RTX_Get_t sCmd;
-   ACK_BearerChsDS_RTX_Get_t sAck;
    DSL_DEV_VersionCheck_t nVerCheck = DSL_VERSION_ERROR;
+   CMD_RTX_BearerChsDS_Get_t sCmd;
+   /* Assume that US/DS messages have same format */
+   union
+   {
+      ACK_RTX_BearerChsUS_Get_t US;
+      ACK_RTX_BearerChsDS_Get_t DS;
+   } sAck;
 
    if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2))
    {
       /* Get FW information */
       nErrCode = DSL_DRV_VRX_FirmwareVersionCheck(pContext,
-                  DSL_MIN_FW_VERSION_RETX_VDSL, &nVerCheck);
+                  DSL_MIN_FW_VERSION_RETX_VDSL_DS, &nVerCheck);
       if (nErrCode != DSL_SUCCESS)
       {
          DSL_DEBUG(DSL_DBG_ERR,
@@ -4760,7 +4822,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgBearerChsDsRtxGet(
    {
       /* Get FW information */
       nErrCode = DSL_DRV_VRX_FirmwareVersionCheck(pContext,
-                  DSL_MIN_FW_VERSION_RETX_ADSL, &nVerCheck);
+                  DSL_MIN_FW_VERSION_RETX_ADSL_DS, &nVerCheck);
       if (nErrCode != DSL_SUCCESS)
       {
          DSL_DEBUG(DSL_DBG_ERR,
@@ -4775,17 +4837,18 @@ DSL_Error_t DSL_DRV_VRX_SendMsgBearerChsDsRtxGet(
       /* fill up the message to be sent */
       memset(&sCmd, 0, sizeof(sCmd));
 
-      nMsgId = CMD_BEARERCHSDS_RTX_GET;
-      sCmd.Length = 5;
+      sCmd.Length = DSL_VRX_16BIT_RD_MSG_LEN_GET(sAck);
 
-      nErrCode = DSL_DRV_VRX_SendMessage( pContext, nMsgId,
-         sizeof(CMD_BearerChsDS_RTX_Get_t), (DSL_uint8_t*)&sCmd,
-         sizeof(ACK_BearerChsDS_RTX_Get_t), (DSL_uint8_t*)&sAck );
+      nErrCode = DSL_DRV_VRX_SendMessage( pContext,
+         nDirection == DSL_DOWNSTREAM ? CMD_RTX_BEARERCHSDS_GET :
+                                        CMD_RTX_BEARERCHSUS_GET,
+         sizeof(sCmd), (DSL_uint8_t*)&sCmd,
+         sizeof(sAck), (DSL_uint8_t*)&sAck );
 
       /* Copy data only if successful */
       if (nErrCode >= DSL_SUCCESS)
       {
-         memcpy(pAck,&sAck, sizeof(ACK_BearerChsDS_RTX_Get_t));
+         memcpy(pAck,&sAck, sizeof(ACK_RTX_BearerChsDS_Get_t));
       }
    }
    else
@@ -4802,7 +4865,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgBearerChsDsRtxGet(
    For a detailed description of the function, its arguments and return value
    please refer to the description in the header file 'drv_dsl_cpe_msg_vrx.h'
 */
-DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsEnableStatusGet(
+DSL_Error_t DSL_DRV_VRX_SendMsgRtxEnableStatusGet(
    DSL_Context_t *pContext,
    DSL_uint8_t *pAck)
 {
@@ -4835,29 +4898,62 @@ DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsEnableStatusGet(
    For a detailed description of the function, its arguments and return value
    please refer to the description in the header file 'drv_dsl_cpe_msg_vrx.h'
 */
-DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsStatsGet(
+DSL_Error_t DSL_DRV_VRX_SendMsgRtxStatsGet(
    DSL_Context_t *pContext,
+   DSL_AccessDir_t nDirection,
    DSL_uint8_t *pAck)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
-   DSL_uint32_t   nMsgId;
    CMD_RTX_DS_StatsGet_t sCmd;
-   ACK_RTX_DS_StatsGet_t sAck;
+   /* Assume that US/DS messages have same format */
+   union
+   {
+      ACK_RTX_US_StatsGet_t US;
+      ACK_RTX_DS_StatsGet_t DS;
+   } sAck;
 
    /* fill up the message to be sent */
    memset(&sCmd, 0, sizeof(sCmd));
 
-   nMsgId = CMD_RTX_DS_STATSGET;
-   sCmd.Length = 6;
+   sCmd.Length = DSL_VRX_16BIT_RD_MSG_LEN_GET(sAck);
 
-   nErrCode = DSL_DRV_VRX_SendMessage( pContext, nMsgId,
-      sizeof(CMD_RTX_DS_StatsGet_t), (DSL_uint8_t*)&sCmd,
-      sizeof(ACK_RTX_DS_StatsGet_t), (DSL_uint8_t*)&sAck );
+   nErrCode = DSL_DRV_VRX_SendMessage( pContext,
+      nDirection == DSL_DOWNSTREAM ? CMD_RTX_DS_STATSGET :
+                                     CMD_RTX_US_STATSGET,
+      sizeof(sCmd), (DSL_uint8_t*)&sCmd,
+      sizeof(sAck), (DSL_uint8_t*)&sAck );
 
    /* Copy data only if successful */
    if (nErrCode >= DSL_SUCCESS)
    {
-      memcpy(pAck,&sAck, sizeof(ACK_RTX_DS_StatsGet_t));
+      memcpy(pAck, &sAck, sizeof(ACK_RTX_DS_StatsGet_t));
+   }
+
+   if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2))
+   {
+      /* fill up the message to be sent */
+      memset(&sCmd, 0, sizeof(sCmd));
+
+      sCmd.Length = DSL_VRX_16BIT_RD_MSG_LEN_GET(sAck);
+
+      /* For nTxRetransmitted API direction mapping to the FW (DS->US, US->DS) */
+      nErrCode = DSL_DRV_VRX_SendMessage( pContext,
+         nDirection == DSL_DOWNSTREAM ? CMD_RTX_US_STATSGET :
+                                        CMD_RTX_DS_STATSGET,
+         sizeof(sCmd), (DSL_uint8_t*)&sCmd,
+         sizeof(sAck), (DSL_uint8_t*)&sAck );
+
+      /* Copy TxDtuRTX_xxx only if successful */
+      if (nErrCode >= DSL_SUCCESS)
+      {
+         ((ACK_RTX_DS_StatsGet_t *)pAck)->TxDtuRTX_LSW = sAck.DS.TxDtuRTX_LSW;
+         ((ACK_RTX_DS_StatsGet_t *)pAck)->TxDtuRTX_MSW = sAck.DS.TxDtuRTX_MSW;
+      }
+   }
+   else
+   {
+      ((ACK_RTX_DS_StatsGet_t *)pAck)->TxDtuRTX_LSW = 0;
+      ((ACK_RTX_DS_StatsGet_t *)pAck)->TxDtuRTX_MSW = 0;
    }
 
    return (nErrCode);
@@ -4867,31 +4963,40 @@ DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsStatsGet(
    For a detailed description of the function, its arguments and return value
    please refer to the description in the header file 'drv_dsl_cpe_msg_vrx.h'
 */
-DSL_Error_t DSL_DRV_VRX_SendMsgRtxPmDsGet(
+DSL_Error_t DSL_DRV_VRX_SendMsgRtxPmGet(
    DSL_Context_t *pContext,
+   DSL_AccessDir_t nDirection,
    DSL_uint8_t *pAck)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
-   DSL_uint32_t   nMsgId;
+   /* Assume that US/DS messages have same format */
    CMD_RTX_PM_DS_Get_t sCmd;
-   ACK_RTX_PM_DS_Get_t sAck;
+   /* sizeof(sAck.US) != sizeof(sAck.DS) */
+   union
+   {
+      ACK_RTX_PM_US_Get_t US;
+      ACK_RTX_PM_DS_Get_t DS;
+   } sAck;
 
-   /* fill up the message to be sent */
    memset(&sCmd, 0, sizeof(sCmd));
+   memset(pAck, 0, sizeof(sAck));
 
-   nMsgId = CMD_RTX_PM_DS_GET;
-   sCmd.Length = 12;
+   sCmd.Length = (nDirection == DSL_UPSTREAM) ?
+                  DSL_VRX_16BIT_RD_MSG_LEN_GET(sAck.US):
+                  DSL_VRX_16BIT_RD_MSG_LEN_GET(sAck.DS);
 
-   nErrCode = DSL_DRV_VRX_SendMessage( pContext, nMsgId,
-      sizeof(CMD_RTX_PM_DS_Get_t), (DSL_uint8_t*)&sCmd,
-      sizeof(ACK_RTX_PM_DS_Get_t), (DSL_uint8_t*)&sAck );
+   nErrCode = DSL_DRV_VRX_SendMessage(pContext,
+            nDirection == DSL_UPSTREAM ? CMD_RTX_PM_US_GET : CMD_RTX_PM_DS_GET,
+            sizeof(CMD_RTX_PM_DS_Get_t), (DSL_uint8_t*)&sCmd,
+            nDirection == DSL_UPSTREAM ? sizeof(sAck.US) : sizeof(sAck.DS),
+            (DSL_uint8_t*)&sAck);
 
    /* Copy data only if successful */
    if (nErrCode >= DSL_SUCCESS)
    {
-      memcpy(pAck,&sAck, sizeof(ACK_RTX_PM_DS_Get_t));
+      memcpy(pAck, &sAck, nDirection == DSL_UPSTREAM ? sizeof(sAck.US):
+                                                       sizeof(sAck.DS));
    }
-
    return (nErrCode);
 }
 

@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -205,8 +205,11 @@ DSL_Error_t DSL_DRV_BND_VRX_ConfigWrite(
       DSL_DEV_NUM(pContext)));
 
 #if (DSL_DRV_LINES_PER_DEVICE == 2)
-   if (DSL_DRV_DEV_FirmwareFeatureCheck(pContext,
-      DSL_FW_XDSLFEATURE_DUALPORT) == DSL_FALSE)
+   /* get port mode type*/
+   DSL_CTX_READ_SCALAR(pContext, nErrCode, pDevCtx->data.nPortMode, nPortMode);
+   if ((nPortMode == DSL_PORT_MODE_DUAL) &&
+       (DSL_DRV_DEV_FirmwareFeatureCheck(pContext, DSL_FW_XDSLFEATURE_DUALPORT)
+                                                                 == DSL_FALSE))
    {
       DSL_DEBUG(DSL_DBG_ERR, (pContext, SYS_DBG_ERR
          "DSL[%02d]: ERROR - Bonding is not supported with the current FW!"
@@ -219,8 +222,6 @@ DSL_Error_t DSL_DRV_BND_VRX_ConfigWrite(
    /* Get Bonding configuration from the CPE API Context*/
    DSL_CTX_READ(pContext, nErrCode, BndConfig, BndConfig);
 #if (DSL_DRV_LINES_PER_DEVICE == 2)
-   /* get port mode type*/
-   DSL_CTX_READ_SCALAR(pContext, nErrCode, pDevCtx->data.nPortMode, nPortMode);
    if (nPortMode != DSL_PORT_MODE_DUAL)
    {
       DSL_DEBUG(DSL_DBG_WRN, (pContext,

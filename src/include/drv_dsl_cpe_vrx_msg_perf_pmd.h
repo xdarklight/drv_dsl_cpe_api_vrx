@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -193,9 +193,10 @@ typedef struct CMD_CRC_StatsNE_Get CMD_CRC_StatsNE_Get_t;
 #define ACK_CRC_STATSNE_GET 0x080A
 
 /**
-   Returns near-end CRC counter values. (Section 7.2.2.1.1 of G997.1). These are
-   wrap-around counters which are not affected by the TR1-period.The "LP1/Fast
-   Path" parameters are fed only in ADSL1 mode with selected fast path.
+   Returns near-end CRC counter values. (Section 7.2.2.1.1 of G.997.1). These
+   are wrap-around counters which are not affected by the TR1-period.The
+   "LP1/Fast Path" parameters are fed only in ADSL1 mode with selected fast
+   path.
 */
 typedef struct ACK_CRC_StatsNE_Get ACK_CRC_StatsNE_Get_t;
 
@@ -212,7 +213,7 @@ typedef struct CMD_CRC_StatsFE_Get CMD_CRC_StatsFE_Get_t;
 #define ACK_CRC_STATSFE_GET 0x0C0A
 
 /**
-   Returns far-end CRC counter values. (Section 7.2.2.2.1 of G997.1). These are
+   Returns far-end CRC counter values. (Section 7.2.2.2.1 of G.997.1). These are
    wrap-around counters which are not affected by the TR1-period.The "LP1/Fast
    Path" parameters are fed only in ADSL1 mode with selected fast path.
 */
@@ -231,7 +232,7 @@ typedef struct CMD_FEC_StatsNE_Get CMD_FEC_StatsNE_Get_t;
 #define ACK_FEC_STATSNE_GET 0x0A0A
 
 /**
-   Returns near-end FEC counter values (Section 7.2.2.1.2 of G997.1). These are
+   Returns near-end FEC counter values (Section 7.2.2.1.2 of G.997.1). These are
    wrap-around counters which are not affected by the TR1-period.The "LP1/Fast
    Path" parameters are fed only in ADSL1 mode with selected fast path.
 */
@@ -250,7 +251,7 @@ typedef struct CMD_FEC_StatsFE_Get CMD_FEC_StatsFE_Get_t;
 #define ACK_FEC_STATSFE_GET 0x0E0A
 
 /**
-   Returns far-end FEC counter values (Section 7.2.2.2.2 of G997.1). These are
+   Returns far-end FEC counter values (Section 7.2.2.2.2 of G.997.1). These are
    wrap-around counters which are not affected by the TR1-period.The "LP1/Fast
    Path" parameters are fed only in ADSL1 mode with selected fast path.
 */
@@ -268,7 +269,7 @@ typedef struct CMD_SOS_StatsNE_Get CMD_SOS_StatsNE_Get_t;
 #define ACK_SOS_STATSNE_GET 0x290A
 
 /**
-   Returns near-end SOS counter values. (Section 7.2.1.6.1 of G997.1)
+   Returns near-end SOS counter values. (Section 7.2.1.6.1 of G.997.1)
 */
 typedef struct ACK_SOS_StatsNE_Get ACK_SOS_StatsNE_Get_t;
 
@@ -285,7 +286,7 @@ typedef struct CMD_SOS_StatsFE_Get CMD_SOS_StatsFE_Get_t;
 #define ACK_SOS_STATSFE_GET 0x2A0A
 
 /**
-   Returns far-end SOS counter values. (Section 7.2.1.7.1 of G997.1)
+   Returns far-end SOS counter values. (Section 7.2.1.7.1 of G.997.1)
 */
 typedef struct ACK_SOS_StatsFE_Get ACK_SOS_StatsFE_Get_t;
 
@@ -310,7 +311,7 @@ typedef struct ACK_LinePerfCountNE_Set ACK_LinePerfCountNE_Set_t;
 #define CMD_CRC_STATSNE_SET 0x084A
 
 /**
-   Writes the near-end CRC counter values (Section 7.2.2.1.1 of G997.1)The
+   Writes the near-end CRC counter values (Section 7.2.2.1.1 of G.997.1)The
    "LP1/Fast Path" parameters are used only in ADSL1 mode with selected "Fast
    Path".
 */
@@ -328,7 +329,7 @@ typedef struct ACK_CRC_StatsNE_Set ACK_CRC_StatsNE_Set_t;
 #define CMD_FEC_STATSNE_SET 0x0A4A
 
 /**
-   Writes near-end FEC counter values. (Section 7.2.2.1.2 of G997.1)The
+   Writes near-end FEC counter values. (Section 7.2.2.1.2 of G.997.1)The
    "LP1/Fast Path" parameters are used only in ADSL1 mode with selected "Fast
    Path".
 */
@@ -347,7 +348,7 @@ typedef struct ACK_FEC_StatsNE_Set ACK_FEC_StatsNE_Set_t;
 
 /**
    Writes near-end SOS counter values. ("SOS-SUCCESS-NE", Section 7.2.1.6.1 of
-   G997.1).
+   G.997.1).
 */
 typedef struct  CMD_SOS_StatsNE_Set CMD_SOS_StatsNE_Set_t;
 
@@ -949,9 +950,10 @@ struct CMD_CRC_StatsNE_Get
 
 
 /**
-   Returns near-end CRC counter values. (Section 7.2.2.1.1 of G997.1). These are
-   wrap-around counters which are not affected by the TR1-period.The "LP1/Fast
-   Path" parameters are fed only in ADSL1 mode with selected fast path.
+   Returns near-end CRC counter values. (Section 7.2.2.1.1 of G.997.1). These
+   are wrap-around counters which are not affected by the TR1-period.The
+   "LP1/Fast Path" parameters are fed only in ADSL1 mode with selected fast
+   path.
 */
 struct ACK_CRC_StatsNE_Get
 {
@@ -1006,7 +1008,7 @@ struct CMD_CRC_StatsFE_Get
 
 
 /**
-   Returns far-end CRC counter values. (Section 7.2.2.2.1 of G997.1). These are
+   Returns far-end CRC counter values. (Section 7.2.2.2.1 of G.997.1). These are
    wrap-around counters which are not affected by the TR1-period.The "LP1/Fast
    Path" parameters are fed only in ADSL1 mode with selected fast path.
 */
@@ -1063,7 +1065,7 @@ struct CMD_FEC_StatsNE_Get
 
 
 /**
-   Returns near-end FEC counter values (Section 7.2.2.1.2 of G997.1). These are
+   Returns near-end FEC counter values (Section 7.2.2.1.2 of G.997.1). These are
    wrap-around counters which are not affected by the TR1-period.The "LP1/Fast
    Path" parameters are fed only in ADSL1 mode with selected fast path.
 */
@@ -1152,7 +1154,7 @@ struct CMD_FEC_StatsFE_Get
 
 
 /**
-   Returns far-end FEC counter values (Section 7.2.2.2.2 of G997.1). These are
+   Returns far-end FEC counter values (Section 7.2.2.2.2 of G.997.1). These are
    wrap-around counters which are not affected by the TR1-period.The "LP1/Fast
    Path" parameters are fed only in ADSL1 mode with selected fast path.
 */
@@ -1228,7 +1230,7 @@ struct CMD_SOS_StatsNE_Get
 
 
 /**
-   Returns near-end SOS counter values. (Section 7.2.1.6.1 of G997.1)
+   Returns near-end SOS counter values. (Section 7.2.1.6.1 of G.997.1)
 */
 struct ACK_SOS_StatsNE_Get
 {
@@ -1275,7 +1277,7 @@ struct CMD_SOS_StatsFE_Get
 
 
 /**
-   Returns far-end SOS counter values. (Section 7.2.1.7.1 of G997.1)
+   Returns far-end SOS counter values. (Section 7.2.1.7.1 of G.997.1)
 */
 struct ACK_SOS_StatsFE_Get
 {
@@ -1381,7 +1383,7 @@ struct ACK_LinePerfCountNE_Set
 
 
 /**
-   Writes the near-end CRC counter values (Section 7.2.2.1.1 of G997.1)The
+   Writes the near-end CRC counter values (Section 7.2.2.1.1 of G.997.1)The
    "LP1/Fast Path" parameters are used only in ADSL1 mode with selected "Fast
    Path".
 */
@@ -1437,7 +1439,7 @@ struct ACK_CRC_StatsNE_Set
 
 
 /**
-   Writes near-end FEC counter values. (Section 7.2.2.1.2 of G997.1)The
+   Writes near-end FEC counter values. (Section 7.2.2.1.2 of G.997.1)The
    "LP1/Fast Path" parameters are used only in ADSL1 mode with selected "Fast
    Path".
 */
@@ -1526,7 +1528,7 @@ struct ACK_FEC_StatsNE_Set
 
 /**
    Writes near-end SOS counter values. ("SOS-SUCCESS-NE", Section 7.2.1.6.1 of
-   G997.1).
+   G.997.1).
 */
 struct  CMD_SOS_StatsNE_Set
 {

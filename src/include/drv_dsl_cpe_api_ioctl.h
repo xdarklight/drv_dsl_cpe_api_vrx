@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -116,7 +116,6 @@ typedef union
    DSL_AuxLineInventory_t            auxLineInventory;
    DSL_BandPlanSupport_t             bandPlanSupport;
    DSL_BandPlanStatus_t              bandPlanStatus;
-   DSL_EFM_MacConfig_t               efmMacConfig;
 #endif /* #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)*/
 #ifdef INCLUDE_DSL_CPE_API_DANUBE
    DSL_ReTxStatistics_t              reTxStatistics;
@@ -860,8 +859,8 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VRX200: xDSL-CPE
-   - XWAY(TM) VRX300: xDSL-CPE
+   - VRX200: xDSL-CPE
+   - VRX300: xDSL-CPE
 
    \code
       DSL_AuxLineInventory_t auxLineInventory;
@@ -993,8 +992,8 @@ typedef union
    Additional Band Plan information is provided by the the following ioctl
    \ref DSL_FIO_BAND_BORDER_STATUS_GET
    Supported by
-   - XWAY(TM) VRX200: xDSL-CPE
-   - XWAY(TM) VRX300: xDSL-CPE
+   - VRX200: xDSL-CPE
+   - VRX300: xDSL-CPE
 
    \code
       DSL_BandPlanStatus_t bpCfg;
@@ -1029,8 +1028,8 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VRX200: xDSL-CPE
-   - XWAY(TM) VRX300: xDSL-CPE
+   - VRX200: xDSL-CPE
+   - VRX300: xDSL-CPE
 
    \code
       DSL_BandPlanSupport_t bpSupport;
@@ -1066,7 +1065,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100 and XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100 and ARX300)
 
    \code
       DSL_ShowtimeLogging_t data;
@@ -1482,7 +1481,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
 
    \code
       DSL_InteropFeatureConfig_t interopFeatureConfig;
@@ -1514,7 +1513,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
 
    \code
       DSL_InteropFeatureConfig_t interopFeatureConfig;
@@ -1578,7 +1577,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
 
    \code
       DSL_MiscLineStatus_t miscLineStatus;
@@ -1641,7 +1640,7 @@ typedef union
       is included within accessCtl structure of user data.
 
    \remarks
-   - Supported by ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - Supported by ADSL only platforms (ARX100, ARX300)
    - Please note that a change of this configuration setting(s) will be only
      effective after restarting the autoboot handling using ioctl
      \ref DSL_FIO_AUTOBOOT_CONTROL_SET with command \ref DSL_AUTOBOOT_CTRL_RESTART
@@ -1676,7 +1675,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
 
    \code
       DSL_LineOptionsConfig_t lineOptionsConfig;
@@ -1744,7 +1743,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
 
    \code
       DSL_DBG_DebugFeatureConfig_t dbgDebugFeatureConfig;
@@ -1782,7 +1781,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
 
    \code
       DSL_DBG_DebugFeatureConfig_t dbgDebugFeatureConfig;
@@ -2076,10 +2075,10 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VRX200: xDSL-CPE
+   - VRX200: xDSL-CPE
 
-   \note This ioctl is reserved for future usage on XWAY(TM) VRX200. This means
-         there is currently no functionality included.
+   \note This ioctl is reserved for future usage on VRX200. This means there is
+         currently no functionality included.
 
    \code
       DSL_BND_HwInit_t BND_HwInit;
@@ -2111,8 +2110,8 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VRX200: xDSL-CPE
-   - XWAY(TM) VRX300: xDSL-CPE
+   - VRX200: xDSL-CPE
+   - VRX300: xDSL-CPE
    \remarks
    - Please note that a change of this configuration setting(s) will be only
      effective after restarting the autoboot handling using ioctl
@@ -2148,8 +2147,8 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VRX200: xDSL-CPE
-   - XWAY(TM) VRX300: xDSL-CPE
+   - VRX200: xDSL-CPE
+   - VRX300: xDSL-CPE
 
    \code
       DSL_BND_ConfigGet_t BND_ConfigGet;
@@ -2181,8 +2180,8 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VRX200: xDSL-CPE
-   - XWAY(TM) VRX300: xDSL-CPE
+   - VRX200: xDSL-CPE
+   - VRX300: xDSL-CPE
 
    \code
       DSL_BND_HsStatusGet_t BND_HsStatusGet;
@@ -2222,8 +2221,8 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VRX200: xDSL-CPE
-   - XWAY(TM) VRX300: xDSL-CPE
+   - VRX200: xDSL-CPE
+   - VRX300: xDSL-CPE
 
    \code
       DSL_BND_HsContinue_t BND_HsContinue;
@@ -2341,7 +2340,7 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VRX200: xDSL-CPE
+   - VRX200: xDSL-CPE
 
    \code
       DSL_BND_PortModeSync_t BND_PortModeSync;
@@ -2709,8 +2708,8 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VRX200: xDSL-CPE
-   - XWAY(TM) VRX300: xDSL-CPE
+   - VRX200: xDSL-CPE
+   - VRX300: xDSL-CPE
 
    \code
       DSL_G997_LineStatusPerBand_t lineStatusPerBand;
@@ -2838,7 +2837,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
 
    \code
       DSL_G997_LastStateTransmitted_t lastStateTransmitted;
@@ -3447,7 +3446,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
 
    \code
       DSL_G997_Snmp_t snmpData;
@@ -3480,7 +3479,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
 
    \code
       DSL_G997_Snmp_t snmpData;
@@ -3580,7 +3579,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
 
    \code
       DSL_G997_RateAdaptationStatus_t raStatGet;
@@ -3614,8 +3613,8 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VRX200: xDSL-CPE
-   - XWAY(TM) VRX300: xDSL-CPE
+   - VRX200: xDSL-CPE
+   - VRX300: xDSL-CPE
 
    \code
       DSL_G997_UsPowerBackOffStatus_t upboStatGet;
@@ -4914,8 +4913,8 @@ typedef union
 
    \remarks
    Supported by all platforms.
-   - XWAY(TM) VRX200: xDSL-CPE
-   - XWAY(TM) VRX300: xDSL-CPE
+   - VRX200: xDSL-CPE
+   - VRX300: xDSL-CPE
 
    \code
       DSL_PM_Dump_t pmDump;
@@ -5145,7 +5144,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
 
    \code
       DSL_PM_ChannelCountersExt_t pmChannelCountersExt;
@@ -5958,7 +5957,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
 
    \code
       DSL_RTT_Init_t RTT_Init;
@@ -5990,7 +5989,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
    \remarks
    - Please note that a change of this configuration setting(s) will be only
      effective after restarting the autoboot handling using ioctl
@@ -6029,7 +6028,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
 
    \code
       DSL_RTT_Config_t RTT_Config;
@@ -6061,7 +6060,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
 
    \code
       DSL_RTT_Status_t DSL_RTT_Status;
@@ -6094,7 +6093,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
 
    \code
       DSL_RTT_Control_t RTT_Control;
@@ -6129,7 +6128,7 @@ typedef union
 
    \remarks
    Supported by
-   - ADSL only platforms (XWAY(TM) ARX100, XWAY(TM) ARX300)
+   - ADSL only platforms (ARX100, ARX300)
 
    \code
       DSL_RTT_Statistics_t RTT_Config;
@@ -6166,8 +6165,8 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VRX200: xDSL-CPE
-   - XWAY(TM) VRX300: xDSL-CPE
+   - VRX200: xDSL-CPE
+   - VRX300: xDSL-CPE
 
    \code
       DSL_G997_LowPowerModeConfig_t lpmCfgSet;
@@ -6200,8 +6199,8 @@ typedef union
 
    \remarks
    Supported by
-   - XWAY(TM) VRX200: xDSL-CPE
-   - XWAY(TM) VRX300: xDSL-CPE
+   - VRX200: xDSL-CPE
+   - VRX300: xDSL-CPE
 
    \code
       DSL_G997_LowPowerModeConfig_t lpmCfgGet;

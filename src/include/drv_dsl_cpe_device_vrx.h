@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -58,8 +58,9 @@
                                             |    |    |    Release status
                                             |    |    |    |    Application Type
 #define DSL_MIN_FW_VERSION_xxx             -1,   3,  -1,  -1,  -1 */
-#define DSL_MIN_FW_VERSION_RETX_ADSL        5,   0, 0xF,  -1,  -1
-#define DSL_MIN_FW_VERSION_RETX_VDSL        4,   4,   6,  -1,  -1
+#define DSL_MIN_FW_VERSION_RETX_ADSL_DS     5,   0, 0xF,  -1,  -1
+#define DSL_MIN_FW_VERSION_RETX_VDSL_DS     4,   4,   6,  -1,  -1
+#define DSL_MIN_FW_VERSION_RETX_VDSL_US     7,  -1,  -1,  -1,  -1
 #define DSL_MIN_FW_VERSION_RETX             4,   4,   6,  -1,  -1
 #define DSL_MIN_FW_VERSION_NTR              4,   5, 0xF,  -1,  -1
 #define DSL_MIN_FW_VERSION_MFD              4,   2,   7,  -1,  -1
@@ -69,6 +70,7 @@
 #define DSL_MIN_FW_VERSION_SRA_VDSL         5,   0,   4,  -1,  -1
 #define DSL_MIN_FW_VERSION_R6_RELEASE       6,  -1,  -1,  -1,  -1
 #define DSL_MIN_FW_VERSION_TC_STAT_ADSL     4,   0,   8,  -1,  -1
+#define DSL_MIN_FW_VERSION_RTXAMD2          7,   1,   1,   1,   1
 
 /*
    Internal device dependent configuration options
@@ -679,7 +681,9 @@ typedef enum
 */
 typedef enum
 {
-   /** Version processing is not possible due to an error */
+   /** Initial value, version could not be checked either of an error or it was
+       not done intentional because of version protected implementation should
+       be skipped. */
    DSL_VERSION_ERROR = 0,
    /** Version is not compared because of different common firmware types
        Currently this indicates a mismatch of the ApplicationType (Annex) only */

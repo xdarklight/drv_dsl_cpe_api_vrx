@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -90,6 +90,7 @@
 #define DSL_PM_COUNTER_LOSS_MAX_VALUE             ((DSL_uint32_t)0xFFFFFFFF)
 #define DSL_PM_COUNTER_SES_MAX_VALUE              ((DSL_uint32_t)0xFFFFFFFF)
 #define DSL_PM_COUNTER_UAS_MAX_VALUE              ((DSL_uint32_t)0xFFFFFFFF)
+#define DSL_PM_COUNTER_FECS_MAX_VALUE             ((DSL_uint32_t)0xFFFFFFFF)
 
 #define DSL_PM_COUNTER_FEC_MAX_VALUE              ((DSL_uint32_t)0xFFFFFFFF)
 #define DSL_PM_COUNTER_CODEVIOLATIONS_MAX_VALUE   ((DSL_uint32_t)0xFFFFFFFF)
@@ -127,6 +128,8 @@
 #define DSL_PM_COUNTER_RX_RETX_MAX_VALUE            ((DSL_uint32_t)0xFFFFFFFF)
 #define DSL_PM_COUNTER_RX_CORR_MAX_VALUE            ((DSL_uint32_t)0xFFFFFFFF)
 #define DSL_PM_COUNTER_EFTR_MIN_MAX_VALUE           ((DSL_uint32_t)0xFFFFFFFF)
+#define DSL_PM_COUNTER_ERROR_FREE_BITS_MAX_VALUE    ((DSL_uint32_t)0xFFFFFFFF)
+#define DSL_PM_COUNTER_LEFTR_MAX_VALUE              ((DSL_uint32_t)0xFFFFFFFF)
 
 /** PM module thread name*/
 #define DSL_PM_NE_TASK_NAME   "cpe_pm_ne"
@@ -478,7 +481,7 @@
 
 #ifdef INCLUDE_DSL_CPE_PM_RETX_COUNTERS
    #define DSL_DRV_PM_PTR_RETX_COUNTERS(ptr, dir) \
-      (dir==DSL_NEAR_END ? ptr->data_ne : ptr.data_fe)
+      ((dir)==DSL_NEAR_END ? &((ptr)->data_ne) : &((ptr)->data_fe))
 
    /**
       Macro to get access to the current ReTx counters in the PM context */

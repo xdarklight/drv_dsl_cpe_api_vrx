@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -157,6 +157,7 @@ DSL_Error_t DSL_DRV_PM_Start(
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
    DSL_PM_Context *pPmContext = DSL_NULL;
+   DSL_XTUDir_t dir;
 
    DSL_CHECK_CTX_POINTER(pContext);
    DSL_CHECK_ERR_CODE();
@@ -477,35 +478,14 @@ DSL_Error_t DSL_DRV_PM_Start(
       DSL_PM_INTERVAL_FAILURE_NOT_COMPLETE;
    #endif /* INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS*/
 
-   /* Set default current counters*/
-   DSL_DRV_MemSet(
-      &(DSL_DRV_PM_CONTEXT(pContext)->pCounters->reTxCounters.recCurr),
-      0xFF,
-      sizeof(DSL_pmReTxData_t));
-
-   /* Set default 15 min counters*/
-   DSL_DRV_MemSet(
-      &(DSL_DRV_PM_CONTEXT(pContext)->pCounters->reTxCounters.rec15min[0]),
-      0xFF,
-      sizeof(DSL_pmReTxData_t));
-
-   /* Set default 1 day counters*/
-   DSL_DRV_MemSet(
-      &(DSL_DRV_PM_CONTEXT(pContext)->pCounters->reTxCounters.rec1day[0]),
-      0xFF,
-      sizeof(DSL_pmReTxData_t));
-
-   /* Set default showtime counters*/
-   DSL_DRV_MemSet(
-      &(DSL_DRV_PM_CONTEXT(pContext)->pCounters->reTxCounters.recShowtime[0]),
-      0xFF,
-      sizeof(DSL_pmReTxData_t));
-
-   /* Set default total counters*/
-   DSL_DRV_MemSet(
-      &(DSL_DRV_PM_CONTEXT(pContext)->pCounters->reTxCounters.recTotal),
-      0xFF,
-      sizeof(DSL_pmReTxData_t));
+   for(dir = 0; dir < 2; dir++)
+   {
+      DSL_DRV_PM_PTR_RETX_COUNTERS_CURR(dir)->nEftrMin       = DSL_PM_COUNTER_EFTR_MIN_MAX_VALUE;
+      DSL_DRV_PM_PTR_RETX_COUNTERS_15MIN(0,dir)->nEftrMin    = DSL_PM_COUNTER_EFTR_MIN_MAX_VALUE;
+      DSL_DRV_PM_PTR_RETX_COUNTERS_1DAY(0,dir)->nEftrMin     = DSL_PM_COUNTER_EFTR_MIN_MAX_VALUE;
+      DSL_DRV_PM_PTR_RETX_COUNTERS_SHOWTIME(0,dir)->nEftrMin = DSL_PM_COUNTER_EFTR_MIN_MAX_VALUE;
+      DSL_DRV_PM_PTR_RETX_COUNTERS_TOTAL(dir)->nEftrMin      = DSL_PM_COUNTER_EFTR_MIN_MAX_VALUE;
+   }
 #endif /* INCLUDE_DSL_CPE_PM_RETX_COUNTERS*/
 
    /* Initialize PM module device specific parameters*/
@@ -4159,6 +4139,7 @@ DSL_Error_t DSL_DRV_PM_LineSecCountersTotalGet(
       pCounters->data.nLOFS = 0;
       pCounters->data.nLOSS = 0;
       pCounters->data.nSES  = 0;
+      pCounters->data.nFECS = 0;
 #endif
       nErrCode = DSL_WRN_INCOMPLETE_RETURN_VALUES;
    }
@@ -4194,7 +4175,7 @@ DSL_Error_t DSL_DRV_PM_LineSecCountersShowtimeGet(
    DSL_CHECK_ERR_CODE();
 
    DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_LineSecCounters15MinGet"
+      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_LineSecCountersShowtimeGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
    /* Check if the PM module is ready*/
@@ -4295,6 +4276,7 @@ DSL_Error_t DSL_DRV_PM_LineSecCountersShowtimeGet(
             pCounters->data.nLOSS += pLineCounters->nLOSS;
             pCounters->data.nSES  += pLineCounters->nSES;
             pCounters->data.nUAS  += pLineCounters->nUAS;
+            pCounters->data.nFECS += pLineCounters->nFECS;
          }
          else
          {
@@ -4327,6 +4309,7 @@ DSL_Error_t DSL_DRV_PM_LineSecCountersShowtimeGet(
       pCounters->data.nLOFS = 0;
       pCounters->data.nLOSS = 0;
       pCounters->data.nSES  = 0;
+      pCounters->data.nFECS = 0;
 #endif
       nErrCode = DSL_WRN_INCOMPLETE_RETURN_VALUES;
    }
@@ -5462,15 +5445,6 @@ DSL_Error_t DSL_DRV_PM_ReTxHistoryStats15MinGet(
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_ReTxHistoryStats15MinGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-   if (pStats->nDirection == DSL_FAR_END)
-   {
-      DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - ReTx counters are not supported for the Far-End!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-      return DSL_ERR_NOT_SUPPORTED_BY_DEFINITION;
-   }
-
    /* Check if the PM module is ready*/
    if (!DSL_DRV_PM_IsPmReady(pContext))
    {
@@ -5570,15 +5544,6 @@ DSL_Error_t DSL_DRV_PM_ReTxHistoryStats1DayGet(
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_ReTxHistoryStats1DayGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-   if (pStats->nDirection == DSL_FAR_END)
-   {
-      DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - ReTx counters are not supported for the Far-End!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-      return DSL_ERR_NOT_SUPPORTED_BY_DEFINITION;
-   }
 
    /* Check if the PM module is ready*/
    if (!DSL_DRV_PM_IsPmReady(pContext))
@@ -5738,15 +5703,6 @@ DSL_Error_t DSL_DRV_PM_ReTxCountersTotalGet(
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_ReTxCountersTotalGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-   if (pCounters->nDirection == DSL_FAR_END)
-   {
-      DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - ReTx counters are not supported for the Far-End!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-      return DSL_ERR_NOT_SUPPORTED_BY_DEFINITION;
-   }
-
    /* Check if the PM module is ready*/
    if (!DSL_DRV_PM_IsPmReady(pContext))
    {
@@ -5803,15 +5759,6 @@ DSL_Error_t DSL_DRV_PM_ReTxThresholds15MinSet(
    DSL_DEBUG( DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_ReTxThresholds15MinSet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-   if (pThreshs->nDirection == DSL_FAR_END)
-   {
-      DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - ReTx counters are not supported for the Far-End!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-      return DSL_ERR_NOT_SUPPORTED_BY_DEFINITION;
-   }
 
    /* Check if the PM module is ready*/
    if (!DSL_DRV_PM_IsPmReady(pContext))
@@ -5892,15 +5839,6 @@ DSL_Error_t DSL_DRV_PM_ReTxThresholds1DaySet(
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_ReTxThresholds1DaySet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-   if (pThreshs->nDirection == DSL_FAR_END)
-   {
-      DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - ReTx counters are not supported for the Far-End!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-      return DSL_ERR_NOT_SUPPORTED_BY_DEFINITION;
-   }
-
    /* Check if the PM module is ready*/
    if (!DSL_DRV_PM_IsPmReady(pContext))
    {
@@ -5977,15 +5915,6 @@ DSL_Error_t DSL_DRV_PM_ReTxThresholds15MinGet(
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_ReTxThresholds15MinGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-   if (pThreshs->nDirection == DSL_FAR_END)
-   {
-      DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - ReTx counters are not supported for the Far-End!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-      return DSL_ERR_NOT_SUPPORTED_BY_DEFINITION;
-   }
-
    /* Check if the PM module is ready*/
    if (!DSL_DRV_PM_IsPmReady(pContext))
    {
@@ -6053,15 +5982,6 @@ DSL_Error_t DSL_DRV_PM_ReTxThresholds1DayGet(
    DSL_DEBUG( DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_ReTxThresholds1DayGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-   if (pThreshs->nDirection == DSL_FAR_END)
-   {
-      DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - ReTx counters are not supported for the Far-End!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-      return DSL_ERR_NOT_SUPPORTED_BY_DEFINITION;
-   }
 
    /* Check if the PM module is ready*/
    if (!DSL_DRV_PM_IsPmReady(pContext))
@@ -6139,16 +6059,6 @@ DSL_Error_t DSL_DRV_PM_ReTxCountersShowtimeGet(
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_ReTxCountersShowtimeGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-   if (pCounters->nDirection == DSL_FAR_END)
-   {
-      DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - ReTx counters are not supported for the Far-End!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-      return DSL_ERR_NOT_SUPPORTED_BY_DEFINITION;
-   }
-
-
    /* Check if the PM module is ready*/
    if (!DSL_DRV_PM_IsPmReady(pContext))
    {
@@ -6161,6 +6071,7 @@ DSL_Error_t DSL_DRV_PM_ReTxCountersShowtimeGet(
       DSL_DRV_PM_INTERVAL_FAILURES_FE_MASK;
 
    DSL_DRV_MemSet( &(pCounters->data), 0x0, sizeof(DSL_PM_ReTxData_t));
+   pCounters->data.nEftrMin = DSL_PM_COUNTER_EFTR_MIN_MAX_VALUE;
 
    if( DSL_DRV_PM_CONTEXT(pContext)->bShowtimeProcessingStart == DSL_FALSE )
    {
@@ -6242,7 +6153,12 @@ DSL_Error_t DSL_DRV_PM_ReTxCountersShowtimeGet(
 
          if( pReTxCounters != DSL_NULL )
          {
-            pCounters->data.nEftrMin += pReTxCounters->nEftrMin;
+            if (pCounters->data.nEftrMin > pReTxCounters->nEftrMin)
+            {
+               pCounters->data.nEftrMin = pReTxCounters->nEftrMin;
+            }
+            pCounters->data.nErrorFreeBits += pReTxCounters->nErrorFreeBits;
+            pCounters->data.nLeftr += pReTxCounters->nLeftr;
          }
          else
          {

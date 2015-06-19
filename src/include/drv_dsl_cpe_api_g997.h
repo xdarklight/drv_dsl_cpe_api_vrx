@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -1794,46 +1794,55 @@ typedef struct
 typedef struct
 {
    /**
-   Downstream/Upstream Line Attenuation (see chapter 7.5.1.6/7.5.1.7 of G.997.1).
-   This parameter is a integral value over the complete spectrum.
-   It is the measured difference in the total power transmitted by the xTU C
-   and the total power received by the xTU R over all subcarriers during
-   diagnostics mode and initialization. The downstream line attenuation ranges
-   per band from 0 to +127 dB with 0.1 dB steps. A special value (1271) indicates
-   the line attenuation per band is out of range to be represented,
-   unused band is indicated by (-32768) value.
+   Downstream/Upstream Line Attenuation (see chapter 7.5.1.9/7.5.1.10 of G.997.1).
+   This parameter is an integral ("per direction") value over the complete
+   spectrum. It is the squared magnitude of the channel characteristics function
+   H(f) averaged and measured during loop diagnostic mode and initialization.
+   The exact definition is included in the relevant xDSL ITU-T Recommendation.
+   The line attenuation ranges from 0 (0) to +127 dB (1270) with 0.1 dB steps.
+   A special value (1271) indicates the line attenuation is out of range to be
+   represented.
+   \note In VDSL the integral "per direction" value for the Line Attenuation is
+         not available because it is not part of G.997.1 and G.993.2. To retrieve
+         the standard Line Attenuation in VDSL please use the API function
+         \ref DSL_FIO_G997_LINE_STATUS_PER_BAND_GET
    \note Line Attenuation values are init values which means it will NOT change
          during showtime.
-   \note For ADSL systems the value that will be reported if the line is
+   \note For ADSL *only* platforms the value that will be reported if the line is
          disabled reflects the last init value.
-   \note For ADSL only platforms and US showtime value a special handling
+   \note For ADSL *only* platforms and US showtime value a special handling
          exists. This handling uses backup value to report LATN parameter in
          case of unsuccessful FW access or OHC access. Initially this special
          backup value reflects the Training LATN. Further on each successful
          FW or OHC access the backup value is updated. */
    DSL_OUT DSL_int16_t LATN;
    /**
-   Downstream/Upstream Signal Attenuation (see chapter 7.5.1.8/7.5.1.9 of G.997.1).
-   This parameter is a integral value over the complete spectrum.
-   It is the measured difference in the total power transmitted by the xTU C
-   and the total power received by the xTU R over all subcarriers during
-   showtime. The downstream line attenuation ranges from 0 to +127 dB
-   with 0.1 dB steps. A special value (1271) indicates the line attenuation per
-   band is out of range to be represented, unused band is indicated
-   by (-32768) value.
+   Downstream/Upstream Signal Attenuation (see chapter 7.5.1.11/7.5.1.12 of G.997.1).
+   This parameter is an integral ("per direction") value over the complete
+   spectrum. It is the measured difference between the total power transmitted
+   by the xTU-C and the total power received by the xTU-R during loop diagnostic
+   mode, initialization and showtime. The exact definition is included in the
+   relevant DSL ITU-T Recommendation.
+   The line attenuation ranges from 0 (0) to +127 dB (1279) with 0.1 dB steps.
+   A special value (1271) indicates that the line attenuation is out of range to
+   be represented.
+   \note In VDSL the integral "per direction" value for the Signal Attenuation is
+         not available because it is not part of G.997.1 and G.993.2. To retrieve
+         the standard Signal Attenuation in VDSL please use the API function
+         \ref DSL_FIO_G997_LINE_STATUS_PER_BAND_GET
    \note During showtime, only a subset of the subcarriers may be transmitted
          by the xTU-C, as compared to diagnostics mode and initialization.
          Therefore, the downstream Signal attenuation may be significantly
          lower than the downstream Line attenuation.
-   \note For ADSL systems and normal initialization the value that will be
-         returned depends on the line state as follows:
+   \note For ADSL *only* platforms and normal initialization the value that will
+         be returned depends on the line state as follows:
          \code
          t1 < t <  (t1 + 15s) : Init value reported
          t >= (t1 + 15s)      : Showtime value reported
 
          with:
          t1 = time where entering showtime
-         t  = time where value is requested from DS API
+         t  = time where value is requested from DSL API
          \endcode
          The value will set to 0 if leaving showtime whether automatically
          (e.g. exception) or manually (e.g. LineDeactivate).
@@ -1841,25 +1850,24 @@ typedef struct
          firmware each time it will be requested from DSL API because this value
          might change in showtime.
          If operating in DELT mode according DELT values will be reported.
-   \note FFor ADSL only platforms and US showtime value a special handling
+   \note For ADSL *only* platforms and US showtime value a special handling
          exists. This handling uses backup value to report SATN parameter in
          case of unsuccessful FW access or OHC access.
          Initially this special backup value reflects the Training SATN. Further
          on each successful FW or OHC access the backup value is updated.*/
    DSL_OUT DSL_int16_t SATN;
    /**
-   Downstream/Upstream Signal-to-Noise Ratio Margin (see chapter 7.5.1.10/7.5.1.11
+   Downstream/Upstream Signal-to-Noise Ratio Margin (see chapter 7.5.1.13/7.5.1.16
    of G.997.1).
-   This parameter is a integral value over the complete spectrum.
-   The downstream signal to noise ratio margin is the maximum increase in dB of
-   the noise power received at the xTU R, such that the BER requirements are met
-   for all downstream bearer channels. The downstream SNR margin ranges from
-   -64 dB to +63 dB with 0.1 dB steps.
-   A special value (-641) indicates the parameter is out of range to be
+   This parameter is an integral ("per direction") value over the complete
+   spectrum. The signal-to-noise ratio margin is the maximum increase in dB of
+   the noise power received at the xTU-R, such that the BER requirements are met
+   for all bearer channels.
+   The SNR margin ranges from -64 dB (640) to +63 dB (630) with 0.1 dB steps. A
+   special value (-641) indicates that the parameter is out of range to be
    represented.
-   \note The downstream SNR margin measurement at the xTU R may take
-         up to 15 s.
-   \note For ADSL systems and normal initialization the value that will be
+   \note The upstream SNR margin measurement at the xTU-C may take up to 10 s.
+   \note For ADSL *only* platforms and normal initialization the value that will be
          returned depends on the line state as follows:
          \code
          t1 < t <  (t1 + 15s) : Init value reported
@@ -1875,7 +1883,7 @@ typedef struct
          firmware each time it will be requested from DSL API because this value
          might change in showtime.
          If operating in DELT mode according DELT values will be reported.
-   \note For ADSL only platforms and US showtime value a special handling
+   \note For ADSL *only* platforms and US showtime value a special handling
          exists. This handling uses backup value to report SNR parameter in case
          of unsuccessful FW access or OHC access.
          Initially this special backup value reflects the Training SNR. Further
@@ -1957,30 +1965,32 @@ typedef struct
 {
    /**
    Downstream/Upstream Line Attenuation per band
-   (see chapter 7.5.1.6/7.5.1.7 of G.997.1).
-   This parameter is defined per usable bands. It is the measured difference
-   in the total power transmitted in this band by the xTU C and the total power
-   received in this band by the xTU R over all subcarriers of this band during
-   diagnostics mode and initialization. The downstream line attenuation ranges
-   per band from 0 to +127 dB with 0.1 dB steps. A special value (-1) indicates
-   the line attenuation per band is out of range to be represented.
-   For ADSL systems, a single parameter is defined as a single downstream
-   band is usable.
-   All unused band entries will carry 0x8000.
+   (see chapter 7.5.1.9/7.5.1.10 of G.997.1).
+   This parameter is defined per usable band. It is the squared magnitude of the
+   channel characteristics function H(f) averaged over this band, and measured
+   during loop diagnostic mode and initialization. The exact definition is
+   included in the relevant xDSL ITU-T Recommendation.
+   The line attenuation ranges per band from 0 (0) to +127 dB (1270) with 0.1 dB
+   steps. A special value (1271) indicates that the line attenuation per band is
+   out of range to be represented.
+   For ADSL systems, a single parameter is defined as a single band is usable.
+   Unused band entries are indicated by a special value (-32768/0x8000).
    \note Line Attenuation values are init values which means it will NOT change
          during showtime. */
    DSL_OUT DSL_int16_t LATN[DSL_G997_MAX_NUMBER_OF_BANDS];
    /**
    Downstream/Upstream Signal Attenuation per band
-   (see chapter 7.5.1.8/7.5.1.9 of G.997.1).
-   This parameter is defined per usable bands. It is the measured difference
-   in the total power transmitted in this band by the xTU C and the total power
-   received in this band by the xTU R over all subcarriers of this band during
-   showtime. The downstream line attenuation per band ranges from 0 to +127 dB
-   with 0.1 dB steps. A special value (-1) indicates the line attenuation per
-   band is out of range to be represented.
-   For ADSL systems, a single parameter is defined as a single downstream
-   band is usable.
+   (see chapter 7.5.1.11/7.5.1.12 of G.997.1).
+   This parameter is defined per usable band. It is the measured difference
+   between the total power transmitted in this band by the xTU-C and the total
+   power received in this band by the xTU-R during loop diagnostic mode,
+   initialization and showtime. The exact definition is included in the relevant
+   DSL ITU-T Recommendation.
+   The line attenuation per band ranges from 0 (0) to +127 dB (1279) with 0.1 dB
+   steps. A special value (1271) indicates that the line attenuation per band is
+   out of range to be represented.
+   For ADSL systems, a single parameter is defined as a single band is usable.
+   Unused band entries are indicated by a special value (-32768/0x8000).
    \note During showtime, only a subset of the subcarriers may be transmitted
          by the xTU-C, as compared to diagnostics mode and initialization.
          Therefore, the downstream Signal attenuation may be significantly
@@ -1988,16 +1998,14 @@ typedef struct
    DSL_OUT DSL_int16_t SATN[DSL_G997_MAX_NUMBER_OF_BANDS];
    /**
    Downstream/Upstream Signal-to-Noise Ratio Margin per band
-   (see chapter 7.5.1.10/7.5.1.11 of G.997.1).
-   This parameter is defined by usable band. The downstream signal to
-   noise ratio margin per band is the maximum increase in dB of the noise
-   power received at the xTU R, such that the BER requirements are met
-   for all downstream bearer channels of this band. The downstream SNR
-   margin per band ranges from -64 dB to +63 dB with 0.1 dB steps.
-   A special value (-641) indicates the parameter is out of range to be
-   represented.
-   \note The downstream SNR margin measurement at the xTU R may take
-         up to 15 s. */
+   (see chapter 7.5.1.14/7.5.1.17 of G.997.1).
+   This parameter is defined per usable band. The signal-to-noise ratio margin
+   per band is the maximum increase in dB of the noise power received at the
+   xTU-R, such that the BER requirements are met for all bearer channels.
+   The SNR margin per band ranges from -64 dB (-640) to +63 dB (630) with 0.1 dB
+   steps. A special value (-641) indicates that the parameter is out of range to
+   be represented.
+   \note The upstream SNR margin measurement at the xTU-C may take up to 10 s. */
    DSL_OUT DSL_int16_t SNR[DSL_G997_MAX_NUMBER_OF_BANDS];
 } DSL_G997_LineStatusPerBandData_t;
 
@@ -2593,6 +2601,9 @@ typedef struct
    /**
    Driver control/status structure */
    DSL_IN_OUT DSL_AccessCtl_t accessCtl;
+   /**
+   Specifies for which DSL flavor the configuration will be applied. */
+   DSL_IN DSL_DslModeSelection_t nDslMode;
    /**
    Specifies for which direction (upstream/downstream) the function will
    apply */

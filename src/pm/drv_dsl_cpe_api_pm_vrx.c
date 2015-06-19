@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -39,6 +39,8 @@ DSL_Error_t DSL_DRV_PM_DEV_Start(DSL_Context_t *pContext)
    DSL_DRV_PM_CONTEXT(pContext)->nCurrShowtime = DSL_PM_FWMODE_NA;
 
 #ifdef INCLUDE_DSL_CPE_PM_CONFIG
+   memset(&pmCfg, 0x0, sizeof(DSL_PM_ConfigData_t));
+
    /* Get PM module configuration data*/
    memcpy(&pmCfg, &(DSL_DRV_PM_CONTEXT(pContext)->nPmConfig),
       sizeof(DSL_PM_ConfigData_t));
@@ -75,6 +77,8 @@ DSL_Error_t DSL_DRV_PM_DEV_Restart(DSL_Context_t *pContext)
 #endif /* INCLUDE_DSL_CPE_PM_CONFIG*/
 
 #ifdef INCLUDE_DSL_CPE_PM_CONFIG
+   memset(&pmCfg, 0x0, sizeof(DSL_PM_ConfigData_t));
+
    /* Get PM module configuration data*/
    memcpy(&pmCfg, &(DSL_DRV_PM_CONTEXT(pContext)->nPmConfig),
       sizeof(DSL_PM_ConfigData_t));
@@ -562,14 +566,16 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersGet(
    union
    {
       CMD_PTM_BC0_StatsNE_Get_t   cmdPtmStatsGet;
-      CMD_ATM_BC0_StatsNE_Get_t   cmdAtmStatsGet;
+      CMD_ATM_BC0_StatsNE_Get_t   cmdAtmStatsNE_Get;
+      CMD_ATM_BC0_StatsFE_Get_t   cmdAtmStatsFE_Get;
       CMD_ATM_BC0_TxStatsNE_Get_t cmdAtmTxStatsGet;
    } sCmd;
 
    union
    {
       ACK_PTM_BC0_StatsNE_Get_t   ackPtmStatsGet;
-      ACK_ATM_BC0_StatsNE_Get_t   ackAtmStatsGet;
+      ACK_ATM_BC0_StatsNE_Get_t   ackAtmStatsNE_Get;
+      ACK_ATM_BC0_StatsFE_Get_t   ackAtmStatsFE_Get;
       ACK_ATM_BC0_TxStatsNE_Get_t ackAtmTxStatsGet;
    } sAck;
 
@@ -623,16 +629,16 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersGet(
          pCounters->nCV_P   = (sAck.ackPtmStatsGet.cntCV_MSW << 16) | sAck.ackPtmStatsGet.cntCV_LSW;
 
          /* ATM counters */
-         memset(&(sAck.ackAtmStatsGet), 0x0, sizeof(sAck.ackAtmStatsGet));
+         memset(&(sAck.ackAtmStatsNE_Get), 0x0, sizeof(sAck.ackAtmStatsNE_Get));
 
-         sCmd.cmdAtmStatsGet.Index  = 0x0;
-         sCmd.cmdAtmStatsGet.Length = 8;
+         sCmd.cmdAtmStatsNE_Get.Index  = 0x0;
+         sCmd.cmdAtmStatsNE_Get.Length = 8;
 
          /* Get ATM statistics*/
          nErrCode = DSL_DRV_VRX_SendMessage(
             pContext, CMD_ATM_BC0_STATSNE_GET,
-            sizeof(sCmd.cmdAtmStatsGet), (DSL_uint8_t*)&(sCmd.cmdAtmStatsGet),
-            sizeof(sAck.ackAtmStatsGet), (DSL_uint8_t*)&(sAck.ackAtmStatsGet));
+            sizeof(sCmd.cmdAtmStatsNE_Get), (DSL_uint8_t*)&(sCmd.cmdAtmStatsNE_Get),
+            sizeof(sAck.ackAtmStatsNE_Get), (DSL_uint8_t*)&(sAck.ackAtmStatsNE_Get));
 
          /* Check nErrCode and return on error*/
          if( nErrCode < 0 )
@@ -645,10 +651,10 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersGet(
          }
 
          /* Fill the output data structure*/
-         pCounters->nHEC            = (sAck.ackAtmStatsGet.hecp_MSW << 16) | sAck.ackAtmStatsGet.hecp_LSW;
-         pCounters->nTotalCells     = (sAck.ackAtmStatsGet.cdp_MSW << 16) | sAck.ackAtmStatsGet.cdp_LSW;
-         pCounters->nUserTotalCells = (sAck.ackAtmStatsGet.cup_MSW << 16) | sAck.ackAtmStatsGet.cup_LSW;
-         pCounters->nIBE            = (sAck.ackAtmStatsGet.ibep_MSW << 16) | sAck.ackAtmStatsGet.ibep_LSW;
+         pCounters->nHEC            = (sAck.ackAtmStatsNE_Get.hecp_MSW << 16) | sAck.ackAtmStatsNE_Get.hecp_LSW;
+         pCounters->nTotalCells     = (sAck.ackAtmStatsNE_Get.cdp_MSW << 16)  | sAck.ackAtmStatsNE_Get.cdp_LSW;
+         pCounters->nUserTotalCells = (sAck.ackAtmStatsNE_Get.cup_MSW << 16)  | sAck.ackAtmStatsNE_Get.cup_LSW;
+         pCounters->nIBE            = (sAck.ackAtmStatsNE_Get.ibep_MSW << 16) | sAck.ackAtmStatsNE_Get.ibep_LSW;
 
          memset(&(sCmd.cmdAtmTxStatsGet), 0x0, sizeof(sCmd.cmdAtmTxStatsGet));
          memset(&(sAck.ackAtmTxStatsGet), 0x0, sizeof(sAck.ackAtmTxStatsGet));
@@ -680,9 +686,33 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersGet(
       }
       else
       {
-         DSL_DEBUG( DSL_DBG_WRN, (pContext, SYS_DBG_WRN
-            "DSL[%02d]: WARNING - Data Path counters are not supported for the FE!"
-            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         /* ATM counters */
+         memset(&(sAck.ackAtmStatsFE_Get), 0x0, sizeof(sAck.ackAtmStatsFE_Get));
+
+         sCmd.cmdAtmStatsFE_Get.Index  = 0x0;
+         sCmd.cmdAtmStatsFE_Get.Length = 8;
+
+         /* Get ATM statistics*/
+         nErrCode = DSL_DRV_VRX_SendMessage(
+            pContext, CMD_ATM_BC0_STATSFE_GET,
+            sizeof(sCmd.cmdAtmStatsFE_Get), (DSL_uint8_t*)&(sCmd.cmdAtmStatsFE_Get),
+            sizeof(sAck.ackAtmStatsFE_Get), (DSL_uint8_t*)&(sAck.ackAtmStatsFE_Get));
+
+         /* Check nErrCode and return on error*/
+         if( nErrCode < 0 )
+         {
+            DSL_DEBUG( DSL_DBG_ERR,
+               (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - ATM statistics get failed!"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+            return nErrCode;
+         }
+
+         /* Fill the output data structure*/
+         pCounters->nHEC            = (sAck.ackAtmStatsFE_Get.hecpfe_MSW << 16) | sAck.ackAtmStatsFE_Get.hecpfe_LSW;
+         pCounters->nTotalCells     = (sAck.ackAtmStatsFE_Get.cdpfe_MSW << 16)  | sAck.ackAtmStatsFE_Get.cdpfe_LSW;
+         pCounters->nUserTotalCells = (sAck.ackAtmStatsFE_Get.cupfe_MSW << 16)  | sAck.ackAtmStatsFE_Get.cupfe_LSW;
+         pCounters->nIBE            = (sAck.ackAtmStatsFE_Get.ibepfe_MSW << 16) | sAck.ackAtmStatsFE_Get.ibepfe_LSW;
       }
    }
    else
@@ -965,6 +995,8 @@ DSL_Error_t DSL_DRV_PM_DEV_LineSecCountersGet(
          pCounters->nUAS  = (sAck.NE.cntUAS_MSW << 16) | sAck.NE.cntUAS_LSW;
          /* Not supported by the VRX VDSL FW*/
          pCounters->nLOFS = 0;
+         /* Get current FECS value*/
+         pCounters->nFECS  = (sAck.NE.cntFECS_MSW << 16) | sAck.NE.cntFECS_LSW;
       }
    }
    else if(DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL))
@@ -989,6 +1021,8 @@ DSL_Error_t DSL_DRV_PM_DEV_LineSecCountersGet(
          pCounters->nUAS  = 0;
          /* LOFS counter not supported by the FW in the ADSL mode*/
          pCounters->nLOFS = 0;
+         /* Get current FECS value*/
+         pCounters->nFECS  = (sAck.NE.cntFECS_MSW << 16) | sAck.NE.cntFECS_LSW;
       }
    }
    else
@@ -1050,49 +1084,26 @@ DSL_Error_t DSL_DRV_PM_DEV_LineSecCountersSet(
        ((DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL)) &&
         (DSL_DRV_PM_CONTEXT(pContext)->nLastShowtime == DSL_PM_FWMODE_ADSL)) )
    {
-      /* Only applicable for ADSL mode*/
-      if( DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2) )
-      {
-         memset(&(sCmd.LinePerfNE), 0x0, sizeof(sCmd.LinePerfNE));
+      memset(&(sCmd.LinePerfNE), 0x0, sizeof(sCmd.LinePerfNE));
 
-         /* Fill the message*/
-         sCmd.LinePerfNE.Length      = 10;
-         sCmd.LinePerfNE.cntES_MSW   = (DSL_uint16_t)(pCounters->nES>>16);
-         sCmd.LinePerfNE.cntES_LSW   = (DSL_uint16_t)pCounters->nES;
-         sCmd.LinePerfNE.cntSES_MSW  = (DSL_uint16_t)(pCounters->nSES>>16);
-         sCmd.LinePerfNE.cntSES_LSW  = (DSL_uint16_t)(pCounters->nSES);
-         sCmd.LinePerfNE.cntES_MSW   = (DSL_uint16_t)(pCounters->nLOSS>>16);
-         sCmd.LinePerfNE.cntLOSS_LSW = (DSL_uint16_t)(pCounters->nLOSS);
-         sCmd.LinePerfNE.cntUAS_MSW  = (DSL_uint16_t)(pCounters->nUAS>>16);
-         sCmd.LinePerfNE.cntUAS_LSW  = (DSL_uint16_t)(pCounters->nUAS);
+      /* Fill the message*/
+      sCmd.LinePerfNE.Length      = 10;
+      sCmd.LinePerfNE.cntFECS_MSW = (DSL_uint16_t)(pCounters->nFECS>>16);
+      sCmd.LinePerfNE.cntFECS_LSW = (DSL_uint16_t)pCounters->nFECS;
+      sCmd.LinePerfNE.cntES_MSW   = (DSL_uint16_t)(pCounters->nES>>16);
+      sCmd.LinePerfNE.cntES_LSW   = (DSL_uint16_t)pCounters->nES;
+      sCmd.LinePerfNE.cntSES_MSW  = (DSL_uint16_t)(pCounters->nSES>>16);
+      sCmd.LinePerfNE.cntSES_LSW  = (DSL_uint16_t)(pCounters->nSES);
+      sCmd.LinePerfNE.cntLOSS_MSW = (DSL_uint16_t)(pCounters->nLOSS>>16);
+      sCmd.LinePerfNE.cntLOSS_LSW = (DSL_uint16_t)(pCounters->nLOSS);
+      sCmd.LinePerfNE.cntUAS_MSW  = (DSL_uint16_t)(pCounters->nUAS>>16);
+      sCmd.LinePerfNE.cntUAS_LSW  = (DSL_uint16_t)(pCounters->nUAS);
 
-         /* Set Line sec counters*/
-         nErrCode =  DSL_DRV_VRX_SendMessage(
-            pContext, CMD_LINEPERFCOUNTNE_SET,
-            sizeof(sCmd.LinePerfNE), (DSL_uint8_t *)&(sCmd.LinePerfNE),
-            sizeof(sAck.LinePerfNE),(DSL_uint8_t *)&(sAck.LinePerfNE));
-      }
-      else
-      {
-         memset(&(sCmd.LinePerfNE), 0x0, sizeof(sCmd.LinePerfNE));
-
-         /* Fill the message*/
-         sCmd.LinePerfNE.Length      = 10;
-         sCmd.LinePerfNE.cntES_MSW   = (DSL_uint16_t)(pCounters->nES>>16);
-         sCmd.LinePerfNE.cntES_LSW   = (DSL_uint16_t)pCounters->nES;
-         sCmd.LinePerfNE.cntSES_MSW  = (DSL_uint16_t)(pCounters->nSES>>16);
-         sCmd.LinePerfNE.cntSES_LSW  = (DSL_uint16_t)(pCounters->nSES);
-         sCmd.LinePerfNE.cntLOSS_MSW = (DSL_uint16_t)(pCounters->nLOSS>>16);
-         sCmd.LinePerfNE.cntLOSS_LSW = (DSL_uint16_t)(pCounters->nLOSS);
-         sCmd.LinePerfNE.cntUAS_MSW  = (DSL_uint16_t)(pCounters->nUAS>>16);
-         sCmd.LinePerfNE.cntUAS_LSW  = (DSL_uint16_t)(pCounters->nUAS);
-
-         /* Set Line sec counters*/
-         nErrCode =  DSL_DRV_VRX_SendMessage(
-            pContext, CMD_LINEPERFCOUNTNE_SET,
-            sizeof(sCmd.LinePerfNE), (DSL_uint8_t *)&(sCmd.LinePerfNE),
-            sizeof(sAck.LinePerfNE),(DSL_uint8_t *)&(sAck.LinePerfNE));
-      }
+      /* Set Line sec counters*/
+      nErrCode =  DSL_DRV_VRX_SendMessage(
+         pContext, CMD_LINEPERFCOUNTNE_SET,
+         sizeof(sCmd.LinePerfNE), (DSL_uint8_t *)&(sCmd.LinePerfNE),
+         sizeof(sAck.LinePerfNE),(DSL_uint8_t *)&(sAck.LinePerfNE));
    }
    else
    {
@@ -1332,8 +1343,13 @@ DSL_Error_t DSL_DRV_PM_DEV_ReTxCountersGet(
    DSL_PM_ReTxData_t *pCounters)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
-   ACK_RTX_PM_DS_Get_t retxPm;
-   DSL_uint32_t nEftrMin;
+   union
+   {
+      ACK_RTX_PM_US_Get_t US;
+      ACK_RTX_PM_DS_Get_t DS;
+   } retxPm;
+
+   DSL_uint32_t nEftrMin = 0;
    DSL_DEV_VersionCheck_t nVerCheck = DSL_VERSION_ERROR;
 
    DSL_DEBUG( DSL_DBG_MSG,
@@ -1344,11 +1360,13 @@ DSL_Error_t DSL_DRV_PM_DEV_ReTxCountersGet(
    DSL_CHECK_ATU_DIRECTION(nDirection);
    DSL_CHECK_ERR_CODE();
 
+   memset(&retxPm, 0x0, sizeof(retxPm));
+
    if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2))
    {
       /* Get FW information */
       nErrCode = DSL_DRV_VRX_FirmwareVersionCheck(pContext,
-                  DSL_MIN_FW_VERSION_RETX_VDSL, &nVerCheck);
+                  DSL_MIN_FW_VERSION_RETX_VDSL_DS, &nVerCheck);
       if (nErrCode != DSL_SUCCESS)
       {
          DSL_DEBUG(DSL_DBG_ERR,
@@ -1359,21 +1377,31 @@ DSL_Error_t DSL_DRV_PM_DEV_ReTxCountersGet(
    }
    else if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL))
    {
-      /* Get FW information */
-      nErrCode = DSL_DRV_VRX_FirmwareVersionCheck(pContext,
-                  DSL_MIN_FW_VERSION_RETX_ADSL, &nVerCheck);
-      if (nErrCode != DSL_SUCCESS)
+      /* Important: API direction mapping to the FW (NE->DS, FE->US) */
+      /* US for ADSL is not supported */
+      if (nDirection == DSL_NEAR_END)
       {
-         DSL_DEBUG(DSL_DBG_ERR,
-            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
-            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-         return nErrCode;
+         /* Get FW information */
+         nErrCode = DSL_DRV_VRX_FirmwareVersionCheck(pContext,
+                     DSL_MIN_FW_VERSION_RETX_ADSL_DS, &nVerCheck);
+         if (nErrCode != DSL_SUCCESS)
+         {
+            DSL_DEBUG(DSL_DBG_ERR,
+               (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+            return nErrCode;
+         }
       }
    }
 
    if (nVerCheck >= DSL_VERSION_EQUAL)
    {
-      nErrCode = DSL_DRV_VRX_SendMsgRtxPmDsGet(pContext, (DSL_uint8_t *)&retxPm);
+      /* Important: API direction mapping to the FW (NE->DS, FE->US) */
+      nErrCode = DSL_DRV_VRX_SendMsgRtxPmGet(
+                                  pContext,
+                                  nDirection == DSL_NEAR_END ? DSL_DOWNSTREAM :
+                                                               DSL_UPSTREAM,
+                                  (DSL_uint8_t *)&retxPm);
       if (nErrCode != DSL_SUCCESS)
       {
          DSL_DEBUG(DSL_DBG_ERR, (pContext,
@@ -1382,7 +1410,24 @@ DSL_Error_t DSL_DRV_PM_DEV_ReTxCountersGet(
          return nErrCode;
       }
 
-      nEftrMin = ((DSL_uint32_t)(retxPm.EFTR_MSW << 16)) | retxPm.EFTR_LSW;
+      if (nDirection == DSL_NEAR_END)
+      {
+         pCounters->nErrorFreeBits = ((DSL_uint32_t)(retxPm.US.ErrorFreeBits_MSW << 16)) |
+                                                     retxPm.US.ErrorFreeBits_LSW;
+         pCounters->nLeftr         = ((DSL_uint32_t)(retxPm.US.leftr_MSW << 16)) |
+                                                     retxPm.US.leftr_LSW;
+         nEftrMin                  = ((DSL_uint32_t)(retxPm.US.EFTR_min_MSW << 16)) |
+                                                     retxPm.US.EFTR_min_LSW;
+      }
+      else
+      {
+         pCounters->nErrorFreeBits = ((DSL_uint32_t)(retxPm.DS.ErrorFreeBits_MSW << 16)) |
+                                                     retxPm.DS.ErrorFreeBits_LSW;
+         pCounters->nLeftr         = ((DSL_uint32_t)(retxPm.DS.leftr_MSW << 16)) |
+                                                     retxPm.DS.leftr_LSW;
+         nEftrMin                  = ((DSL_uint32_t)(retxPm.DS.EFTR_MSW << 16)) |
+                                                     retxPm.DS.EFTR_LSW;
+      }
 
       /* ignore zero value*/
       if (nEftrMin)

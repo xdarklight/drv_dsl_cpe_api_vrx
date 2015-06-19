@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -302,9 +302,6 @@ typedef struct
    /**
    Number of used data elements */
    DSL_uint16_t nNumData;
-   /**
-   Number of used data elements (previous call) */
-   DSL_uint16_t nNumDataPrev;
    /**
    Data elements */
    DSL_uint8_t nSCGData[DSL_MAX_SNR_US_SCG];

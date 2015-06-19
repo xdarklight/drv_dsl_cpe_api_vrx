@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -1110,6 +1110,7 @@ DSL_Error_t DSL_DRV_Init(
    pContext->lineFeatureDataCfg[DSL_DOWNSTREAM].bBitswapEnable = DSL_TRUE;
 
    /* ReTx is only valid for downstream direction */
+   pContext->lineFeatureDataCfg[DSL_UPSTREAM].bReTxEnable = DSL_FALSE;
    pContext->lineFeatureDataCfg[DSL_DOWNSTREAM].bReTxEnable = DSL_TRUE;
 
 #ifdef INCLUDE_DSL_CPE_API_VRX
@@ -1136,6 +1137,21 @@ DSL_Error_t DSL_DRV_Init(
    pContext->PMMode = DSL_G997_PMMODE_BIT_L3_STATE;
 #endif /* INCLUDE_DSL_CPE_API_VRX*/
 
+   /* Set default rate adaptation mode settings */
+#ifdef INCLUDE_DSL_CPE_API_VRX
+   /* SRA disabled by default for VRX in ADSL mode (see DSLCPE_SW-755) */
+   pContext->rateAdaptationMode[DSL_MODE_ADSL][DSL_UPSTREAM] = DSL_G997_RA_MODE_AT_INIT;
+   pContext->rateAdaptationMode[DSL_MODE_ADSL][DSL_DOWNSTREAM] = DSL_G997_RA_MODE_AT_INIT;
+   /* SRA enabled by default for VRX in VDSL mode (see DSLCPE_SW-755) */
+   /* Also refer to DSLCPE_SW-768 for special handling within context of F7 FW */
+   pContext->rateAdaptationMode[DSL_MODE_VDSL][DSL_UPSTREAM] = DSL_G997_RA_MODE_DYNAMIC;
+   pContext->rateAdaptationMode[DSL_MODE_VDSL][DSL_DOWNSTREAM] = DSL_G997_RA_MODE_DYNAMIC;
+#else
+   /* SRA enabled by default for ARX */
+   pContext->rateAdaptationMode[DSL_MODE_ADSL][DSL_UPSTREAM] = DSL_G997_RA_MODE_DYNAMIC;
+   pContext->rateAdaptationMode[DSL_MODE_ADSL][DSL_DOWNSTREAM] = DSL_G997_RA_MODE_DYNAMIC;
+#endif /* INCLUDE_DSL_CPE_API_VRX*/
+
    /* *********************************************************************** */
 
    DSL_DRV_MUTEX_UNLOCK(pContext->dataMutex);
@@ -1153,6 +1169,11 @@ DSL_Error_t DSL_DRV_Init(
 
    memcpy(&(pContext->nFwFeatures), &(pData->data.nFirmwareFeatures),
       sizeof(DSL_FirmwareFeatures_t));
+
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 2)
+   memcpy(&(pContext->nFwFeatures2), &(pData->data.nFirmwareFeatures2),
+      sizeof(DSL_FirmwareFeatures_t));
+#endif
 
    /* Download FW if available and Start Autoboot handling.
        If no FW specified, do it later with appropriate IOCTLs*/
@@ -1399,6 +1420,10 @@ DSL_Error_t DSL_DRV_AutobootLoadFirmware(
          DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
       DSL_CTX_WRITE(pContext, nErrCode, nFwFeatures, pData->data.firmwareFeatures);
+
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 2)
+      DSL_CTX_WRITE(pContext, nErrCode, nFwFeatures2, pData->data.firmwareFeatures2);
+#endif
    }
    else
    {
@@ -2421,6 +2446,7 @@ DSL_Error_t DSL_DRV_LineFeatureConfigSet(
    DSL_IN DSL_Context_t *pContext,
    DSL_IN_OUT DSL_LineFeature_t *pData)
 {
+   DSL_boolean_t bReTxEnableDs = DSL_FALSE;
    DSL_Error_t nErrCode = DSL_SUCCESS, nRet = DSL_SUCCESS;
 
    DSL_DEBUG(DSL_DBG_MSG,
@@ -2432,14 +2458,26 @@ DSL_Error_t DSL_DRV_LineFeatureConfigSet(
    DSL_CHECK_DIRECTION(pData->nDirection);
    DSL_CHECK_ERR_CODE();
 
+   DSL_CTX_READ_SCALAR(pContext, nErrCode,
+      lineFeatureDataCfg[DSL_DOWNSTREAM].bReTxEnable, bReTxEnableDs);
+
    if (pData->nDirection == DSL_UPSTREAM)
    {
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+      if((pData->data.bReTxEnable == DSL_TRUE) && (bReTxEnableDs == DSL_FALSE))
+      {
+         /* Retransmission for US can be only enabled if DS is already enabled */
+         pData->data.bReTxEnable = DSL_FALSE;
+         nRet = DSL_WRN_CONFIG_RTX_US_ONLY_SUPPORTED_WITH_DS_ENABLED;
+      }
+#else
       if(pData->data.bReTxEnable == DSL_TRUE)
       {
          /* Retransmission mode not supported for US */
          pData->data.bReTxEnable = DSL_FALSE;
          nRet = DSL_WRN_CONFIG_PARAM_IGNORED;
       }
+#endif
    }
 
    if ((pData->nDirection == DSL_UPSTREAM) &&

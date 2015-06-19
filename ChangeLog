@@ -1,5 +1,99 @@
 NEXT VERSION
 
+V4.16.2.4 - 2014-03-11
+Bug fix(es):
+- VRX (DSLPCE_SW-787) US ETR value read from CPE through API command is not correct
+  + extended msg white list with CMD_RTX_BEARERCHSUS_GET
+
+V4.16.2.3 - 2014-02-27
+common:
+- (DSLCPE_SW-786) [VRX] Counter overflow in UAS or FECS values
+  + fixed ms counter overflow handling for UAS counter
+  + extended LineSecCounters restore with FECS counter
+  + fixed ES counter restore
+
+V4.16.2.2 - 2014-02-10
+-
+
+V4.16.2.1 - 2014-01-20
+common:
+- VRX (DSLCPE_SW-778) Line unlock does not work in case of operating a single
+  link line on a boding CPE (related to the DSLCPE_SW-752)
+  + fix orderly shutdown usage in case of internal firmware exception case
+
+V4.16.2 - 2014-01-16
+-
+
+V4.16.1 - 2014-01-15
+common:
+- (DSLCPE_SW-770) Klocwork reworks/fixes for UGW-6.1.
+  + Extended drv_dsl_cpe_api (UGW_VRX288_GW_HE_VDSL_LTE)
+
+V4.16.0 - 2014-01-10
+common:
+- Updated copyright header (year 2014)
+
+V4.15.10 - 2013-12-19
+- VRX (DSLCPE_SW-768) API for FW R7 Release - Change of default configuration
+  values
+- VRX (DSLCPE_SW-759) Include and test CPE controlled L3 orderly shutdown handling
+
+V4.15.9 - 2013-12-06
+- VRX (DSLCPE_SW-749) Rework Retransmission counter related API functions.
+  + fix compile with disabled PM ReTX counters
+  + fix DSL_DRV_PM_PTR_RETX_COUNTERS macro (definition & usage)
+
+V4.15.8 - 2013-12-05
+common:
+- (DSLCPE_SW-772) Take care that MEI driver version can be more than three digits
+  + Reworked implementation for ADSL platforms (ADSL MEI Driver related handling)
+- VRX (DSLCPE_SW-749) Rework Retransmission counter related API functions.
+  + Extended PM_ReTxCounters with nErrorFreeBits, nLeftr.
+  + Extended PM_LineSecCounters with nFECS.
+  + Fixed nEftrMin handling for PM Showtime counter.
+- VRX (DSLCPE_SW-752) Strictly usage of local orderly shutdown.
+  + Extended transition to L3 within showtime update with orderly shutdown.
+  + Extended SNR min margin error within showtime update with orderly shutdown.
+- VRX (DSLCPE_SW-764) CMV bit to enable/disable G.INP Amendment 2 support.
+  + Added G.998.4 Amendment 2 support.
+- VRX (DSLCPE_SW-731) Extend far end counter handling of PM module.
+  + Added FarEnd CMD_ATM_BC0_StatsFE_Get (MsgId 0x330A) (HEC, IBE, CD, CU).
+
+V4.15.7 - 2013-09-18
+common:
+- VRX (DSLCPE_SW-757)Extend Retransmission config&status for Upstream direction
+  + Message header files update to VRX FWMCAT Rev2.3
+  + Extended handling for upstream RTX config und status, *excluding* counters
+    from within following functions
+    - DSL_FIO_PM_RETX_COUNTERS_xxx_GET
+    - DSL_FIO_RETX_STATISTICS_GET
+
+V4.15.6 - 2013-09-13
+common:
+- (DSLCPE_SW-755) Extensions for G997_RateAdaptationConfigSet handling
+- VRX (DSLCPE_SW-754) Using different DSL FW binaries for dual port
+  and single port mode.
+  + Extended firmware download handling with second firmware.
+
+V4.15.5 - 2013-08-22
+-
+
+V4.15.4 - 2013-08-16
+common:
+- (DSLCPE_SW-734) Take care that DSL Subsystem is fully functional with
+  Linux kernel 3.8.
+  + Extended source code for Danube to be compilable with linux kernel 3.8
+Bug fix(es):
+- Danube (DSLCPE_SW-744) SNRpsds w/ and w/o virtual noise including bugfixes for
+  all per-tone/subcarrier functions.
+  + Fixed compilation error for DSL_DRV_DEV_DeltSNRGet() function.
+
+V4.15.3 - 2013-08-09
+common:
+- (DSLCPE_SW-734) Take care that DSL Subsystem is fully functional with
+  Linux kernel 3.8.
+  + Extended source code for VRX to be compilable with linux kernel 3.8
+
 V4.15.2 - 2013-07-29
 common:
 - VRX (DSLCPE_SW-744) SNRpsds w/ and w/o virtual noise including bugfixes for

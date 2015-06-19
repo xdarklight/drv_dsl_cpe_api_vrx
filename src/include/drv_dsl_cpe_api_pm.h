@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -346,6 +346,9 @@ typedef struct
    An LOF failure is cleared when LOS failure is declared, or after 10 + 0.5 s
    of no SEF defect. */
    DSL_OUT DSL_uint32_t nLOFS;
+   /**
+   Forward Error Correction Seconds */
+   DSL_OUT DSL_uint32_t nFECS;
 } DSL_PM_LineSecData_t;
 
 /**
@@ -1251,6 +1254,13 @@ typedef struct
    The management entity shall read EFTR_min (at least) every 15 min to
    determine the minimum EFTR over the 15 min and 24 hour intervals. */
    DSL_OUT DSL_uint32_t nEftrMin;
+   /**
+   Counter for the number of bits which has been passed from the RTX receiver to
+   the next sub-layer. */
+   DSL_OUT DSL_uint32_t nErrorFreeBits;
+   /**
+   Counter for "leftr" defects seconds */
+   DSL_OUT DSL_uint32_t nLeftr;
 } DSL_PM_ReTxData_t;
 
 /**
@@ -1367,6 +1377,12 @@ typedef enum
    /**
    nEftrMin counter threshold crossing. */
    DSL_PM_RETXTHRESHCROSS_EFTR_MIN = 0x00000010,
+   /**
+   nErrorFreeBits counter threshold crossing. */
+   DSL_PM_RETXTHRESHCROSS_ERROR_FREE_BITS = 0x00000020,
+   /**
+   nLeftr counter threshold crossing. */
+   DSL_PM_RETXTHRESHCROSS_LEFTR = 0x00000040,
 } DSL_PM_BF_ReTxThresholdCrossing_t;
 
 /**

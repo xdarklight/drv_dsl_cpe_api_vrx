@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -1642,6 +1642,9 @@ static DSL_Error_t DSL_DRV_PM_HistoryEpUpdate(
    DSL_pmBF_IntervalFailures_t *pInvalidHist = DSL_NULL;
    DSL_uint8_t *pRec = DSL_NULL;
    DSL_int_t histIdx = 0;
+#ifdef INCLUDE_DSL_CPE_PM_RETX_COUNTERS
+   DSL_pmReTxData_t *pData = DSL_NULL;
+#endif /* INCLUDE_DSL_CPE_PM_RETX_COUNTERS */
 
    /* Get Endpoint data*/
    nEpData.epType = epType;
@@ -1674,7 +1677,7 @@ static DSL_Error_t DSL_DRV_PM_HistoryEpUpdate(
       pInvalidHist = nEpData.pShowtimeInvalidHist;
       pRec         = nEpData.pRecShowtime;
       break;
-#endif /* INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS */
+#endif /* INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS*/
    default:
       return DSL_ERROR;
    }
@@ -1722,17 +1725,22 @@ static DSL_Error_t DSL_DRV_PM_HistoryEpUpdate(
       return nErrCode;
    }
 
+   /* set history memory to zeros */
+   memset((pRec + histIdx*nEpData.nEpRecElementSize), 0, nEpData.nEpRecElementSize);
+
+#ifdef INCLUDE_DSL_CPE_PM_RETX_COUNTERS
    if (epType == DSL_PM_COUNTER_RETX)
    {
+      pData = (DSL_pmReTxData_t *)(pRec + histIdx*nEpData.nEpRecElementSize);
+
       /* set history memory to 0xff because we need to
          determine minimum value for this counters*/
-      memset((pRec + histIdx*nEpData.nEpRecElementSize), 0xff, nEpData.nEpRecElementSize);
+      DSL_DRV_PM_PTR_RETX_COUNTERS(pData, DSL_NEAR_END)->nEftrMin =
+                                             DSL_PM_COUNTER_EFTR_MIN_MAX_VALUE;
+      DSL_DRV_PM_PTR_RETX_COUNTERS(pData, DSL_FAR_END )->nEftrMin =
+                                             DSL_PM_COUNTER_EFTR_MIN_MAX_VALUE;
    }
-   else
-   {
-      /* set history memory to zeros */
-      memset((pRec + histIdx*nEpData.nEpRecElementSize), 0, nEpData.nEpRecElementSize);
-   }
+#endif /* INCLUDE_DSL_CPE_PM_RETX_COUNTERS*/
 
    /* Set invalid indication*/
    pInvalidHist[histIdx] = DSL_PM_INTERVAL_FAILURE_NOT_COMPLETE;
@@ -3092,7 +3100,7 @@ static DSL_Error_t DSL_DRV_PM_LineSecCountersCurrentGet(
    DSL_CHECK_ERR_CODE();
 
    DSL_DEBUG( DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_LineSecCountersUpdate"
+      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_PM_LineSecCountersCurrentGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
    /* Get pointer to the Line Sec counters according to the specified direction*/
@@ -3102,7 +3110,7 @@ static DSL_Error_t DSL_DRV_PM_LineSecCountersCurrentGet(
    nErrCode = DSL_DRV_PM_DEV_LineSecCountersGet(pContext, nDirection, pLineSecCounters);
 
    DSL_DEBUG( DSL_DBG_MSG,(pContext, SYS_DBG_MSG"DSL[%02d]: OUT - "
-      "DSL_DRV_PM_LineSecCountersUpdate, retCode=%d"DSL_DRV_CRLF,
+      "DSL_DRV_PM_LineSecCountersCurrentGet, retCode=%d"DSL_DRV_CRLF,
       DSL_DEV_NUM(pContext), nErrCode));
 
    return nErrCode;
@@ -3246,6 +3254,15 @@ static DSL_Error_t DSL_DRV_PM_LineSecCountersThresholdsCrossingCheck(
          nMibThresholds |= (nDirection == DSL_NEAR_END) ?
             DSL_MIB_THRESHOLD_ATUR_15MIN_UASL_FLAG :
             DSL_MIB_THRESHOLD_ATUC_15MIN_UASL_FLAG;
+         #endif
+      }
+
+      if( pLineSecCounters->nFECS > pLineSecThresholds->nFECS )
+      {
+         *pEvtThresholdInd |= DSL_PM_LINETHRESHCROSS_FECS;
+         #ifdef INCLUDE_DSL_ADSL_MIB
+         nMibThresholds |= (nDirection == DSL_NEAR_END) ?
+            DSL_MIB_THRESHOLD_ATUR_FECS_FLAG : DSL_MIB_THRESHOLD_ATUC_FECS_FLAG;
          #endif
       }
 
@@ -3445,6 +3462,12 @@ DSL_Error_t DSL_DRV_PM_LineSecThresholdsUpdate(
       if( pCounters->nUAS <= pThreshsOld->nUAS )
          /* Clear nUAS indication bitmask*/
          *pInd &= ~DSL_PM_LINETHRESHCROSS_UAS;
+
+      /* Set new nFECS threshold*/
+      pThreshsOld->nFECS = pThreshsNew->nFECS;
+      if( pCounters->nFECS <= pThreshsOld->nFECS )
+         /* Clear nFECS indication bitmask*/
+         *pInd &= ~DSL_PM_LINETHRESHCROSS_FECS;
    }
    else
    {
@@ -3684,7 +3707,7 @@ static DSL_Error_t DSL_DRV_PM_LineSecCountersUpdate(
             }
             else
             {
-               nUasIncr = nCurrTime + (0xFFFFFFFF - pLineSecAuxData->nUASBegin);
+               nUasIncr = nCurrTime + (0xFFFFFFFF/(HZ*DSL_PM_MSEC) - pLineSecAuxData->nUASBegin) + 1;
             }
 
             pLineSecAuxData->nUASLast += nUasIncr;
@@ -3736,6 +3759,13 @@ static DSL_Error_t DSL_DRV_PM_LineSecCountersUpdate(
       &(pNewSecCounters->nUAS), &(pCurrSecCounters->nUAS),
       &(nAbsSecCounters.nUAS), DSL_PM_COUNTER_UAS_MAX_VALUE, nDirection);
 
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+   /* Update nFECS*/
+   DSL_DRV_PM_CounterUpdate(
+      &(pNewSecCounters->nFECS), &(pCurrSecCounters->nFECS),
+      &(nAbsSecCounters.nFECS), DSL_PM_COUNTER_FECS_MAX_VALUE, nDirection);
+#endif
+
 #ifdef INCLUDE_DSL_CPE_PM_LINE_COUNTERS
 #ifdef INCLUDE_DSL_CPE_PM_HISTORY
    if (b15min)
@@ -3746,6 +3776,7 @@ static DSL_Error_t DSL_DRV_PM_LineSecCountersUpdate(
       p15minSecCounters->nLOSS += nAbsSecCounters.nLOSS;
       p15minSecCounters->nSES  += nAbsSecCounters.nSES;
       p15minSecCounters->nUAS  += nAbsSecCounters.nUAS;
+      p15minSecCounters->nFECS += nAbsSecCounters.nFECS;
    }
 
    if (b1day)
@@ -3756,6 +3787,7 @@ static DSL_Error_t DSL_DRV_PM_LineSecCountersUpdate(
       p1daySecCounters->nLOSS += nAbsSecCounters.nLOSS;
       p1daySecCounters->nSES  += nAbsSecCounters.nSES;
       p1daySecCounters->nUAS  += nAbsSecCounters.nUAS;
+      p1daySecCounters->nFECS += nAbsSecCounters.nFECS;
    }
 #endif /* #ifdef INCLUDE_DSL_CPE_PM_HISTORY*/
 
@@ -3768,6 +3800,7 @@ static DSL_Error_t DSL_DRV_PM_LineSecCountersUpdate(
       pShowtimeSecCounters->nLOSS += nAbsSecCounters.nLOSS;
       pShowtimeSecCounters->nSES  += nAbsSecCounters.nSES;
       pShowtimeSecCounters->nUAS  += nAbsSecCounters.nUAS;
+      pShowtimeSecCounters->nFECS += nAbsSecCounters.nFECS;
    }
 #endif /* #ifdef INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS*/
 
@@ -3779,6 +3812,7 @@ static DSL_Error_t DSL_DRV_PM_LineSecCountersUpdate(
       pTotalSecCounters->nLOSS += nAbsSecCounters.nLOSS;
       pTotalSecCounters->nSES  += nAbsSecCounters.nSES;
       pTotalSecCounters->nUAS  += nAbsSecCounters.nUAS;
+      pTotalSecCounters->nFECS += nAbsSecCounters.nFECS;
    }
 #endif /* #ifdef INCLUDE_DSL_CPE_PM_LINE_COUNTERS*/
 
@@ -4099,6 +4133,7 @@ DSL_Error_t DSL_DRV_PM_LineSecCountersHistoryIntervalGet(
       pCounters->data.nLOFS = 0;
       pCounters->data.nLOSS = 0;
       pCounters->data.nSES  = 0;
+      pCounters->data.nFECS = 0;
 #endif
       nErrCode = DSL_WRN_INCOMPLETE_RETURN_VALUES;
    }
@@ -5522,6 +5557,14 @@ static DSL_Error_t DSL_DRV_PM_ReTxCountersThresholdsCrossingCheck(
       if( pCounters->nEftrMin > pThresholds->nEftrMin )
          *pEvtThresholdInd |= DSL_PM_RETXTHRESHCROSS_EFTR_MIN;
 
+      /* Check for nErrorFreeBits threshold crossing*/
+      if( pCounters->nErrorFreeBits > pThresholds->nErrorFreeBits )
+         *pEvtThresholdInd |= DSL_PM_RETXTHRESHCROSS_ERROR_FREE_BITS;
+
+      /* Check for nLeftr threshold crossing*/
+      if( pCounters->nLeftr > pThresholds->nLeftr )
+         *pEvtThresholdInd |= DSL_PM_RETXTHRESHCROSS_LEFTR;
+
       /* Check if new threshold crossing occured since the last check*/
       if( *pEvtThresholdInd != *pThresholdInd )
       {
@@ -5570,6 +5613,18 @@ DSL_Error_t DSL_DRV_PM_ReTxThresholdsUpdate(
       if( pCounters->nEftrMin <= pThreshsOld->nEftrMin )
          /* Clear nEftrMin indication bitmask*/
          *pInd &= ~DSL_PM_RETXTHRESHCROSS_EFTR_MIN;
+
+      /* Set new nErrorFreeBits threshold*/
+      pThreshsOld->nErrorFreeBits = pThreshsNew->nErrorFreeBits;
+      if( pCounters->nErrorFreeBits <= pThreshsOld->nErrorFreeBits )
+         /* Clear nErrorFreeBits indication bitmask*/
+         *pInd &= ~DSL_PM_RETXTHRESHCROSS_ERROR_FREE_BITS;
+
+      /* Set new nLeftr threshold*/
+      pThreshsOld->nLeftr = pThreshsNew->nLeftr;
+      if( pCounters->nLeftr <= pThreshsOld->nLeftr )
+         /* Clear nLeftr indication bitmask*/
+         *pInd &= ~DSL_PM_RETXTHRESHCROSS_LEFTR;
    }
    else
    {
@@ -5621,6 +5676,7 @@ static DSL_Error_t DSL_DRV_PM_ReTxCountersUpdate(
    DSL_int_t histShowtimeIdx = -1;
 #endif /* INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS*/
 
+   DSL_PM_ReTxData_t nAbsCounters;
    DSL_PM_ReTxData_t *pCurrCounters, *pTotalCounters;
 #ifdef INCLUDE_DSL_CPE_PM_HISTORY
    DSL_PM_ReTxData_t *p15minCounters, *p1dayCounters;
@@ -5678,6 +5734,8 @@ static DSL_Error_t DSL_DRV_PM_ReTxCountersUpdate(
    }
 #endif /* INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS*/
 
+   memset(&nAbsCounters, 0x0, sizeof(DSL_PM_ReTxData_t));
+
    /* Get counters from the PM module context*/
    pCurrCounters     = DSL_DRV_PM_PTR_RETX_COUNTERS_CURR(nDirection);
 #ifdef INCLUDE_DSL_CPE_PM_HISTORY
@@ -5689,6 +5747,16 @@ static DSL_Error_t DSL_DRV_PM_ReTxCountersUpdate(
 #endif /* #ifdef INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS*/
    pTotalCounters    = DSL_DRV_PM_PTR_RETX_COUNTERS_TOTAL(nDirection);
 
+   /* Update nErrorFreeBits */
+   DSL_DRV_PM_CounterUpdate(
+      &(pNewCounters->nErrorFreeBits), &(pCurrCounters->nErrorFreeBits),
+      &(nAbsCounters.nErrorFreeBits), DSL_PM_COUNTER_ERROR_FREE_BITS_MAX_VALUE, nDirection);
+
+   /* Update nLeftr */
+   DSL_DRV_PM_CounterUpdate(
+      &(pNewCounters->nLeftr), &(pCurrCounters->nLeftr),
+      &(nAbsCounters.nLeftr), DSL_PM_COUNTER_LEFTR_MAX_VALUE, nDirection);
+
 #ifdef INCLUDE_DSL_CPE_PM_HISTORY
    if (b15min)
    {
@@ -5697,6 +5765,8 @@ static DSL_Error_t DSL_DRV_PM_ReTxCountersUpdate(
       {
          p15minCounters->nEftrMin = pCurrCounters->nEftrMin;
       }
+      p15minCounters->nErrorFreeBits += nAbsCounters.nErrorFreeBits;
+      p15minCounters->nLeftr += nAbsCounters.nLeftr;
    }
 
    if (b1day)
@@ -5706,6 +5776,8 @@ static DSL_Error_t DSL_DRV_PM_ReTxCountersUpdate(
       {
          p1dayCounters->nEftrMin = pCurrCounters->nEftrMin;
       }
+      p1dayCounters->nErrorFreeBits += nAbsCounters.nErrorFreeBits;
+      p1dayCounters->nLeftr += nAbsCounters.nLeftr;
    }
 #endif /* INCLUDE_DSL_CPE_PM_HISTORY*/
 
@@ -5717,6 +5789,8 @@ static DSL_Error_t DSL_DRV_PM_ReTxCountersUpdate(
       {
          pShowtimeCounters->nEftrMin = pCurrCounters->nEftrMin;
       }
+      pShowtimeCounters->nErrorFreeBits += nAbsCounters.nErrorFreeBits;
+      pShowtimeCounters->nLeftr += nAbsCounters.nLeftr;
    }
 #endif /* #ifdef INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS*/
 
@@ -5727,6 +5801,8 @@ static DSL_Error_t DSL_DRV_PM_ReTxCountersUpdate(
       {
          pTotalCounters->nEftrMin = pCurrCounters->nEftrMin;
       }
+      pTotalCounters->nErrorFreeBits += nAbsCounters.nErrorFreeBits;
+      pTotalCounters->nLeftr += nAbsCounters.nLeftr;
    }
 
 #ifdef INCLUDE_DSL_CPE_PM_RETX_THRESHOLDS
@@ -5764,15 +5840,6 @@ DSL_Error_t DSL_DRV_PM_ReTxCountersHistoryIntervalGet(
 
    DSL_CHECK_ATU_DIRECTION(pCounters->nDirection);
    DSL_CHECK_ERR_CODE();
-
-   if (pCounters->nDirection == DSL_FAR_END)
-   {
-      DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - ReTx counters are not supported for the Far-End!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-
-      return DSL_ERR_NOT_SUPPORTED_BY_DEFINITION;
-   }
 
    /* Check selected interval Type*/
    if ((intervalType != DSL_PM_HISTORY_INTERVAL_15MIN) &&

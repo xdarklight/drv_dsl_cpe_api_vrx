@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -116,7 +116,11 @@ typedef enum
    /* *********************************************************************** */
    /* *** Common Error Codes                                              *** */
    /* *********************************************************************** */
-   /** data not available at the moment, updating */
+   /** Data is currently not available.
+       Update handling for the relevant interval was not completed before and
+       is just in progress. Please request the data at a later point in time
+       again and/or wait for the according "data available" event, for
+       example \ref DSL_EVENT_S_FE_TESTPARAMS_AVAILABLE */
    DSL_ERR_DATA_UPDATE_IN_PROGRESS = -42,
    /** invalid DSL mode */
    DSL_ERR_DSLMODE = -41,
@@ -326,6 +330,11 @@ typedef enum
        configuration is accepted but during link configuration only PTM/EFM
        is enabled. */
    DSL_WRN_CONFIG_BND_VS_TCLAYER = 401,
+   /** The configuration parameter for upstream (US) direction can be only
+       enabled if according downstream (DS) value is enabled. In this case
+       the configuration to enable upstream RTX was discared. Please enable
+       RTX for downstream first! */
+   DSL_WRN_CONFIG_RTX_US_ONLY_SUPPORTED_WITH_DS_ENABLED = 402,
    /* *********************************************************************** */
    /* *** Bonding functionality related warning codes                     *** */
    /* *********************************************************************** */

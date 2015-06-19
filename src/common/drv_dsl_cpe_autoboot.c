@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -214,7 +214,10 @@ static DSL_int_t DSL_DRV_AutobootThreadMain(
       DSL_DRV_WAIT_EVENT_TIMEOUT(pContext->autobootEvent, pContext->nAutobootPollTime);
 
       if (DSL_DRV_SIGNAL_PENDING)
+      {
+         DSL_DRV_WAKEUP_EVENT(pContext->autobootEvent);
          break;
+      }
 
       /* Check autoboot state*/
       if ((nRet = DSL_DRV_AutobootStateCheck(pContext)) != DSL_SUCCESS)
@@ -1476,10 +1479,24 @@ static DSL_Error_t DSL_DRV_AutobootHandleShowtime(
 
                if (bRestart)
                {
+#if defined(INCLUDE_DSL_CPE_API_VRX)
+#if defined(INCLUDE_DSL_BONDING) && (DSL_DRV_LINES_PER_DEVICE == 1)
+                  DSL_DRV_MUTEX_LOCK(bndLineLockMutex);
+                  if ((nLineLocked != -1) && (nLineLocked != DSL_DEV_NUM(pContext)))
+                  {
+                     /* No line is lock now */
+                     nLineLocked = -1;
+                  }
+                  DSL_DRV_MUTEX_UNLOCK(bndLineLockMutex);
+#endif
+                  /* Trigger restart sequence (orderly shutdown) */
+                  DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bAutobootRestart, DSL_TRUE);
+#else
                   nErrCode = DSL_DRV_AutobootStateSet(
                                 pContext,
                                 DSL_AUTOBOOTSTATE_EXCEPTION,
                                 DSL_AUTOBOOT_EXCEPTION_POLL_TIME);
+#endif /* INCLUDE_DSL_CPE_API_VRX */
                }
 
                break;

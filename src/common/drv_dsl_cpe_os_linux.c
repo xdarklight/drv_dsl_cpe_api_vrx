@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -244,7 +244,7 @@ static DSL_long_t DSL_DRV_Ioctls(DSL_DRV_file_t * pFile,
    }
    else
    {
-      pINode == DSL_NULL;
+      pINode = DSL_NULL;
    }
 #endif
 

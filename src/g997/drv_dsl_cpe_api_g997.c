@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -535,6 +535,9 @@ DSL_Error_t DSL_DRV_G997_RateAdaptationConfigSet(
    DSL_CHECK_POINTER(pContext, pData);
    DSL_CHECK_ERR_CODE();
 
+   DSL_CHECK_DSLMODE(pData->nDslMode);
+   DSL_CHECK_ERR_CODE();
+
    DSL_CHECK_DIRECTION(pData->nDirection);
    DSL_CHECK_ERR_CODE();
 
@@ -550,15 +553,17 @@ DSL_Error_t DSL_DRV_G997_RateAdaptationConfigSet(
    }
    else
    {
-#ifdef INCLUDE_DSL_CPE_API_DANUBE
+#if defined(INCLUDE_DSL_CPE_API_DANUBE) || defined(INCLUDE_DSL_CPE_API_VRX)
       if (pData->data.RA_MODE == DSL_G997_RA_MODE_DYNAMIC_SOS)
       {
          return DSL_ERR_NOT_SUPPORTED_BY_FIRMWARE;
       }
 #endif /* INCLUDE_DSL_CPE_API_DANUBE*/
-      /* Update internal Rate Adaptation Mode Settings for the selected direction*/
+      /* Update internal Rate Adaptation Mode Settings for the selected
+         xDSL mode and direction */
       DSL_CTX_WRITE(pContext, nErrCode,
-         rateAdaptationMode[pData->nDirection], pData->data.RA_MODE);
+         rateAdaptationMode[pData->nDslMode][pData->nDirection],
+         pData->data.RA_MODE);
    }
 
    DSL_DEBUG(DSL_DBG_MSG,
@@ -583,6 +588,9 @@ DSL_Error_t DSL_DRV_G997_RateAdaptationConfigGet(
    DSL_CHECK_POINTER(pContext, pData);
    DSL_CHECK_ERR_CODE();
 
+   DSL_CHECK_DSLMODE(pData->nDslMode);
+   DSL_CHECK_ERR_CODE();
+
    DSL_CHECK_DIRECTION(pData->nDirection);
    DSL_CHECK_ERR_CODE();
 
@@ -592,14 +600,14 @@ DSL_Error_t DSL_DRV_G997_RateAdaptationConfigGet(
 
    /* Get internal Rate Adaptation Mode Settings for the selected direction*/
    DSL_CTX_READ(pContext, nErrCode,
-      rateAdaptationMode[pData->nDirection], nSRAmode);
+      rateAdaptationMode[pData->nDslMode][pData->nDirection], nSRAmode);
 
    pData->data.RA_MODE = (nSRAmode == DSL_G997_RA_MODE_AT_INIT) ||
                          (nSRAmode == DSL_G997_RA_MODE_DYNAMIC_SOS) ?
                             nSRAmode : DSL_G997_RA_MODE_DYNAMIC;
 
-   DSL_DEBUG(DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_G997_RateAdaptationConfigGet, retCode=%d"
+   DSL_DEBUG(DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+      "DSL[%02d]: OUT - DSL_DRV_G997_RateAdaptationConfigGet, retCode=%d"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
 
    return nErrCode;

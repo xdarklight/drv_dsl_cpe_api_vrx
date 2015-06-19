@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -66,6 +66,8 @@
 #define ACK_RA_ModeUS_Get_AT_INIT 2
 #define ACK_RA_ModeUS_Get_DYNAMIC 3
 #define ACK_RA_ModeUS_Get_SOS 4
+#define CMD_RTX_Control_RTX_DS_ENABLE 1
+#define CMD_RTX_Control_RTX_DSUS_ENABLE 2
 #define CMD_DSM_Control_OFF 0
 #define CMD_DSM_Control_FULL_VECTOR 1
 #define CMD_DSM_Control_VECTOR_FRIENLY 2
@@ -86,7 +88,7 @@ typedef struct CMD_BAT_TableEntriesGet CMD_BAT_TableEntriesGet_t;
 
 /**
    Returns information about the bit-allocation per tone for the chosen range of
-   subcarriers.(Section 7.5.1.29.1-2 of G997.1)
+   subcarriers.(Section 7.5.1.29.1-2 of G.997.1)
 */
 typedef struct ACK_BAT_TableEntriesGet ACK_BAT_TableEntriesGet_t;
 
@@ -105,7 +107,7 @@ typedef struct CMD_GainTableEntriesGet CMD_GainTableEntriesGet_t;
 
 /**
    Returns information about the Gain-per-tone for the chosen range of
-   subcarriers.(Section 7.5.1.29.3-4 of G997.1)
+   subcarriers.(Section 7.5.1.29.3-4 of G.997.1)
 */
 typedef struct ACK_GainTableEntriesGet ACK_GainTableEntriesGet_t;
 
@@ -117,7 +119,7 @@ typedef struct ACK_GainTableEntriesGet ACK_GainTableEntriesGet_t;
    noise for the near-end side , which means for downstream direction at the
    CPE. It is the hosts responsibility to select the tone indices
    accordingly.See also Table 12 "How to retrieve test parameter data" on Page
-   466.
+   470.
 */
 typedef struct CMD_SNR_NE_TableEntriesGet CMD_SNR_NE_TableEntriesGet_t;
 
@@ -144,7 +146,7 @@ typedef struct CMD_ADSL_BAT_DS_Get CMD_ADSL_BAT_DS_Get_t;
 
 /**
    Returns information about the downstream bit-allocation per tone for the
-   chosen range of subcarriers.(Section 7.5.1.29.1 of G997.1)
+   chosen range of subcarriers.(Section 7.5.1.29.1 of G.997.1)
 */
 typedef struct ACK_ADSL_BAT_DS_Get ACK_ADSL_BAT_DS_Get_t;
 
@@ -162,7 +164,7 @@ typedef struct CMD_ADSL_BAT_US_Get CMD_ADSL_BAT_US_Get_t;
 
 /**
    Returns information about the upstream bit-allocation per tone for the chosen
-   range of subcarriers.(Section 7.5.1.29.2 of G997.1)
+   range of subcarriers.(Section 7.5.1.29.2 of G.997.1)
 */
 typedef struct ACK_ADSL_BAT_US_Get ACK_ADSL_BAT_US_Get_t;
 
@@ -180,7 +182,7 @@ typedef struct CMD_ADSL_GainTableDS_Get CMD_ADSL_GainTableDS_Get_t;
 
 /**
    Returns information about the Gain-per-tone for the chosen range of
-   subcarriers for the downstream direction.(Section 7.5.1.29.3 of G997.1) as
+   subcarriers for the downstream direction.(Section 7.5.1.29.3 of G.997.1) as
    requested by CMD_ADSL_GainTableDS_Get.
 */
 typedef struct ACK_ADSL_GainTableDS_Get ACK_ADSL_GainTableDS_Get_t;
@@ -199,7 +201,7 @@ typedef struct CMD_ADSL_GainTableUS_Get CMD_ADSL_GainTableUS_Get_t;
 
 /**
    Returns information about the Gain-per-tone for the chosen range of
-   subcarriers for the upstream direction.(Section 7.5.1.29.4 of G997.1)
+   subcarriers for the upstream direction.(Section 7.5.1.29.4 of G.997.1)
 */
 typedef struct ACK_ADSL_GainTableUS_Get ACK_ADSL_GainTableUS_Get_t;
 
@@ -226,7 +228,7 @@ typedef struct ACK_ADSL_ExMarginReductionGet ACK_ADSL_ExMarginReductionGet_t;
 
 /**
    Requests information about the downstream HLOG information per subcarrier
-   group (Section 7.5.1.26.6 of G997.1).During STEADY_STATE, the command can be
+   group (Section 7.5.1.26.6 of G.997.1).During STEADY_STATE, the command can be
    used in VDSL to request near-end data only (CPE). For the far-end HLOG to be
    provided via the EOC channel CMD_TestParamsFE_Request must be used. In ADSL,
    the command can be applied for near-end as well as far-end parameters.During
@@ -240,7 +242,7 @@ typedef struct CMD_HlogDS_Get CMD_HlogDS_Get_t;
 
 /**
    Returns information about the downstream HLOG per subcarrier group for the
-   chosen range. (Section 7.5.1.26.6 of G997.1)
+   chosen range. (Section 7.5.1.26.6 of G.997.1)
 */
 typedef struct ACK_HlogDS_Get ACK_HlogDS_Get_t;
 
@@ -249,7 +251,7 @@ typedef struct ACK_HlogDS_Get ACK_HlogDS_Get_t;
 
 /**
    Requests information about the upstream HLOG information per subcarrier group
-   (Section 7.5.1.26.11 of G997.1).In VDSL the command cannot be used in
+   (Section 7.5.1.26.11 of G.997.1).In VDSL the command cannot be used in
    STEADY_STATE. Instead, CMD_TestParamsFE_Request must be applied.
 */
 typedef struct CMD_HlogUS_Get CMD_HlogUS_Get_t;
@@ -259,7 +261,7 @@ typedef struct CMD_HlogUS_Get CMD_HlogUS_Get_t;
 
 /**
    Returns information about the upstream HLOG per subcarrier group for the
-   chosen range. (Section 7.5.1.26.11 of G997.1)
+   chosen range. (Section 7.5.1.26.11 of G.997.1)
 */
 typedef struct ACK_HlogUS_Get ACK_HlogUS_Get_t;
 
@@ -268,8 +270,8 @@ typedef struct ACK_HlogUS_Get ACK_HlogUS_Get_t;
 
 /**
    Requests information about the downstream HLIN information per subcarrier
-   group. (Section 7.5.1.26.3 of G997.1).The HLIN data are available during loop
-   diagnostic mode only.
+   group. (Section 7.5.1.26.3 of G.997.1).The HLIN data are available during
+   loop diagnostic mode only.
 */
 typedef struct CMD_HlinDS_Get CMD_HlinDS_Get_t;
 
@@ -278,7 +280,7 @@ typedef struct CMD_HlinDS_Get CMD_HlinDS_Get_t;
 
 /**
    Returns information about the downstream HLIN per subcarrier group for the
-   chosen range. (Section 7.5.1.26.3 of G997.1)
+   chosen range. (Section 7.5.1.26.3 of G.997.1)
 */
 typedef struct ACK_HlinDS_Get ACK_HlinDS_Get_t;
 
@@ -287,7 +289,7 @@ typedef struct ACK_HlinDS_Get ACK_HlinDS_Get_t;
 
 /**
    Requests information about the upstream HLIN information per subcarrier
-   group. (Section 7.5.1.26.9 of G997.1).The HLIN data are available in loop
+   group. (Section 7.5.1.26.9 of G.997.1).The HLIN data are available in loop
    diagnostic mode only.
 */
 typedef struct CMD_HlinUS_Get CMD_HlinUS_Get_t;
@@ -297,7 +299,7 @@ typedef struct CMD_HlinUS_Get CMD_HlinUS_Get_t;
 
 /**
    Returns information about the upstream HLIN per subcarrier group for the
-   chosen range. (Section 7.5.1.26.9 of G997.1)
+   chosen range. (Section 7.5.1.26.9 of G.997.1)
 */
 typedef struct ACK_HlinUS_Get ACK_HlinUS_Get_t;
 
@@ -306,7 +308,7 @@ typedef struct ACK_HlinUS_Get ACK_HlinUS_Get_t;
 
 /**
    Requests information about the downstream QLN information (QLNpsds) per
-   subcarrier group (Section 7.5.1.27.3 of G997.1).During STEADY_STATE, the
+   subcarrier group (Section 7.5.1.27.3 of G.997.1).During STEADY_STATE, the
    command can be used in VDSL to request near-end data only (CPE).
 */
 typedef struct CMD_QLN_DS_Get CMD_QLN_DS_Get_t;
@@ -316,7 +318,7 @@ typedef struct CMD_QLN_DS_Get CMD_QLN_DS_Get_t;
 
 /**
    Returns information about the QLN per subcarrier group for the chosen range.
-   (Section 7.5.1.27.3 of G997.1)
+   (Section 7.5.1.27.3 of G.997.1)
 */
 typedef struct ACK_QLN_DS_Get ACK_QLN_DS_Get_t;
 
@@ -325,7 +327,7 @@ typedef struct ACK_QLN_DS_Get ACK_QLN_DS_Get_t;
 
 /**
    Requests information about the upstream QLN (QLNpsus) per subcarrier group.
-   (Section 7.5.1.27.6 of G997.1).IIn VDSL the command cannot be used in
+   (Section 7.5.1.27.6 of G.997.1).IIn VDSL the command cannot be used in
    STEADY_STATE. Instead, CMD_TestParamsFE_Request must be applied.
 */
 typedef struct CMD_QLN_US_Get CMD_QLN_US_Get_t;
@@ -335,7 +337,7 @@ typedef struct CMD_QLN_US_Get CMD_QLN_US_Get_t;
 
 /**
    Returns information about the QLN per subcarrier group for the chosen range.
-   (Section 7.5.1.27.6 of G997.1)
+   (Section 7.5.1.27.6 of G.997.1)
 */
 typedef struct ACK_QLN_US_Get ACK_QLN_US_Get_t;
 
@@ -345,7 +347,7 @@ typedef struct ACK_QLN_US_Get ACK_QLN_US_Get_t;
 /**
    Requests information about the downstream SNR per subcarrier group in VDSL or
    the SNR per subcarrier in ADSL, both without considering virtual noise
-   (Section 7.5.1.28.3 of G997.1).
+   (Section 7.5.1.28.3 of G.997.1).
 */
 typedef struct CMD_SNR_DS_Get CMD_SNR_DS_Get_t;
 
@@ -355,7 +357,7 @@ typedef struct CMD_SNR_DS_Get CMD_SNR_DS_Get_t;
 /**
    Returns information about the SNR per subcarrier (ADSL) or per subcarrier
    group (VDSL) for the chosen range without considering virtual noise. (Section
-   7.5.1.28.3 of G997.1)
+   7.5.1.28.3 of G.997.1)
 */
 typedef struct ACK_SNR_DS_Get ACK_SNR_DS_Get_t;
 
@@ -364,7 +366,7 @@ typedef struct ACK_SNR_DS_Get ACK_SNR_DS_Get_t;
 
 /**
    Requests information about the upstream SNR per subcarrier group (Section
-   7.5.1.28.6 of G997.1).During Showtime the message is used to retrieve the
+   7.5.1.28.6 of G.997.1).During Showtime the message is used to retrieve the
    SNRpsus in ADSL only. In VDSL CMD_TestParamsFE_Request is to be applied
    instead. During loop diagnostic mode the message is used for both ADSL and
    VDSL.
@@ -376,7 +378,7 @@ typedef struct CMD_SNR_US_Get CMD_SNR_US_Get_t;
 
 /**
    Returns information about the upstream SNR per subcarrier group for the
-   chosen range. (Section 7.5.1.28.6 of G997.1)
+   chosen range. (Section 7.5.1.28.6 of G.997.1)
 */
 typedef struct ACK_SNR_US_Get ACK_SNR_US_Get_t;
 
@@ -387,7 +389,7 @@ typedef struct ACK_SNR_US_Get ACK_SNR_US_Get_t;
    Requests test parameter related information for the downstream direction: The
    HLIN scaling factor (HLINSCds), the subcarrier group size "G" and the
    measurement times for HLOGpsds, QLNpsds, SNRpsds.(Sections 7.5.1.26.1/2/4/5,
-   7.5.1.27.1/2 and 7.5.1.28.1/2 of G997.1)
+   7.5.1.27.1/2 and 7.5.1.28.1/2 of G.997.1)
 */
 typedef struct CMD_TestParamsAuxDS_Get CMD_TestParamsAuxDS_Get_t;
 
@@ -398,7 +400,7 @@ typedef struct CMD_TestParamsAuxDS_Get CMD_TestParamsAuxDS_Get_t;
    Provides the test-parameter related information as requested by
    CMD_TestParamsAuxDS_Get: The HLIN scaling factor (HLINSCds), the subcarrier
    group size "G" and the measurement times for HLOGpsds, QLNpsds,
-   SNRpsds.(Sections 7.5.1.26.1/2/4/5, 7.5.1.27.1/2 and 7.5.1.28.1/2 of G997.1)
+   SNRpsds.(Sections 7.5.1.26.1/2/4/5, 7.5.1.27.1/2 and 7.5.1.28.1/2 of G.997.1)
 */
 typedef struct ACK_TestParamsAuxDS_Get ACK_TestParamsAuxDS_Get_t;
 
@@ -409,7 +411,7 @@ typedef struct ACK_TestParamsAuxDS_Get ACK_TestParamsAuxDS_Get_t;
    Requests test parameter related information for the upstream direction: The
    HLIN scaling factor (HLINSCus), the subcarrier group size "G" and the
    measurement times for HLOGpsus, QLNpsus, SNRpsus.(Sections
-   7.5.1.26.7/8/10/11, 7.5.1.27.4/5 and 7.5.1.28.4/5 of G997.1)The test
+   7.5.1.26.7/8/10/11, 7.5.1.27.4/5 and 7.5.1.28.4/5 of G.997.1)The test
    parameters can be requested during loop diagnostic mode (VDSL, ADSL) and in
    ADSL also during STEADY_STATE.In VDSL during STEADY_STATE, the command can be
    used only to retrieve the "group size" parameters. To get the measurement
@@ -603,7 +605,7 @@ typedef struct EVT_ClearEOCStatusGet EVT_ClearEOCStatusGet_t;
    The message is used to reset the transmit or receive status of the clear eoc
    data transmission to IDLE (for defined states see also
    CMD_ClearEOCStatusGet). See the description on the Clear EOC handling on Page
-   514 for when it has to be applied. Transmit and receive status are
+   518 for when it has to be applied. Transmit and receive status are
    distinguished by the Index parameter.
 */
 typedef struct CMD_ClearEOCStatusSet CMD_ClearEOCStatusSet_t;
@@ -792,46 +794,81 @@ typedef struct CMD_OLR_DS_EventConfigure CMD_OLR_DS_EventConfigure_t;
 */
 typedef struct ACK_OLR_DS_EventConfigure ACK_OLR_DS_EventConfigure_t;
 
-/** Message ID for CMD_RTX_DS_Configure */
-#define CMD_RTX_DS_CONFIGURE 0x5048
+/** Message ID for CMD_RTX_Control */
+#define CMD_RTX_CONTROL 0x5048
 
 /**
    Configures a link for retransmission of downstream data. For using the RTX
    function, this message has to be sent.
 */
-typedef struct CMD_RTX_DS_Configure CMD_RTX_DS_Configure_t;
+typedef struct CMD_RTX_Control CMD_RTX_Control_t;
 
-/** Message ID for ACK_RTX_DS_Configure */
-#define ACK_RTX_DS_CONFIGURE 0x5048
+/** Message ID for ACK_RTX_Control */
+#define ACK_RTX_CONTROL 0x5048
 
 /**
-   Acknowledgement for CMD_RTX_DS_Configure.
+   Acknowledgement for CMD_RTX_Control.
 */
-typedef struct ACK_RTX_DS_Configure ACK_RTX_DS_Configure_t;
+typedef struct ACK_RTX_Control ACK_RTX_Control_t;
 
-/** Message ID for CMD_BearerChsDS_RTX_Get */
-#define CMD_BEARERCHSDS_RTX_GET 0x0206
+/** Message ID for CMD_RTX_US_Configure */
+#define CMD_RTX_US_CONFIGURE 0x5448
+
+/**
+   Message for debug and test purposes to configure further parameters for G.INP
+   upstream retransmission: the framing type and half-roundtrip delay(s).
+*/
+typedef struct CMD_RTX_US_Configure CMD_RTX_US_Configure_t;
+
+/** Message ID for ACK_RTX_US_Configure */
+#define ACK_RTX_US_CONFIGURE 0x5448
+
+/**
+   Acknowledgement for CMD_RTX_US_Configure.
+*/
+typedef struct ACK_RTX_US_Configure ACK_RTX_US_Configure_t;
+
+/** Message ID for CMD_RTX_BearerChsDS_Get */
+#define CMD_RTX_BEARERCHSDS_GET 0x0206
 
 /**
    Requests RTX specific status information for the downstream bearer channels
    if G.INP retransmission is used.
 */
-typedef struct CMD_BearerChsDS_RTX_Get CMD_BearerChsDS_RTX_Get_t;
+typedef struct CMD_RTX_BearerChsDS_Get CMD_RTX_BearerChsDS_Get_t;
 
-/** Message ID for ACK_BearerChsDS_RTX_Get */
-#define ACK_BEARERCHSDS_RTX_GET 0x0206
+/** Message ID for ACK_RTX_BearerChsDS_Get */
+#define ACK_RTX_BEARERCHSDS_GET 0x0206
 
 /**
    Delivers status information for the downstream bearer channels when G.INP
    retransmission is actually used.
 */
-typedef struct ACK_BearerChsDS_RTX_Get ACK_BearerChsDS_RTX_Get_t;
+typedef struct ACK_RTX_BearerChsDS_Get ACK_RTX_BearerChsDS_Get_t;
+
+/** Message ID for CMD_RTX_BearerChsUS_Get */
+#define CMD_RTX_BEARERCHSUS_GET 0x0306
+
+/**
+   Requests RTX specific status information for the upstream bearer channels if
+   upstream G.INP retransmission is used.
+*/
+typedef struct CMD_RTX_BearerChsUS_Get CMD_RTX_BearerChsUS_Get_t;
+
+/** Message ID for ACK_RTX_BearerChsUS_Get */
+#define ACK_RTX_BEARERCHSUS_GET 0x0306
+
+/**
+   Delivers status information for the upstream bearer channels when upstream
+   G.INP retransmission is used.
+*/
+typedef struct ACK_RTX_BearerChsUS_Get ACK_RTX_BearerChsUS_Get_t;
 
 /** Message ID for CMD_RTX_PM_DS_Get */
 #define CMD_RTX_PM_DS_GET 0x2B0A
 
 /**
-   Requests counters for RTX performance monitoring.
+   Requests performance monitoring counters for downstream G.INP retransmission.
 */
 typedef struct CMD_RTX_PM_DS_Get CMD_RTX_PM_DS_Get_t;
 
@@ -839,15 +876,32 @@ typedef struct CMD_RTX_PM_DS_Get CMD_RTX_PM_DS_Get_t;
 #define ACK_RTX_PM_DS_GET 0x2B0A
 
 /**
-   Delivers retransmission counters for RTX performance monitoring.
+   Delivers performance monitoring counters for downstream G.INP retransmission.
 */
 typedef struct ACK_RTX_PM_DS_Get ACK_RTX_PM_DS_Get_t;
+
+/** Message ID for CMD_RTX_PM_US_Get */
+#define CMD_RTX_PM_US_GET 0x3B0A
+
+/**
+   Requests performance monitoring counters for upstream G.INP retransmission.
+*/
+typedef struct CMD_RTX_PM_US_Get CMD_RTX_PM_US_Get_t;
+
+/** Message ID for ACK_RTX_PM_US_Get */
+#define ACK_RTX_PM_US_GET 0x3B0A
+
+/**
+   Delivers performance monitoring counters for upstream G.INP retransmission.
+   They are all far-end parameters received from CO.
+*/
+typedef struct ACK_RTX_PM_US_Get ACK_RTX_PM_US_Get_t;
 
 /** Message ID for CMD_RTX_DS_StatsGet */
 #define CMD_RTX_DS_STATSGET 0x2C0A
 
 /**
-   Requests retransmission test and debug wrap-around counters.
+   Requests DTU counters for G.INP downstream retransmission.
 */
 typedef struct CMD_RTX_DS_StatsGet CMD_RTX_DS_StatsGet_t;
 
@@ -855,9 +909,28 @@ typedef struct CMD_RTX_DS_StatsGet CMD_RTX_DS_StatsGet_t;
 #define ACK_RTX_DS_STATSGET 0x2C0A
 
 /**
-   Delivers retransmission test and debug wrap-around counters.
+   Delivers DTU counters for G.INP downstream retransmission. The counters are
+   Non-TR1 wrap-around counters, which are reset at reboot only.
 */
 typedef struct ACK_RTX_DS_StatsGet ACK_RTX_DS_StatsGet_t;
+
+/** Message ID for CMD_RTX_US_StatsGet */
+#define CMD_RTX_US_STATSGET 0x3A0A
+
+/**
+   Requests DTU counters for G.INP upstream retransmission, which is defined for
+   VDSL only.
+*/
+typedef struct CMD_RTX_US_StatsGet CMD_RTX_US_StatsGet_t;
+
+/** Message ID for ACK_RTX_US_StatsGet */
+#define ACK_RTX_US_STATSGET 0x3A0A
+
+/**
+   Delivers DTU counters for G.INP upstream retransmission. The counters are
+   Non-TR1 wrap-around counters, which are reset at reboot only.
+*/
+typedef struct ACK_RTX_US_StatsGet ACK_RTX_US_StatsGet_t;
 
 /** Message ID for CMD_RTX_StatusGet */
 #define CMD_RTX_STATUSGET 0xE503
@@ -874,6 +947,26 @@ typedef struct CMD_RTX_StatusGet CMD_RTX_StatusGet_t;
    Provides the actually used G.INP retransmission status.
 */
 typedef struct ACK_RTX_StatusGet ACK_RTX_StatusGet_t;
+
+/** Message ID for CMD_RTX_US_FrameDataGet */
+#define CMD_RTX_US_FRAMEDATAGET 0xED03
+
+/**
+   Requests upstream G.INP retransmission specific framing parameters and other
+   status parameters. They are always associated with bearer channel 0.
+*/
+typedef struct CMD_RTX_US_FrameDataGet CMD_RTX_US_FrameDataGet_t;
+
+/** Message ID for ACK_RTX_US_FrameDataGet */
+#define ACK_RTX_US_FRAMEDATAGET 0xED03
+
+/**
+   Delivers upstream retransmission specific framing parameters and other status
+   parameters, as requested by CMD_RTX_US_FrameDataGet. They are always
+   associated with bearer channel 0.In addition, the usual framing parameters
+   are to be retrieved with CMD_FrameDataExt2US_Get.
+*/
+typedef struct ACK_RTX_US_FrameDataGet ACK_RTX_US_FrameDataGet_t;
 
 /** Message ID for CMD_DSM_Control */
 #define CMD_DSM_CONTROL 0x5248
@@ -952,7 +1045,7 @@ struct CMD_BAT_TableEntriesGet
 
 /**
    Returns information about the bit-allocation per tone for the chosen range of
-   subcarriers.(Section 7.5.1.29.1-2 of G997.1)
+   subcarriers.(Section 7.5.1.29.1-2 of G.997.1)
 */
 struct ACK_BAT_TableEntriesGet
 {
@@ -997,7 +1090,7 @@ struct CMD_GainTableEntriesGet
 
 /**
    Returns information about the Gain-per-tone for the chosen range of
-   subcarriers.(Section 7.5.1.29.3-4 of G997.1)
+   subcarriers.(Section 7.5.1.29.3-4 of G.997.1)
 */
 struct ACK_GainTableEntriesGet
 {
@@ -1024,7 +1117,7 @@ struct ACK_GainTableEntriesGet
    noise for the near-end side , which means for downstream direction at the
    CPE. It is the hosts responsibility to select the tone indices
    accordingly.See also Table 12 "How to retrieve test parameter data" on Page
-   466.
+   470.
 */
 struct CMD_SNR_NE_TableEntriesGet
 {
@@ -1088,7 +1181,7 @@ struct CMD_ADSL_BAT_DS_Get
 
 /**
    Returns information about the downstream bit-allocation per tone for the
-   chosen range of subcarriers.(Section 7.5.1.29.1 of G997.1)
+   chosen range of subcarriers.(Section 7.5.1.29.1 of G.997.1)
 */
 struct ACK_ADSL_BAT_DS_Get
 {
@@ -1132,7 +1225,7 @@ struct CMD_ADSL_BAT_US_Get
 
 /**
    Returns information about the upstream bit-allocation per tone for the chosen
-   range of subcarriers.(Section 7.5.1.29.2 of G997.1)
+   range of subcarriers.(Section 7.5.1.29.2 of G.997.1)
 */
 struct ACK_ADSL_BAT_US_Get
 {
@@ -1176,7 +1269,7 @@ struct CMD_ADSL_GainTableDS_Get
 
 /**
    Returns information about the Gain-per-tone for the chosen range of
-   subcarriers for the downstream direction.(Section 7.5.1.29.3 of G997.1) as
+   subcarriers for the downstream direction.(Section 7.5.1.29.3 of G.997.1) as
    requested by CMD_ADSL_GainTableDS_Get.
 */
 struct ACK_ADSL_GainTableDS_Get
@@ -1221,7 +1314,7 @@ struct CMD_ADSL_GainTableUS_Get
 
 /**
    Returns information about the Gain-per-tone for the chosen range of
-   subcarriers for the upstream direction.(Section 7.5.1.29.4 of G997.1)
+   subcarriers for the upstream direction.(Section 7.5.1.29.4 of G.997.1)
 */
 struct ACK_ADSL_GainTableUS_Get
 {
@@ -1289,7 +1382,7 @@ struct ACK_ADSL_ExMarginReductionGet
 
 /**
    Requests information about the downstream HLOG information per subcarrier
-   group (Section 7.5.1.26.6 of G997.1).During STEADY_STATE, the command can be
+   group (Section 7.5.1.26.6 of G.997.1).During STEADY_STATE, the command can be
    used in VDSL to request near-end data only (CPE). For the far-end HLOG to be
    provided via the EOC channel CMD_TestParamsFE_Request must be used. In ADSL,
    the command can be applied for near-end as well as far-end parameters.During
@@ -1314,7 +1407,7 @@ struct CMD_HlogDS_Get
 
 /**
    Returns information about the downstream HLOG per subcarrier group for the
-   chosen range. (Section 7.5.1.26.6 of G997.1)
+   chosen range. (Section 7.5.1.26.6 of G.997.1)
 */
 struct ACK_HlogDS_Get
 {
@@ -1338,7 +1431,7 @@ struct ACK_HlogDS_Get
 
 /**
    Requests information about the upstream HLOG information per subcarrier group
-   (Section 7.5.1.26.11 of G997.1).In VDSL the command cannot be used in
+   (Section 7.5.1.26.11 of G.997.1).In VDSL the command cannot be used in
    STEADY_STATE. Instead, CMD_TestParamsFE_Request must be applied.
 */
 struct CMD_HlogUS_Get
@@ -1359,7 +1452,7 @@ struct CMD_HlogUS_Get
 
 /**
    Returns information about the upstream HLOG per subcarrier group for the
-   chosen range. (Section 7.5.1.26.11 of G997.1)
+   chosen range. (Section 7.5.1.26.11 of G.997.1)
 */
 struct ACK_HlogUS_Get
 {
@@ -1383,8 +1476,8 @@ struct ACK_HlogUS_Get
 
 /**
    Requests information about the downstream HLIN information per subcarrier
-   group. (Section 7.5.1.26.3 of G997.1).The HLIN data are available during loop
-   diagnostic mode only.
+   group. (Section 7.5.1.26.3 of G.997.1).The HLIN data are available during
+   loop diagnostic mode only.
 */
 struct CMD_HlinDS_Get
 {
@@ -1404,7 +1497,7 @@ struct CMD_HlinDS_Get
 
 /**
    Returns information about the downstream HLIN per subcarrier group for the
-   chosen range. (Section 7.5.1.26.3 of G997.1)
+   chosen range. (Section 7.5.1.26.3 of G.997.1)
 */
 struct ACK_HlinDS_Get
 {
@@ -1428,7 +1521,7 @@ struct ACK_HlinDS_Get
 
 /**
    Requests information about the upstream HLIN information per subcarrier
-   group. (Section 7.5.1.26.9 of G997.1).The HLIN data are available in loop
+   group. (Section 7.5.1.26.9 of G.997.1).The HLIN data are available in loop
    diagnostic mode only.
 */
 struct CMD_HlinUS_Get
@@ -1449,7 +1542,7 @@ struct CMD_HlinUS_Get
 
 /**
    Returns information about the upstream HLIN per subcarrier group for the
-   chosen range. (Section 7.5.1.26.9 of G997.1)
+   chosen range. (Section 7.5.1.26.9 of G.997.1)
 */
 struct ACK_HlinUS_Get
 {
@@ -1473,7 +1566,7 @@ struct ACK_HlinUS_Get
 
 /**
    Requests information about the downstream QLN information (QLNpsds) per
-   subcarrier group (Section 7.5.1.27.3 of G997.1).During STEADY_STATE, the
+   subcarrier group (Section 7.5.1.27.3 of G.997.1).During STEADY_STATE, the
    command can be used in VDSL to request near-end data only (CPE).
 */
 struct CMD_QLN_DS_Get
@@ -1494,7 +1587,7 @@ struct CMD_QLN_DS_Get
 
 /**
    Returns information about the QLN per subcarrier group for the chosen range.
-   (Section 7.5.1.27.3 of G997.1)
+   (Section 7.5.1.27.3 of G.997.1)
 */
 struct ACK_QLN_DS_Get
 {
@@ -1518,7 +1611,7 @@ struct ACK_QLN_DS_Get
 
 /**
    Requests information about the upstream QLN (QLNpsus) per subcarrier group.
-   (Section 7.5.1.27.6 of G997.1).IIn VDSL the command cannot be used in
+   (Section 7.5.1.27.6 of G.997.1).IIn VDSL the command cannot be used in
    STEADY_STATE. Instead, CMD_TestParamsFE_Request must be applied.
 */
 struct CMD_QLN_US_Get
@@ -1539,7 +1632,7 @@ struct CMD_QLN_US_Get
 
 /**
    Returns information about the QLN per subcarrier group for the chosen range.
-   (Section 7.5.1.27.6 of G997.1)
+   (Section 7.5.1.27.6 of G.997.1)
 */
 struct ACK_QLN_US_Get
 {
@@ -1564,7 +1657,7 @@ struct ACK_QLN_US_Get
 /**
    Requests information about the downstream SNR per subcarrier group in VDSL or
    the SNR per subcarrier in ADSL, both without considering virtual noise
-   (Section 7.5.1.28.3 of G997.1).
+   (Section 7.5.1.28.3 of G.997.1).
 */
 struct CMD_SNR_DS_Get
 {
@@ -1585,7 +1678,7 @@ struct CMD_SNR_DS_Get
 /**
    Returns information about the SNR per subcarrier (ADSL) or per subcarrier
    group (VDSL) for the chosen range without considering virtual noise. (Section
-   7.5.1.28.3 of G997.1)
+   7.5.1.28.3 of G.997.1)
 */
 struct ACK_SNR_DS_Get
 {
@@ -1609,7 +1702,7 @@ struct ACK_SNR_DS_Get
 
 /**
    Requests information about the upstream SNR per subcarrier group (Section
-   7.5.1.28.6 of G997.1).During Showtime the message is used to retrieve the
+   7.5.1.28.6 of G.997.1).During Showtime the message is used to retrieve the
    SNRpsus in ADSL only. In VDSL CMD_TestParamsFE_Request is to be applied
    instead. During loop diagnostic mode the message is used for both ADSL and
    VDSL.
@@ -1632,7 +1725,7 @@ struct CMD_SNR_US_Get
 
 /**
    Returns information about the upstream SNR per subcarrier group for the
-   chosen range. (Section 7.5.1.28.6 of G997.1)
+   chosen range. (Section 7.5.1.28.6 of G.997.1)
 */
 struct ACK_SNR_US_Get
 {
@@ -1658,7 +1751,7 @@ struct ACK_SNR_US_Get
    Requests test parameter related information for the downstream direction: The
    HLIN scaling factor (HLINSCds), the subcarrier group size "G" and the
    measurement times for HLOGpsds, QLNpsds, SNRpsds.(Sections 7.5.1.26.1/2/4/5,
-   7.5.1.27.1/2 and 7.5.1.28.1/2 of G997.1)
+   7.5.1.27.1/2 and 7.5.1.28.1/2 of G.997.1)
 */
 struct CMD_TestParamsAuxDS_Get
 {
@@ -1680,7 +1773,7 @@ struct CMD_TestParamsAuxDS_Get
    Provides the test-parameter related information as requested by
    CMD_TestParamsAuxDS_Get: The HLIN scaling factor (HLINSCds), the subcarrier
    group size "G" and the measurement times for HLOGpsds, QLNpsds,
-   SNRpsds.(Sections 7.5.1.26.1/2/4/5, 7.5.1.27.1/2 and 7.5.1.28.1/2 of G997.1)
+   SNRpsds.(Sections 7.5.1.26.1/2/4/5, 7.5.1.27.1/2 and 7.5.1.28.1/2 of G.997.1)
 */
 struct ACK_TestParamsAuxDS_Get
 {
@@ -1734,7 +1827,7 @@ struct ACK_TestParamsAuxDS_Get
    Requests test parameter related information for the upstream direction: The
    HLIN scaling factor (HLINSCus), the subcarrier group size "G" and the
    measurement times for HLOGpsus, QLNpsus, SNRpsus.(Sections
-   7.5.1.26.7/8/10/11, 7.5.1.27.4/5 and 7.5.1.28.4/5 of G997.1)The test
+   7.5.1.26.7/8/10/11, 7.5.1.27.4/5 and 7.5.1.28.4/5 of G.997.1)The test
    parameters can be requested during loop diagnostic mode (VDSL, ADSL) and in
    ADSL also during STEADY_STATE.In VDSL during STEADY_STATE, the command can be
    used only to retrieve the "group size" parameters. To get the measurement
@@ -2289,7 +2382,7 @@ struct EVT_ClearEOCStatusGet
    The message is used to reset the transmit or receive status of the clear eoc
    data transmission to IDLE (for defined states see also
    CMD_ClearEOCStatusGet). See the description on the Clear EOC handling on Page
-   514 for when it has to be applied. Transmit and receive status are
+   518 for when it has to be applied. Transmit and receive status are
    distinguished by the Index parameter.
 */
 struct CMD_ClearEOCStatusSet
@@ -2987,7 +3080,7 @@ struct ACK_OLR_DS_EventConfigure
    Configures a link for retransmission of downstream data. For using the RTX
    function, this message has to be sent.
 */
-struct CMD_RTX_DS_Configure
+struct CMD_RTX_Control
 {
 #if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
    /** Index */
@@ -2995,26 +3088,105 @@ struct CMD_RTX_DS_Configure
    /** Length */
    DSL_uint16_t Length;
    /** Reserved */
-   DSL_uint16_t Res0 : 15;
-   /** Retransmission Enable */
-   DSL_uint16_t RtxMode : 1;
+   DSL_uint16_t Res0 : 7;
+   /** G.998.4 Amendment2 */
+   DSL_uint16_t RtxModeAmd2 : 1;
+   /** Reserved */
+   DSL_uint16_t Res1 : 6;
+   /** Retransmission Control */
+   DSL_uint16_t RtxMode : 2;
 #else
    /** Index */
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Retransmission Enable */
-   DSL_uint16_t RtxMode : 1;
+   /** Retransmission Control */
+   DSL_uint16_t RtxMode : 2;
    /** Reserved */
-   DSL_uint16_t Res0 : 15;
+   DSL_uint16_t Res1 : 6;
+   /** G.998.4 Amendment2 */
+   DSL_uint16_t RtxModeAmd2 : 1;
+   /** Reserved */
+   DSL_uint16_t Res0 : 7;
 #endif
 } __PACKED__ ;
 
 
 /**
-   Acknowledgement for CMD_RTX_DS_Configure.
+   Acknowledgement for CMD_RTX_Control.
 */
-struct ACK_RTX_DS_Configure
+struct ACK_RTX_Control
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Message for debug and test purposes to configure further parameters for G.INP
+   upstream retransmission: the framing type and half-roundtrip delay(s).
+*/
+struct CMD_RTX_US_Configure
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** Reserved */
+   DSL_uint16_t Res0 : 13;
+   /** DTU Framing Type 4 */
+   DSL_uint16_t FramingType4 : 1;
+   /** DTU Framing Type 3 */
+   DSL_uint16_t FramingType3 : 1;
+   /** DTU Framing Type 2 */
+   DSL_uint16_t FramingType2 : 1;
+   /** Reserved */
+   DSL_uint8_t Res1;
+   /** HalfRoundtripTx: DTU Part. */
+   DSL_uint8_t HRT_DTU;
+   /** Reserved */
+   DSL_uint8_t Res2;
+   /** HalfRoundtripTx: DMT Symbol Part. */
+   DSL_uint8_t HRT_Symbol;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** DTU Framing Type 2 */
+   DSL_uint16_t FramingType2 : 1;
+   /** DTU Framing Type 3 */
+   DSL_uint16_t FramingType3 : 1;
+   /** DTU Framing Type 4 */
+   DSL_uint16_t FramingType4 : 1;
+   /** Reserved */
+   DSL_uint16_t Res0 : 13;
+   /** HalfRoundtripTx: DTU Part. */
+   DSL_uint8_t HRT_DTU;
+   /** Reserved */
+   DSL_uint8_t Res1;
+   /** HalfRoundtripTx: DMT Symbol Part. */
+   DSL_uint8_t HRT_Symbol;
+   /** Reserved */
+   DSL_uint8_t Res2;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Acknowledgement for CMD_RTX_US_Configure.
+*/
+struct ACK_RTX_US_Configure
 {
 #if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
    /** Index */
@@ -3034,7 +3206,7 @@ struct ACK_RTX_DS_Configure
    Requests RTX specific status information for the downstream bearer channels
    if G.INP retransmission is used.
 */
-struct CMD_BearerChsDS_RTX_Get
+struct CMD_RTX_BearerChsDS_Get
 {
 #if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
    /** Index */
@@ -3054,7 +3226,7 @@ struct CMD_BearerChsDS_RTX_Get
    Delivers status information for the downstream bearer channels when G.INP
    retransmission is actually used.
 */
-struct ACK_BearerChsDS_RTX_Get
+struct ACK_RTX_BearerChsDS_Get
 {
 #if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
    /** Index */
@@ -3091,7 +3263,67 @@ struct ACK_BearerChsDS_RTX_Get
 
 
 /**
-   Requests counters for RTX performance monitoring.
+   Requests RTX specific status information for the upstream bearer channels if
+   upstream G.INP retransmission is used.
+*/
+struct CMD_RTX_BearerChsUS_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Delivers status information for the upstream bearer channels when upstream
+   G.INP retransmission is used.
+*/
+struct ACK_RTX_BearerChsUS_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** Expected Throughput ETR of RTX_us Function, LSW */
+   DSL_uint16_t ETR_LSW;
+   /** Expected Throughput ETR of RTX_us Function, MSW */
+   DSL_uint16_t ETR_MSW;
+   /** Actual Delay of RTX_us Function */
+   DSL_uint16_t ActDelay;
+   /** Actual INP SHINE of RTX_us Function */
+   DSL_uint16_t ActInpSHINE;
+   /** Actual INP REIN of RTX_us Function */
+   DSL_uint16_t ActInpREIN;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** Expected Throughput ETR of RTX_us Function, LSW */
+   DSL_uint16_t ETR_LSW;
+   /** Expected Throughput ETR of RTX_us Function, MSW */
+   DSL_uint16_t ETR_MSW;
+   /** Actual Delay of RTX_us Function */
+   DSL_uint16_t ActDelay;
+   /** Actual INP SHINE of RTX_us Function */
+   DSL_uint16_t ActInpSHINE;
+   /** Actual INP REIN of RTX_us Function */
+   DSL_uint16_t ActInpREIN;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Requests performance monitoring counters for downstream G.INP retransmission.
 */
 struct CMD_RTX_PM_DS_Get
 {
@@ -3110,7 +3342,7 @@ struct CMD_RTX_PM_DS_Get
 
 
 /**
-   Delivers retransmission counters for RTX performance monitoring.
+   Delivers performance monitoring counters for downstream G.INP retransmission.
 */
 struct ACK_RTX_PM_DS_Get
 {
@@ -3169,7 +3401,70 @@ struct ACK_RTX_PM_DS_Get
 
 
 /**
-   Requests retransmission test and debug wrap-around counters.
+   Requests performance monitoring counters for upstream G.INP retransmission.
+*/
+struct CMD_RTX_PM_US_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Delivers performance monitoring counters for upstream G.INP retransmission.
+   They are all far-end parameters received from CO.
+*/
+struct ACK_RTX_PM_US_Get
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** ErrorFreeBitsCNT, LSW */
+   DSL_uint16_t ErrorFreeBits_LSW;
+   /** ErrorFreeBitsCNT, MSW */
+   DSL_uint16_t ErrorFreeBits_MSW;
+   /** EFTR_min reported to CO, LSW */
+   DSL_uint16_t EFTR_min_LSW;
+   /** EFTR_min reported to CO, MSW */
+   DSL_uint16_t EFTR_min_MSW;
+   /** "leftr" Count, LSW */
+   DSL_uint16_t leftr_LSW;
+   /** "leftr" Count, MSW */
+   DSL_uint16_t leftr_MSW;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** ErrorFreeBitsCNT, LSW */
+   DSL_uint16_t ErrorFreeBits_LSW;
+   /** ErrorFreeBitsCNT, MSW */
+   DSL_uint16_t ErrorFreeBits_MSW;
+   /** EFTR_min reported to CO, LSW */
+   DSL_uint16_t EFTR_min_LSW;
+   /** EFTR_min reported to CO, MSW */
+   DSL_uint16_t EFTR_min_MSW;
+   /** "leftr" Count, LSW */
+   DSL_uint16_t leftr_LSW;
+   /** "leftr" Count, MSW */
+   DSL_uint16_t leftr_MSW;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Requests DTU counters for G.INP downstream retransmission.
 */
 struct CMD_RTX_DS_StatsGet
 {
@@ -3188,9 +3483,74 @@ struct CMD_RTX_DS_StatsGet
 
 
 /**
-   Delivers retransmission test and debug wrap-around counters.
+   Delivers DTU counters for G.INP downstream retransmission. The counters are
+   Non-TR1 wrap-around counters, which are reset at reboot only.
 */
 struct ACK_RTX_DS_StatsGet
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** TxDtuRetransmitted Count, LSW */
+   DSL_uint16_t TxDtuRTX_LSW;
+   /** TxDtuRetransmitted Count, MSW */
+   DSL_uint16_t TxDtuRTX_MSW;
+   /** RxDtuCorrected Count, LSW */
+   DSL_uint16_t RxDtuCorr_LSW;
+   /** RxDtuCorrected Count, MSW */
+   DSL_uint16_t RxDtuCorr_MSW;
+   /** RxDtuUncorrected Count, LSW */
+   DSL_uint16_t RxDtuNoCorr_LSW;
+   /** RxDtuUncorrected Count, MSW */
+   DSL_uint16_t RxDtuNoCorr_MSW;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** TxDtuRetransmitted Count, LSW */
+   DSL_uint16_t TxDtuRTX_LSW;
+   /** TxDtuRetransmitted Count, MSW */
+   DSL_uint16_t TxDtuRTX_MSW;
+   /** RxDtuCorrected Count, LSW */
+   DSL_uint16_t RxDtuCorr_LSW;
+   /** RxDtuCorrected Count, MSW */
+   DSL_uint16_t RxDtuCorr_MSW;
+   /** RxDtuUncorrected Count, LSW */
+   DSL_uint16_t RxDtuNoCorr_LSW;
+   /** RxDtuUncorrected Count, MSW */
+   DSL_uint16_t RxDtuNoCorr_MSW;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Requests DTU counters for G.INP upstream retransmission, which is defined for
+   VDSL only.
+*/
+struct CMD_RTX_US_StatsGet
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Delivers DTU counters for G.INP upstream retransmission. The counters are
+   Non-TR1 wrap-around counters, which are reset at reboot only.
+*/
+struct ACK_RTX_US_StatsGet
 {
 #if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
    /** Index */
@@ -3259,15 +3619,85 @@ struct ACK_RTX_StatusGet
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Retransmission Used "RTX_USED" */
-   DSL_uint16_t RtxUsed;
+   /** Reserved */
+   DSL_uint16_t Res0 : 14;
+   /** Retransmission US Used ("RTX_USED_us", VDSL only) */
+   DSL_uint16_t RtxUsedUs : 1;
+   /** Retransmission DS Used ("RTX_USED_ds") */
+   DSL_uint16_t RtxUsedDs : 1;
 #else
    /** Index */
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Retransmission Used "RTX_USED" */
-   DSL_uint16_t RtxUsed;
+   /** Retransmission DS Used ("RTX_USED_ds") */
+   DSL_uint16_t RtxUsedDs : 1;
+   /** Retransmission US Used ("RTX_USED_us", VDSL only) */
+   DSL_uint16_t RtxUsedUs : 1;
+   /** Reserved */
+   DSL_uint16_t Res0 : 14;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Requests upstream G.INP retransmission specific framing parameters and other
+   status parameters. They are always associated with bearer channel 0.
+*/
+struct CMD_RTX_US_FrameDataGet
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+#endif
+} __PACKED__ ;
+
+
+/**
+   Delivers upstream retransmission specific framing parameters and other status
+   parameters, as requested by CMD_RTX_US_FrameDataGet. They are always
+   associated with bearer channel 0.In addition, the usual framing parameters
+   are to be retrieved with CMD_FrameDataExt2US_Get.
+*/
+struct ACK_RTX_US_FrameDataGet
+{
+#if DSL_BYTE_ORDER == DSL_BIG_ENDIAN
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** Framing Type of LP1 RTX_us Framing */
+   DSL_uint16_t FT;
+   /** FEC Codewords per DTU of LP1 RTX_us Framing */
+   DSL_uint16_t Q;
+   /** Padding Bytes per DTU of LP1 RTX_usFraming */
+   DSL_uint16_t V;
+   /** RTX Queue Length in DTUs of RTX_us Function */
+   DSL_uint16_t Qtx;
+   /** Look-Back Value for RRC Codeword Evaluation of RTX_us Function */
+   DSL_uint16_t lb;
+#else
+   /** Index */
+   DSL_uint16_t Index;
+   /** Length */
+   DSL_uint16_t Length;
+   /** Framing Type of LP1 RTX_us Framing */
+   DSL_uint16_t FT;
+   /** FEC Codewords per DTU of LP1 RTX_us Framing */
+   DSL_uint16_t Q;
+   /** Padding Bytes per DTU of LP1 RTX_usFraming */
+   DSL_uint16_t V;
+   /** RTX Queue Length in DTUs of RTX_us Function */
+   DSL_uint16_t Qtx;
+   /** Look-Back Value for RRC Codeword Evaluation of RTX_us Function */
+   DSL_uint16_t lb;
 #endif
 } __PACKED__ ;
 

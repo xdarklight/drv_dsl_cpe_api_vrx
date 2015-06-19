@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -462,7 +462,6 @@ DSL_Error_t DSL_DRV_VRX_SendMsgInventoryFeGet(
    Write all the Inventory information of the Near End to the device
 
    \param pContext   Pointer to dsl cpe library context structure, [I]
-   \param pData      Pointer to the Inventory data to set, [I]
 
    \return
    Return values are defined within the DSL_Error_t definition
@@ -476,11 +475,6 @@ DSL_Error_t DSL_DRV_VRX_SendMsgInventoryNeSet(
    This function sends the firmware message "CMD_OLR_Control".
 
    \param pContext Pointer to dsl library context structure, [I]
-   \param bAutoSRA_DS AutoSRA control DS, [I]
-   \param bAutoSRA_US AutoSRA control US, [I]
-   \param bSos_DS SOS control DS, [I]
-   \param bSos_US SOS control US, [I]
-
 
    \return
    Return values are defined within the DSL_Error_t definition
@@ -488,26 +482,20 @@ DSL_Error_t DSL_DRV_VRX_SendMsgInventoryNeSet(
    - DSL_ERROR (-1) if operation failed
 */
 DSL_Error_t DSL_DRV_VRX_SendMsgOlrControl(
-   DSL_Context_t *pContext,
-   DSL_boolean_t bAutoSRA_DS,
-   DSL_boolean_t bAutoSRA_US,
-   DSL_boolean_t bSos_DS,
-   DSL_boolean_t bSos_US);
+   DSL_Context_t *pContext);
 
 /*
-   This function sends the firmware message "CMD_RTX_DS_Configure".
+   This function sends the firmware message "CMD_RTX_Control".
 
    \param pContext Pointer to dsl library context structure, [I]
-   \param bReTxEnable ReTx control DS
 
    \return
    Return values are defined within the DSL_Error_t definition
    - DSL_SUCCESS (0) in case of success
    - DSL_ERROR (-1) if operation failed
 */
-DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsConfigure(
-   DSL_Context_t *pContext,
-   DSL_boolean_t bReTxEnable);
+DSL_Error_t DSL_DRV_VRX_SendMsgRtxControl(
+   DSL_Context_t *pContext);
 
 /*
    This function sends the firmware message "CMD_BandConfig_US/DS_Get"
@@ -762,7 +750,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgLineStatusGet(
 
 /*
    This function sends the VRX firmware message
-   CMD_BearerChsDS_RTX_Get
+   CMD_RTX_BearerChsDS_Get
 
    \param pContext Pointer to dsl library context structure, [I]
    \param pAck Pointer to the msg ACK, [O]
@@ -772,13 +760,14 @@ DSL_Error_t DSL_DRV_VRX_SendMsgLineStatusGet(
    - DSL_SUCCESS in case of success
    - DSL_ERROR if operation failed
 */
-DSL_Error_t DSL_DRV_VRX_SendMsgBearerChsDsRtxGet(
+DSL_Error_t DSL_DRV_VRX_SendMsgBearerChsRtxGet(
    DSL_Context_t *pContext,
+   DSL_AccessDir_t nDirection,
    DSL_uint8_t *pAck);
 
 /*
    This function sends the VRX firmware message
-   CMD_RTX_DS_StatsGet
+   CMD_RTX_DS_StatsGet or CMD_RTX_US_StatsGet
 
    \param pContext Pointer to dsl library context structure, [I]
    \param pAck Pointer to the msg ACK, [O]
@@ -788,13 +777,14 @@ DSL_Error_t DSL_DRV_VRX_SendMsgBearerChsDsRtxGet(
    - DSL_SUCCESS in case of success
    - DSL_ERROR if operation failed
 */
-DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsStatsGet(
+DSL_Error_t DSL_DRV_VRX_SendMsgRtxStatsGet(
    DSL_Context_t *pContext,
+   DSL_AccessDir_t nDirection,
    DSL_uint8_t *pAck);
 
 /*
    This function sends the VRX firmware message
-   CMD_VDSL_RTX_StatusGet
+   CMD_RTX_StatusGet
 
    \param pContext Pointer to dsl library context structure, [I]
    \param pAck Pointer to the msg ACK, [O]
@@ -804,7 +794,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsStatsGet(
    - DSL_SUCCESS in case of success
    - DSL_ERROR if operation failed
 */
-DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsEnableStatusGet(
+DSL_Error_t DSL_DRV_VRX_SendMsgRtxEnableStatusGet(
    DSL_Context_t *pContext,
    DSL_uint8_t *pAck);
 
@@ -820,8 +810,9 @@ DSL_Error_t DSL_DRV_VRX_SendMsgRtxDsEnableStatusGet(
    - DSL_SUCCESS in case of success
    - DSL_ERROR if operation failed
 */
-DSL_Error_t DSL_DRV_VRX_SendMsgRtxPmDsGet(
+DSL_Error_t DSL_DRV_VRX_SendMsgRtxPmGet(
    DSL_Context_t *pContext,
+   DSL_AccessDir_t nDirection,
    DSL_uint8_t *pAck);
 
 /*

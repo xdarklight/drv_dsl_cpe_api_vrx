@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -170,7 +170,7 @@ typedef struct ACK_HS_StandardInfoFE_SPAR1Get ACK_HS_StandardInfoFE_SPAR1Get_t;
 #define CMD_SYSVENDORID_R_SET 0x3C43
 
 /**
-   Sets the in System Vendor ID at the xTU-R. (Section 7.4.4 of G997.1 [11])
+   Sets the in System Vendor ID at the xTU-R. (Section 7.4.4 of G.997.1 [11])
 */
 typedef struct CMD_SysVendorID_R_Set CMD_SysVendorID_R_Set_t;
 
@@ -187,7 +187,7 @@ typedef struct ACK_SysVendorID_R_Set ACK_SysVendorID_R_Set_t;
 
 /**
    Sets the in system vendor version number at the xTU-R. (Section 7.4.6 of
-   G997.1 [11])
+   G.997.1 [11])
 */
 typedef struct CMD_SysVendorVersionNum_R_Set CMD_SysVendorVersionNum_R_Set_t;
 
@@ -203,7 +203,7 @@ typedef struct ACK_SysVendorVersionNum_R_Set ACK_SysVendorVersionNum_R_Set_t;
 #define CMD_SYSVENDORSERIALNUM_R_SET 0x3E43
 
 /**
-   Sets the system vendor serial number at the xTU-R. (Section 7.4.8 of G997.1
+   Sets the system vendor serial number at the xTU-R. (Section 7.4.8 of G.997.1
    [11])
 */
 typedef struct CMD_SysVendorSerialNum_R_Set CMD_SysVendorSerialNum_R_Set_t;
@@ -237,7 +237,7 @@ typedef struct ACK_AuxInventoryInfo_R_Set ACK_AuxInventoryInfo_R_Set_t;
 #define CMD_VENDORID_O_GET 0x4003
 
 /**
-   Requests the xTU-C Vendor ID. (Section 7.4.1 of G997.1 [11])
+   Requests the xTU-C Vendor ID. (Section 7.4.1 of G.997.1 [11])
 */
 typedef struct CMD_VendorID_O_Get CMD_VendorID_O_Get_t;
 
@@ -253,7 +253,7 @@ typedef struct ACK_VendorID_O_Get ACK_VendorID_O_Get_t;
 #define CMD_VENDORID_R_GET 0x4103
 
 /**
-   Requests the xTU-R Vendor ID. (Section 7.4.2 of G997.1 [11])
+   Requests the xTU-R Vendor ID. (Section 7.4.2 of G.997.1 [11])
 */
 typedef struct CMD_VendorID_R_Get CMD_VendorID_R_Get_t;
 
@@ -269,7 +269,7 @@ typedef struct ACK_VendorID_R_Get ACK_VendorID_R_Get_t;
 #define CMD_SYSVENDORID_O_GET 0x3803
 
 /**
-   Requests the xTU-C System Vendor ID. (Section 7.4.3 of G997.1 [11])
+   Requests the xTU-C System Vendor ID. (Section 7.4.3 of G.997.1 [11])
 */
 typedef struct CMD_SysVendorID_O_Get CMD_SysVendorID_O_Get_t;
 
@@ -285,7 +285,7 @@ typedef struct ACK_SysVendorID_O_Get ACK_SysVendorID_O_Get_t;
 #define CMD_SYSVENDORID_R_GET 0x3C03
 
 /**
-   Requests the xTU-R System Vendor ID. (Section 7.4.4 of G997.1 [11])
+   Requests the xTU-R System Vendor ID. (Section 7.4.4 of G.997.1 [11])
 */
 typedef struct CMD_SysVendorID_R_Get CMD_SysVendorID_R_Get_t;
 
@@ -301,7 +301,7 @@ typedef struct ACK_SysVendorID_R_Get ACK_SysVendorID_R_Get_t;
 #define CMD_SYSVENDORVERSIONNUMO_GET 0x3A03
 
 /**
-   Requests the xTU-C system vendor version number. (Section 7.4.5 of G997.1
+   Requests the xTU-C system vendor version number. (Section 7.4.5 of G.997.1
    [11])
 */
 typedef struct CMD_SysVendorVersionNumO_Get CMD_SysVendorVersionNumO_Get_t;
@@ -319,7 +319,7 @@ typedef struct ACK_SysVendorVersionNum_O_Get ACK_SysVendorVersionNum_O_Get_t;
 #define CMD_SYSVENDORVERSIONNUM_R_GET 0x3D03
 
 /**
-   Requests the xTU-R system vendor version number. (Section 7.4.6 of G997.1
+   Requests the xTU-R system vendor version number. (Section 7.4.6 of G.997.1
    [11])
 */
 typedef struct CMD_SysVendorVersionNum_R_Get CMD_SysVendorVersionNum_R_Get_t;
@@ -337,7 +337,7 @@ typedef struct ACK_SysVendorVersionNum_R_Get ACK_SysVendorVersionNum_R_Get_t;
 #define CMD_SYSVENDORSERIALNUM_O_GET 0x3903
 
 /**
-   Requests the xTU-C system vendor serial number. (Section 7.4.7 of G997.1
+   Requests the xTU-C system vendor serial number. (Section 7.4.7 of G.997.1
    [11])
 */
 typedef struct CMD_SysVendorSerialNum_O_Get CMD_SysVendorSerialNum_O_Get_t;
@@ -355,7 +355,7 @@ typedef struct ACK_SysVendorSerialNum_O_Get ACK_SysVendorSerialNum_O_Get_t;
 #define CMD_SYSVENDORSERIALNUM_R_GET 0x3E03
 
 /**
-   Requests the xTU-R system vendor serial number. (Section 7.4.8 of G997.1
+   Requests the xTU-R system vendor serial number. (Section 7.4.8 of G.997.1
    [11])
 */
 typedef struct CMD_SysVendorSerialNum_R_Get CMD_SysVendorSerialNum_R_Get_t;
@@ -2060,7 +2060,7 @@ struct ACK_HS_StandardInfoFE_SPAR1Get
 
 
 /**
-   Sets the in System Vendor ID at the xTU-R. (Section 7.4.4 of G997.1 [11])
+   Sets the in System Vendor ID at the xTU-R. (Section 7.4.4 of G.997.1 [11])
 */
 struct CMD_SysVendorID_R_Set
 {
@@ -2103,7 +2103,7 @@ struct ACK_SysVendorID_R_Set
 
 /**
    Sets the in system vendor version number at the xTU-R. (Section 7.4.6 of
-   G997.1 [11])
+   G.997.1 [11])
 */
 struct CMD_SysVendorVersionNum_R_Set
 {
@@ -2145,7 +2145,7 @@ struct ACK_SysVendorVersionNum_R_Set
 
 
 /**
-   Sets the system vendor serial number at the xTU-R. (Section 7.4.8 of G997.1
+   Sets the system vendor serial number at the xTU-R. (Section 7.4.8 of G.997.1
    [11])
 */
 struct CMD_SysVendorSerialNum_R_Set
@@ -2231,7 +2231,7 @@ struct ACK_AuxInventoryInfo_R_Set
 
 
 /**
-   Requests the xTU-C Vendor ID. (Section 7.4.1 of G997.1 [11])
+   Requests the xTU-C Vendor ID. (Section 7.4.1 of G.997.1 [11])
 */
 struct CMD_VendorID_O_Get
 {
@@ -2273,7 +2273,7 @@ struct ACK_VendorID_O_Get
 
 
 /**
-   Requests the xTU-R Vendor ID. (Section 7.4.2 of G997.1 [11])
+   Requests the xTU-R Vendor ID. (Section 7.4.2 of G.997.1 [11])
 */
 struct CMD_VendorID_R_Get
 {
@@ -2315,7 +2315,7 @@ struct ACK_VendorID_R_Get
 
 
 /**
-   Requests the xTU-C System Vendor ID. (Section 7.4.3 of G997.1 [11])
+   Requests the xTU-C System Vendor ID. (Section 7.4.3 of G.997.1 [11])
 */
 struct CMD_SysVendorID_O_Get
 {
@@ -2357,7 +2357,7 @@ struct ACK_SysVendorID_O_Get
 
 
 /**
-   Requests the xTU-R System Vendor ID. (Section 7.4.4 of G997.1 [11])
+   Requests the xTU-R System Vendor ID. (Section 7.4.4 of G.997.1 [11])
 */
 struct CMD_SysVendorID_R_Get
 {
@@ -2399,7 +2399,7 @@ struct ACK_SysVendorID_R_Get
 
 
 /**
-   Requests the xTU-C system vendor version number. (Section 7.4.5 of G997.1
+   Requests the xTU-C system vendor version number. (Section 7.4.5 of G.997.1
    [11])
 */
 struct CMD_SysVendorVersionNumO_Get
@@ -2443,7 +2443,7 @@ struct ACK_SysVendorVersionNum_O_Get
 
 
 /**
-   Requests the xTU-R system vendor version number. (Section 7.4.6 of G997.1
+   Requests the xTU-R system vendor version number. (Section 7.4.6 of G.997.1
    [11])
 */
 struct CMD_SysVendorVersionNum_R_Get
@@ -2487,7 +2487,7 @@ struct ACK_SysVendorVersionNum_R_Get
 
 
 /**
-   Requests the xTU-C system vendor serial number. (Section 7.4.7 of G997.1
+   Requests the xTU-C system vendor serial number. (Section 7.4.7 of G.997.1
    [11])
 */
 struct CMD_SysVendorSerialNum_O_Get
@@ -2531,7 +2531,7 @@ struct ACK_SysVendorSerialNum_O_Get
 
 
 /**
-   Requests the xTU-R system vendor serial number. (Section 7.4.8 of G997.1
+   Requests the xTU-R system vendor serial number. (Section 7.4.8 of G.997.1
    [11])
 */
 struct CMD_SysVendorSerialNum_R_Get

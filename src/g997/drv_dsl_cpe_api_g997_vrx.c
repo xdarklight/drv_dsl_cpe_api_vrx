@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -102,18 +102,8 @@ DSL_Error_t DSL_DRV_DEV_G997_SnrAllocationNscGet(
          {
             if( pContext->DELT_SHOWTIME != DSL_NULL )
             {
-               /* data is ready, use new amount of data */
-               if (pContext->eTestParametersFeReady == VRX_FE_TESTPARAMS_READY)
-               {
-                  pData->data.snrAllocationNsc.nNumData
-                        = pContext->DELT_SHOWTIME->snrDataUsVdsl.deltSnr.nNumData;
-               }
-               /* data is updating, use previous updated value */
-               else
-               {
-                  pData->data.snrAllocationNsc.nNumData
-                        = pContext->DELT_SHOWTIME->snrDataUsVdsl.deltSnr.nNumDataPrev;
-               }
+               pData->data.snrAllocationNsc.nNumData
+                     = pContext->DELT_SHOWTIME->snrDataUsVdsl.deltSnr.nNumData;
                /* copy data */
                memcpy(&pData->data.snrAllocationNsc.nNSCData,
                       pContext->DELT_SHOWTIME->snrDataUsVdsl.deltSnr.nSCGData,
@@ -980,10 +970,6 @@ DSL_Error_t DSL_DRV_DEV_G997_PowerManagementStateForcedTrigger(
 
    DSL_CHECK_POINTER(pContext, pData);
    DSL_CHECK_ERR_CODE();
-
-#if !defined(INCLUDE_DSL_CPE_API_VRX_FULL_MSG)
-   return DSL_ERR_NOT_SUPPORTED_BY_FIRMWARE;
-#endif
 
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_DEV_G997_PowerManagementStateForcedTrigger"

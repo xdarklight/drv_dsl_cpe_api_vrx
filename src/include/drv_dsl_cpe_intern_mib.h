@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -42,8 +42,10 @@ typedef enum DSL_MIB_ADSL_Thresholds
    DSL_MIB_THRESHOLD_ATUC_15MIN_FAILED_FASTR_FLAG = 0x200,  /* BIT 9 */
    DSL_MIB_THRESHOLD_ATUC_15MIN_SESL_FLAG         = 0x400,  /* BIT 10 */
    DSL_MIB_THRESHOLD_ATUC_15MIN_UASL_FLAG         = 0x800,  /* BIT 11 */
-   DSL_MIB_THRESHOLD_ATUR_15MIN_SESL_FLAG         = 0x1000,  /* BIT 12 */
-   DSL_MIB_THRESHOLD_ATUR_15MIN_UASL_FLAG         = 0x2000  /* BIT 13 */
+   DSL_MIB_THRESHOLD_ATUR_15MIN_SESL_FLAG         = 0x1000, /* BIT 12 */
+   DSL_MIB_THRESHOLD_ATUR_15MIN_UASL_FLAG         = 0x2000, /* BIT 13 */
+   DSL_MIB_THRESHOLD_ATUR_FECS_FLAG               = 0x4000, /* BIT 14 */
+   DSL_MIB_THRESHOLD_ATUC_FECS_FLAG               = 0x8000  /* BIT 15 */
 } DSL_MIB_ADSL_Thresholds_t;
 
 /** ADSL Mib context structure */

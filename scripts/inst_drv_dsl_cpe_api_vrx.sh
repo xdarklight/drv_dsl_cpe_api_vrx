@@ -20,9 +20,10 @@ if [ -e /etc/rc.d/ltq_dsl_functions.sh ]; then
    . /etc/rc.d/ltq_dsl_functions.sh 
    get_phy_tc_info
 fi
+
 if [ "$wan_mode" = "AUTO" -o "$wan_mode" = "ADSL" -o "$wan_mode" = "VDSL" ]; then
-   # check for linux 2.6.x
-   uname -r | grep -q 2.6.
+   # check for linux 2.6.x or 3.8.x
+   uname -r | grep -q -e 2.6. -e 3.8.
    if [ $? -eq 0 ]; then
       MODEXT=.ko
    fi

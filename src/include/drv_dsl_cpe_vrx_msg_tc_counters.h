@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -279,7 +279,7 @@ typedef struct ACK_ATM_BC0_TxStatsNE_Get ACK_ATM_BC0_TxStatsNE_Get_t;
 
 /**
    Writes the transmit data-path counters for BC0 of an ATM-TC link.For "Why
-   writing performance counters" see Page 628.
+   writing performance counters" see Page 648.
 */
 typedef struct CMD_ATM_BC0_TxStatsNE_Set CMD_ATM_BC0_TxStatsNE_Set_t;
 
@@ -304,7 +304,7 @@ typedef struct CMD_VersionInfoGet CMD_VersionInfoGet_t;
 
 /**
    Provides version information about hardware and firmware. The FW version
-   numbering scheme has a long and a short form (Table 339).
+   numbering scheme has a long and a short form (Table 353).
 */
 typedef struct ACK_VersionInfoGet ACK_VersionInfoGet_t;
 
@@ -1290,7 +1290,7 @@ struct ACK_ATM_BC0_TxStatsNE_Get
 
 /**
    Writes the transmit data-path counters for BC0 of an ATM-TC link.For "Why
-   writing performance counters" see Page 628.
+   writing performance counters" see Page 648.
 */
 struct CMD_ATM_BC0_TxStatsNE_Set
 {
@@ -1364,7 +1364,7 @@ struct CMD_VersionInfoGet
 
 /**
    Provides version information about hardware and firmware. The FW version
-   numbering scheme has a long and a short form (Table 339).
+   numbering scheme has a long and a short form (Table 353).
 */
 struct ACK_VersionInfoGet
 {

@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -46,7 +46,11 @@
 #include <linux/delay.h>
 #include <linux/poll.h>
 #include <asm/uaccess.h>
-#include <linux/smp_lock.h>
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,8,0))
+   #include <linux/smp_lock.h>
+#else
+#include <linux/smp.h>
+#endif
 
 #ifdef INCLUDE_DSL_CPE_API_IFXOS_SUPPORT
 /** IFXOS includes*/

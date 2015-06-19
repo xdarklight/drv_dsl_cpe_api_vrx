@@ -1,6 +1,6 @@
 /******************************************************************************
 
-                              Copyright (c) 2013
+                              Copyright (c) 2014
                             Lantiq Deutschland GmbH
 
   For licensing information, see the file 'LICENSE' in the root folder of
@@ -128,7 +128,7 @@ DSL_Error_t DSL_DRV_BND_VRX_ConfigWrite(
    DSL_Context_t *pContext);
 
 /**
-   XWAY(TM) VRX200 device specific Bonding HW initialization.
+   VRX200 device specific Bonding HW initialization.
 
    \param pContext - Pointer to dsl cpe library context structure, [I/O]
    \param pData    - Pointer to the Bonding HW initialization data, [I]
