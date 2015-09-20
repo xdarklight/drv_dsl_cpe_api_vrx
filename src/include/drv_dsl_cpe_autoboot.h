@@ -152,6 +152,7 @@ DSL_Error_t DSL_DRV_AutobootTimeoutSet(
 /** This constant defines default value for autoboot thread poll time in msec */
 #define DSL_AUTOBOOT_IDLE_POLL_TIME 1000
 #define DSL_AUTOBOOT_L3_POLL_TIME 1000
+#define DSL_AUTOBOOT_BONDING_TRAINING_POLL_TIME 100
 #define DSL_AUTOBOOT_TRAINING_POLL_TIME 1000
 #define DSL_AUTOBOOT_INIT_POLL_TIME 100
 #define DSL_AUTOBOOT_SHOWTIME_POLL_TIME 1000
@@ -167,15 +168,28 @@ DSL_Error_t DSL_DRV_AutobootTimeoutSet(
 #define DSL_AUTOBOOT_ORDERLY_SHUTDOWN_POLL_TIME 250
 #define DSL_AUTOBOOT_DISABLE_POLL_TIME 100
 
+/** firmware wait timeout in sec */
+#define DSL_AUTOBOOT_FW_WAIT_TIMEOUT 10
+
 /** Waitnig for orderly shutdown ready timeout in sec */
 #define DSL_AUTOBOOT_ORDERLY_SHUTDOWN_TIMEOUT 12
 
-/** This constant defines default value for autoboot training timeout in sec */
-#define DSL_AUTOBOOT_TRAINING_TIMEOUT_DEFAULT 120
-#define DSL_AUTOBOOT_TRAINING_TIMEOUT_V_GHS 60
-#define DSL_AUTOBOOT_TRAINING_TIMEOUT_GOTO_V_STD 60
-#define DSL_AUTOBOOT_TRAINING_TIMEOUT_GOTO_V_GHS 120
-#define DSL_AUTOBOOT_TRAINING_TIMEOUT_GOTO_V_ANSI 180
+/** timeout for the first CO side answer, in sec */
+#define DSL_AUTOBOOT_PRE_TRAINING_TIMEOUT_DEFAULT 120
+
+/** autoboot training timeouts between handshake and showtime, in sec */
+#define DSL_AUTOBOOT_TRAINING_TIMEOUT_DANUBE 120
+#define DSL_AUTOBOOT_TRAINING_TIMEOUT_VRX 720
+
+/** diagnosic mode timeouts, in sec */
+#define DSL_AUTOBOOT_DELT_TIMEOUT_DANUBE 360
+#define DSL_AUTOBOOT_DELT_TIMEOUT_VRX 840
+
+/** APS3 handshake timeouts between link activate and handshake, in sec */
+#define DSL_AUTOBOOT_HANDSHAKE_TIMEOUT_V_GHS 60
+#define DSL_AUTOBOOT_HANDSHAKE_TIMEOUT_GOTO_V_STD 60
+#define DSL_AUTOBOOT_HANDSHAKE_TIMEOUT_GOTO_V_GHS 120
+#define DSL_AUTOBOOT_HANDSHAKE_TIMEOUT_GOTO_V_ANSI 180
 
 #ifdef __cplusplus
 }

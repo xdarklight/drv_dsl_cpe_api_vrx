@@ -1,25 +1,76 @@
 NEXT VERSION
 
-V4.16.2.4 - 2014-03-11
-Bug fix(es):
-- VRX (DSLPCE_SW-787) US ETR value read from CPE through API command is not correct
-  + extended msg white list with CMD_RTX_BEARERCHSUS_GET
+V4.16.5.4 - 2014-04-21
+-
 
-V4.16.2.3 - 2014-02-27
+V4.16.5.3 - 2014-04-15
+- VRX320 (DSLCPE_SW-790) Changes for QCA platform
+  + fixed MCAT header files for little endian case
+
+V4.16.5.2 - 2014-04-01
+- VRX320 (DSLCPE_SW-790) Changes for QCA platform
+  + included DSL/PP related interface functions
+
+V4.16.5.1 - 2014-03-21
+- VRX320 (DSLCPE_SW-790) Changes for QCA platform
+  + added new device VR10_320 handling
+
+V4.16.5 - 2014-03-07
+Bug fix(es):
+- (DSLCPE_SW-786) [VRX] Counter overflow in UAS or FECS values
+ + extended UAS counter handling
+  + exluded possible overflow within autoboot timeouts handling
+
+V4.16.4 - 2014-03-05
+Bug fix(es):
+- VRX (DSLCPE_SW-789) Version check for G.INP Amd2 Support (ReTx) is wrong
+  + Corrected version check including check to enable feature only for VDSL
 common:
+- VRX (DSLCPE_SW-777) In case of bonding is enabled increase polling cycle
+  frequency during G.HS phase
+  + excluded PM related counters (except UAS) polling cycle within training
+  + added CMD_ATM_BC0_TXSTATSNE_GET to the DSL_DRV_VRX_g_MsgDumpBlacklist
+- (DSLSPE_SW-771) Extend debugging functionality and take care that it is
+  working completely
+  + extended DSL_FIO_DBG_MODULE_LEVEL_SET/GET (+ DSL_DBG_NOTIFICATIONS)
+  + extended showtime enter/exit debug prints with new debug level
+- VRX (DSLCPE_SW-783) first US parameters are 0, when API command lsg is
+  directly after ST is read.
+  + extended DSL_DRV_VRX_LineStatusGet() function
+- (DSLCPE_SW-711) Misc smaller improvements
+  + extended context variables read/write operations with mutex protection
+  + updated timeout wait values within according defines and descriptions
 - (DSLCPE_SW-786) [VRX] Counter overflow in UAS or FECS values
   + fixed ms counter overflow handling for UAS counter
   + extended LineSecCounters restore with FECS counter
   + fixed ES counter restore
+  + extended UAS counter handling aligned in sync with IFXOS_ElapsedTimeMSecGet
+  + extended DSL_DRV_ElapsedTimeMSecGet aligned to the IFXOS_ElapsedTimeMSecGet
+- (DSLPCE_SW-787) [VRX] US ETR value read from CPE through API command is not
+  correct
+  + extended msg white list with CMD_RTX_BEARERCHSUS_GET
 
-V4.16.2.2 - 2014-02-10
--
-
-V4.16.2.1 - 2014-01-20
+V4.16.3 - 2014-01-29
 common:
+- VRX (DSLCPE_SW-768) API for FW R7 Release - Change of default configuration
+  values
+  + Added handling to set API default for (S)RA mode within context of FW
+    download only in case no user specific re-configurations has been done
+    before
+- VRX (DSLCPE_SW-767) Extensions for retry-counter handling of
+  Multimode State Machine (APS3).
+  + Extended with CAM retry function with nCamGhsReinits counter.
 - VRX (DSLCPE_SW-778) Line unlock does not work in case of operating a single
   link line on a boding CPE (related to the DSLCPE_SW-752)
   + fix orderly shutdown usage in case of internal firmware exception case
+- VRX (DSLCPE_SW-775) Automatically enable Telefonica mode in case of T1.413 is
+  configured at startup
+  + extended startup activation sequence with auto sequence config.
+- VRX (DSLCPE_SW-777) In case of bonding is enabled increase polling cycle
+  frequency during G.HS phase
+  + added DSL_AUTOBOOT_BONDING_TRAINING_POLL_TIME 100ms for PafEnable case
+    between link actvation and full init
+  + added new function DSL_DRV_BND_BondingEnableCheck
 
 V4.16.2 - 2014-01-16
 -

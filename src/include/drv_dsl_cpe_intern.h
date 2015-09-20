@@ -367,7 +367,15 @@ struct DSL_Context
    /**
       G997 Rate Adaptation Mode*/
    DSL_G997_RA_MODE_t rateAdaptationMode[DSL_MODE_LAST][DSL_ACCESSDIR_LAST];
-   /** Used for special handling for DSLCPE_SW-768 (VRX only) */
+   /** Used for special handling within context of DSLCPE_SW-768 (VRX only).
+       It defines whether the API default configuration for SRA has to be
+       applied or not. Because SRA configuration for VDSL is currently
+       dependend on the FW capabilities the according detection can be only
+       done within context FW download (API might be started withou defined
+       FW!)
+       DSL_FALSE: Default API value was not set so far (initializtion value)
+       DSL_TRUE:  Default value was already set or manual user re-configuration
+       was done before which shall have the higher priority. */
    DSL_boolean_t bDefaultRaModeSet;
 
    /** Line activation configuration. It will be applied during next
@@ -827,6 +835,14 @@ DSL_Error_t DSL_DRV_ResourceUsageStatisticsGet(
 
 #ifndef SWIG
 /**
+   Check for if bonding is enabled.
+*/
+DSL_boolean_t DSL_DRV_BondingEnableCheck(
+   DSL_Context_t *pContext);
+#endif
+
+#ifndef SWIG
+/**
    Check for a valid XTSE settings
 */
 DSL_Error_t DSL_DRV_XtseSettingsCheck(
@@ -1219,6 +1235,32 @@ DSL_Error_t DSL_DRV_LoopLengthStatusGet(
    DSL_IN_OUT DSL_LoopLengthStatus_t *pData
 );
 #endif
+
+#if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
+/**
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_POSPHY_ADDRESS_CONFIG_SET
+*/
+#ifndef SWIG_TMP
+DSL_Error_t DSL_DRV_PosphyAddressConfigSet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_PhyAddressConfig_t *pData
+);
+#endif
+#endif /* #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1) */
+
+#if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
+/**
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_POSPHY_ADDRESS_CONFIG_GET
+*/
+#ifndef SWIG_TMP
+DSL_Error_t DSL_DRV_PosphyAddressConfigGet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_PhyAddressConfig_t *pData
+);
+#endif
+#endif /* #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1) */
 
 #ifndef SWIG_TMP
 DSL_Error_t DSL_DRV_SystemInterfaceConfigCheck(

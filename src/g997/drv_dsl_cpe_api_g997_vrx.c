@@ -102,12 +102,23 @@ DSL_Error_t DSL_DRV_DEV_G997_SnrAllocationNscGet(
          {
             if( pContext->DELT_SHOWTIME != DSL_NULL )
             {
+               if(DSL_DRV_MUTEX_LOCK(pContext->dataMutex))
+               {
+                  DSL_DEBUG( DSL_DBG_ERR,
+                     (pContext, SYS_DBG_ERR"DSL[%02d]: Couldn't lock data mutex"
+                     DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+                  return DSL_ERR_SEMAPHORE_GET;
+               }
+
                pData->data.snrAllocationNsc.nNumData
                      = pContext->DELT_SHOWTIME->snrDataUsVdsl.deltSnr.nNumData;
                /* copy data */
                memcpy(&pData->data.snrAllocationNsc.nNSCData,
                       pContext->DELT_SHOWTIME->snrDataUsVdsl.deltSnr.nSCGData,
                       pData->data.snrAllocationNsc.nNumData);
+
+               DSL_DRV_MUTEX_UNLOCK(pContext->dataMutex);
             }
             else
             {
@@ -248,10 +259,8 @@ DSL_Error_t DSL_DRV_DEV_G997_LineStatusGet(
       /* get the Line Status data from the internal buffer*/
       if( pContext->DELT != DSL_NULL )
       {
-         memcpy(
-            &(pData->data),
-            &(pContext->DELT->lineStatus[nDirection]),
-            sizeof(DSL_G997_LineStatusData_t));
+         DSL_CTX_READ(pContext, nErrCode,
+                                    DELT->lineStatus[nDirection], pData->data);
       }
       else
       {
@@ -555,9 +564,16 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltHlinScaleGet(
    {
       if( pContext->DELT != DSL_NULL )
       {
-         pData->nDeltHlinScale = nDirection == DSL_DOWNSTREAM ?
-                                 pContext->DELT->hlinScaleDataDs.nDeltHlinScale :
-                                 pContext->DELT->hlinScaleDataUs.nDeltHlinScale;
+         if (nDirection == DSL_DOWNSTREAM)
+         {
+            DSL_CTX_READ_SCALAR(pContext, nErrCode,
+                  DELT->hlinScaleDataDs.nDeltHlinScale, pData->nDeltHlinScale);
+         }
+         else
+         {
+            DSL_CTX_READ_SCALAR(pContext, nErrCode,
+                  DELT->hlinScaleDataUs.nDeltHlinScale, pData->nDeltHlinScale);
+         }
       }
       else
       {
@@ -604,12 +620,14 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltHlinGet(
       /* get the far end data from the internal buffer*/
       if( pContext->DELT != DSL_NULL )
       {
-         memcpy(pData,
-                nDirection == DSL_DOWNSTREAM ?
-                (DSL_void_t*)&(pContext->DELT->hlinDataDs) :
-                (DSL_void_t*)&(pContext->DELT->hlinDataUs),
-                nDirection == DSL_DOWNSTREAM ? sizeof(pContext->DELT->hlinDataDs) :
-                                               sizeof(pContext->DELT->hlinDataUs));
+         if (nDirection == DSL_DOWNSTREAM)
+         {
+            DSL_CTX_READ(pContext, nErrCode, DELT->hlinDataDs, pData);
+         }
+         else
+         {
+            DSL_CTX_READ(pContext, nErrCode, DELT->hlinDataUs, pData);
+         }
       }
       else
       {
@@ -682,8 +700,7 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltHlogGet(
                if(pContext->DELT_SHOWTIME != DSL_NULL)
                {
                   /* Get FE showtime parameters from the internal buffer*/
-                  memcpy(pData,(DSL_void_t*)&(pContext->DELT_SHOWTIME->hlogDataUsVdsl),
-                           sizeof(pContext->DELT_SHOWTIME->hlogDataUsVdsl));
+                  DSL_CTX_READ(pContext, nErrCode, DELT_SHOWTIME->hlogDataUsVdsl, pData);
                }
                else
                {
@@ -709,12 +726,14 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltHlogGet(
       /* get the far end data from the internal buffer*/
       if( pContext->DELT != DSL_NULL )
       {
-         memcpy(pData,
-                nDirection == DSL_DOWNSTREAM ?
-                (DSL_void_t*)&(pContext->DELT->hlogDataDs) :
-                (DSL_void_t*)&(pContext->DELT->hlogDataUs),
-                nDirection == DSL_DOWNSTREAM ? sizeof(pContext->DELT->hlogDataDs) :
-                                               sizeof(pContext->DELT->hlogDataUs));
+         if (nDirection == DSL_DOWNSTREAM)
+         {
+            DSL_CTX_READ(pContext, nErrCode, DELT->hlogDataDs, pData);
+         }
+         else
+         {
+            DSL_CTX_READ(pContext, nErrCode, DELT->hlogDataUs, pData);
+         }
       }
       else
       {
@@ -787,8 +806,7 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltQLNGet(
                if(pContext->DELT_SHOWTIME != DSL_NULL)
                {
                   /* Get FE showtime parameters from the internal buffer*/
-                  memcpy(pData,(DSL_void_t*)&(pContext->DELT_SHOWTIME->qlnDataUsVdsl),
-                              sizeof(pContext->DELT_SHOWTIME->qlnDataUsVdsl));
+                  DSL_CTX_READ(pContext, nErrCode, DELT_SHOWTIME->qlnDataUsVdsl, pData);
                }
                else
                {
@@ -814,12 +832,14 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltQLNGet(
       /* get the far end data from the internal buffer*/
       if( pContext->DELT != DSL_NULL )
       {
-         memcpy(pData,
-                nDirection == DSL_DOWNSTREAM ?
-                (DSL_void_t*)&(pContext->DELT->qlnDataDs) :
-                (DSL_void_t*)&(pContext->DELT->qlnDataUs),
-                nDirection == DSL_DOWNSTREAM ? sizeof(pContext->DELT->qlnDataDs) :
-                                               sizeof(pContext->DELT->qlnDataUs));
+         if (nDirection == DSL_DOWNSTREAM)
+         {
+            DSL_CTX_READ(pContext, nErrCode, DELT->qlnDataDs, pData);
+         }
+         else
+         {
+            DSL_CTX_READ(pContext, nErrCode, DELT->qlnDataUs, pData);
+         }
       }
       else
       {
@@ -854,7 +874,6 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltSNRGet(
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
    DSL_LineStateValue_t nCurrentState = DSL_LINESTATE_UNKNOWN;
-   DSL_VRX_FwVersion_t fwVersion = {0};
    ACK_TestParamsAuxDS_Get_t  sAck;
 
    DSL_CHECK_POINTER(pContext, pData);
@@ -895,8 +914,7 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltSNRGet(
                if(pContext->DELT_SHOWTIME != DSL_NULL)
                {
                   /* Get FE showtime parameters from the internal buffer*/
-                  memcpy(pData,(DSL_void_t*)&(pContext->DELT_SHOWTIME->snrDataUsVdsl),
-                               sizeof(pContext->DELT_SHOWTIME->snrDataUsVdsl));
+                  DSL_CTX_READ(pContext, nErrCode, DELT_SHOWTIME->snrDataUsVdsl, pData);
                }
                else
                {
@@ -922,13 +940,14 @@ DSL_Error_t DSL_DRV_DEV_G997_DeltSNRGet(
       /* get the far end data from the internal buffer*/
       if( pContext->DELT != DSL_NULL )
       {
-         memcpy(pData,
-                nDirection == DSL_DOWNSTREAM ?
-                (DSL_void_t*)&(pContext->DELT->snrDataDs) :
-                (DSL_void_t*)&(pContext->DELT->snrDataUs),
-                nDirection == DSL_DOWNSTREAM ?
-                                           sizeof(pContext->DELT->snrDataDs) :
-                                           sizeof(pContext->DELT->snrDataUs));
+         if (nDirection == DSL_DOWNSTREAM)
+         {
+            DSL_CTX_READ(pContext, nErrCode, DELT->snrDataDs, pData);
+         }
+         else
+         {
+            DSL_CTX_READ(pContext, nErrCode, DELT->snrDataUs, pData);
+         }
       }
       else
       {

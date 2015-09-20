@@ -3687,7 +3687,7 @@ static DSL_Error_t DSL_DRV_PM_LineSecCountersUpdate(
            (nCurrentState != DSL_LINESTATE_SHOWTIME_NO_SYNC)) &&
            (!pLineSecAuxData->bUASStart))
       {
-         pLineSecAuxData->nUASBegin = DSL_DRV_PM_TIME_GET() / DSL_PM_MSEC;
+         pLineSecAuxData->nUASBegin = DSL_DRV_ElapsedTimeMSecGet(0);
          pLineSecAuxData->bUASStart = DSL_TRUE;
          pLineSecAuxData->nUASLast  = 0;
       }
@@ -3695,23 +3695,15 @@ static DSL_Error_t DSL_DRV_PM_LineSecCountersUpdate(
       {
          if (pLineSecAuxData->bUASStart)
          {
-            nCurrTime = DSL_DRV_PM_TIME_GET() / DSL_PM_MSEC;
-
-            if (pLineSecAuxData->nUASBegin == 0)
+            nCurrTime = DSL_DRV_ElapsedTimeMSecGet(pLineSecAuxData->nUASBegin);
+            nUasIncr = nCurrTime / DSL_PM_MSEC;
+            if (nCurrTime%DSL_PM_MSEC >= DSL_PM_MSEC/2)
             {
-               nUasIncr = nCurrTime;
-            }
-            else if (pLineSecAuxData->nUASBegin <= nCurrTime)
-            {
-               nUasIncr = nCurrTime - pLineSecAuxData->nUASBegin;
-            }
-            else
-            {
-               nUasIncr = nCurrTime + (0xFFFFFFFF/(HZ*DSL_PM_MSEC) - pLineSecAuxData->nUASBegin) + 1;
+               nUasIncr++;
             }
 
             pLineSecAuxData->nUASLast += nUasIncr;
-            pLineSecAuxData->nUASBegin = nCurrTime;
+            pLineSecAuxData->nUASBegin += nCurrTime;
          }
 
          if ((nCurrentState == DSL_LINESTATE_SHOWTIME_TC_SYNC)  ||

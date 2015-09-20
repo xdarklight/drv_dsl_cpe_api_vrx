@@ -73,10 +73,16 @@ static DSL_Error_t DSL_DRV_VRX_CamRetryReset(
 
    DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.nCamReinits, 0);
    DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.nCamFwReinits, 0);
+#ifdef INCLUDE_DEVICE_EXCEPTION_CODES
+   DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.nCamGhsReinits, 0);
+#endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
 
    DSL_DEBUG(DSL_DBG_MSG, (pContext,
       SYS_DBG_MSG"DSL[%02d]: CAM - Retry counters reset: "
                  "nCamReinits = 0, nCamFwReinits = 0"
+#ifdef INCLUDE_DEVICE_EXCEPTION_CODES
+                 ", nCamGhsReinits = 0"
+#endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
                  DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
    return nErrCode;
@@ -156,6 +162,10 @@ DSL_Error_t DSL_DRV_VRX_CamExceptionHandle(
    DSL_uint8_t nCamFwReinits = 0;
    DSL_boolean_t bCamDualPortModeSteady = DSL_FALSE;
    DSL_G997_LineInitStatusData_t lineInitStatus = {LINIT_UNKNOWN, LINIT_SUB_NONE};
+#ifdef INCLUDE_DEVICE_EXCEPTION_CODES
+   DSL_LastExceptionCodesData_t LastExceptionCodes;
+   DSL_uint8_t nCamGhsReinits = 0;
+#endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
    DSL_boolean_t bFsmStatusChange = DSL_FALSE;
    DSL_uint8_t i, nAtse = 0, nAtseCurr = 0, nVtse = 0, nXtse1 = 0;
    DSL_MultimodeFsmConfigData_t nCamOpt;
@@ -214,9 +224,19 @@ DSL_Error_t DSL_DRV_VRX_CamExceptionHandle(
       /* Get reinit counters*/
       DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.nCamReinits, nCamReinits);
       DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.nCamFwReinits, nCamFwReinits);
+#ifdef INCLUDE_DEVICE_EXCEPTION_CODES
+      DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.nCamGhsReinits, nCamGhsReinits);
+#endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
 
       /* Get Line Init info*/
       DSL_CTX_READ(pContext, nErrCode, lineInitStatus, lineInitStatus);
+
+#ifdef INCLUDE_DEVICE_EXCEPTION_CODES
+      memset(&LastExceptionCodes, 0x0, sizeof(DSL_LastExceptionCodesData_t));
+      /* Get fw failure code */
+      DSL_CTX_READ(pContext, nErrCode, LastExceptionCodes, LastExceptionCodes);
+#endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
+
       if (lineInitStatus.nLineInitSubStatus == LINIT_SUB_OPP_MODE &&
           nCurrentState != DSL_CAM_VDSL_DUAL)
       {
@@ -257,6 +277,17 @@ DSL_Error_t DSL_DRV_VRX_CamExceptionHandle(
                (pContext, SYS_DBG_MSG"DSL[%02d]: CAM - nCamFwReinits=%u"
                DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nCamFwReinits));
          }
+#ifdef INCLUDE_DEVICE_EXCEPTION_CODES
+         else if ((LastExceptionCodes.nFwErrorCode1 >= 300) &&
+                  (LastExceptionCodes.nFwErrorCode1 < 400))
+         {
+            /* Update GHS reinit counter*/
+            nCamGhsReinits++;
+            DSL_DEBUG(DSL_DBG_MSG,
+               (pContext, SYS_DBG_MSG"DSL[%02d]: CAM - nCamGhsReinits=%u"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nCamGhsReinits));
+         }
+#endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
          else {
             /* Update general reinit counter*/
             nCamReinits++;
@@ -265,12 +296,23 @@ DSL_Error_t DSL_DRV_VRX_CamExceptionHandle(
                DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nCamReinits));
          }
 
-         if ((nCamReinits >= DSL_CAM_MAX_REINITS) || (nCamFwReinits >= DSL_CAM_MAX_FW_REINITS))
+         if ((nCamReinits >= DSL_CAM_MAX_REINITS) || (nCamFwReinits >= DSL_CAM_MAX_FW_REINITS)
+#ifdef INCLUDE_DEVICE_EXCEPTION_CODES
+            || (nCamGhsReinits >= DSL_CAM_MAX_GHS_REINITS)
+#endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
+            )
          {
             DSL_DEBUG(DSL_DBG_MSG,
                (pContext, SYS_DBG_MSG"DSL[%02d]: CAM - Re-init limit reached, "
                "nCamReinits=%u nCamFwReinits=%u"
-               DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nCamReinits, nCamFwReinits));
+#ifdef INCLUDE_DEVICE_EXCEPTION_CODES
+               " nCamGhsReinits=%u"
+#endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nCamReinits, nCamFwReinits
+#ifdef INCLUDE_DEVICE_EXCEPTION_CODES
+               , nCamGhsReinits
+#endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
+                ));
 
             bFsmStatusChange = DSL_TRUE;
 
@@ -286,7 +328,9 @@ DSL_Error_t DSL_DRV_VRX_CamExceptionHandle(
                                  pDevCtx->data.nActivationCfg, nActivationCfg);
                DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.bT1_413, bT1_413);
 
-               if ((nActivationCfg.nActivationSequence == DSL_ACT_SEQ_NON_STD) && bT1_413)
+               if ( (nActivationCfg.nActivationSequence == DSL_ACT_SEQ_AUTO ||
+                     nActivationCfg.nActivationSequence == DSL_ACT_SEQ_NON_STD)
+                     && bT1_413)
                {
                   switch (nActivationCfg.nActivationMode)
                   {
@@ -314,6 +358,9 @@ DSL_Error_t DSL_DRV_VRX_CamExceptionHandle(
       /* Update reinit counters*/
       DSL_CTX_WRITE(pContext, nErrCode, pDevCtx->data.nCamReinits, nCamReinits);
       DSL_CTX_WRITE(pContext, nErrCode, pDevCtx->data.nCamFwReinits, nCamFwReinits);
+#ifdef INCLUDE_DEVICE_EXCEPTION_CODES
+      DSL_CTX_WRITE(pContext, nErrCode, pDevCtx->data.nCamGhsReinits, nCamGhsReinits);
+#endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
 
       if (bFsmStatusChange)
       {
@@ -493,7 +540,7 @@ DSL_Error_t DSL_DRV_VRX_CamFsmUpdate(
 #endif
    DSL_MultimodeFsmConfigData_t nCamOpt;
    DSL_boolean_t bCamSinglePortModeSteady = DSL_FALSE,
-      bRemember = DSL_FALSE;
+      bRemember = DSL_FALSE, bT1_413 = DSL_FALSE;
    DSL_ActivationMode_t nActivationMode;
 
    DSL_CHECK_CTX_POINTER(pContext);
@@ -576,11 +623,20 @@ DSL_Error_t DSL_DRV_VRX_CamFsmUpdate(
       }
    }
 
+   DSL_DEBUG(DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+      "DSL[%02d]: CAM - Update T1.413 from XTSE configuration"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
    /* get the XTSE1 bits (config) */
    DSL_CTX_READ_SCALAR(pContext, nErrCode, xtseCfg[0], nXtse1);
 
-   DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.bT1_413,
-      nXtse1 & XTSE_1_01_A_T1_413 ? DSL_TRUE : DSL_FALSE);
+   /* update T1.413 within reset state */
+   bT1_413 = (nXtse1 & XTSE_1_01_A_T1_413) ? DSL_TRUE : DSL_FALSE;
+   DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.bT1_413, bT1_413);
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: CAM - Set T1.413 %i"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext), bT1_413));
 
    /* get the ADSL bits (config) */
    for (i = 0; i < DSL_G997_NUM_XTSE_OCTETS - 1; i++)
@@ -791,6 +847,7 @@ DSL_Error_t DSL_DRV_VRX_CamTrainingTimeoutHandle(
    DSL_DEV_CamStates_t nCamState = DSL_DRV_VRX_CamFsmStateGet(pContext);
    DSL_MultimodeFsmConfigData_t nCamOpt;
    DSL_uint8_t i, nAtse = 0, nAtseCurr = 0, nVtse = 0;
+   DSL_ActivationFsmConfigData_t nActivationCfg;
    DSL_boolean_t bT1_413 = DSL_FALSE;
 
    DSL_DEBUG(DSL_DBG_MSG,
@@ -820,9 +877,13 @@ DSL_Error_t DSL_DRV_VRX_CamTrainingTimeoutHandle(
    {
       case DSL_CAM_VDSL_SINGLE:
       case DSL_CAM_VDSL_DUAL:
+         DSL_CTX_READ(pContext, nErrCode,
+                                 pDevCtx->data.nActivationCfg, nActivationCfg);
          DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.bT1_413, bT1_413);
-         /* is it necessary to do only for T1.413? */
-         if (bT1_413)
+
+         if ( (nActivationCfg.nActivationSequence == DSL_ACT_SEQ_AUTO ||
+               nActivationCfg.nActivationSequence == DSL_ACT_SEQ_NON_STD)
+               && bT1_413)
          {
             /* Set Activation mode to ANSI-T1.413 */
             DSL_CTX_WRITE_SCALAR(pContext, nErrCode,
@@ -1243,6 +1304,15 @@ DSL_Error_t DSL_DRV_VRX_DiagnosticDeltDataGet(
          return DSL_ERROR;
       }
 
+      if(DSL_DRV_MUTEX_LOCK(pContext->dataMutex))
+      {
+         DSL_DEBUG( DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: Couldn't lock data mutex"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+         return DSL_ERR_SEMAPHORE_GET;
+      }
+
       /* Update Aux Parameters*/
       if (((DSL_AccessDir_t)i) == DSL_DOWNSTREAM)
       {
@@ -1270,6 +1340,8 @@ DSL_Error_t DSL_DRV_VRX_DiagnosticDeltDataGet(
          /* Not supported yet*/
          pContext->DELT->hlinDataUs.nMeasurementTime    = 0x0;
       }
+
+      DSL_DRV_MUTEX_UNLOCK(pContext->dataMutex);
 
       /* Get Hlog values, not available for VDSL in DIAG_COMPLETE state*/
       nErrCode = DSL_DRV_VRX_SendMsgHlogGet(
@@ -1953,7 +2025,7 @@ static DSL_Error_t DSL_DRV_VRX_DeviceCfgStore(
    /* Write FSM config*/
    DSL_CTX_WRITE(pContext, nErrCode, pDevCtx->data.nCamConfig, pData->data.nDeviceCfg.nMultimodeCfg);
 
-   if (pData->data.nDeviceCfg.nActivationCfg.nActivationSequence < DSL_ACT_SEQ_STD ||
+   if (pData->data.nDeviceCfg.nActivationCfg.nActivationSequence < DSL_ACT_SEQ_AUTO ||
        pData->data.nDeviceCfg.nActivationCfg.nActivationSequence >= DSL_ACT_SEQ_LAST)
    {
       DSL_DEBUG(DSL_DBG_ERR,
@@ -2068,47 +2140,46 @@ DSL_Error_t DSL_DRV_VRX_LineStatusGet(
    {
       if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_ADSL))
       {
-         pData->LATN = nDirection == DSL_DOWNSTREAM ? sAck.DS.LATNds :
-                                                      sAck.US.LATNus;
-         /* Check for the FW 1023 special value*/
-         pData->LATN = pData->LATN == 1023 ? 1271 : pData->LATN;
-
-         pData->SATN = nDirection == DSL_DOWNSTREAM ? sAck.DS.SATNds :
-                                                      sAck.US.SATNus;
-         /* Check for the FW 1023 special value*/
-         pData->SATN = pData->SATN == 1023 ? 1271 : pData->SATN;
-
-         pData->SNR  = nDirection == DSL_DOWNSTREAM ?
-            ((DSL_int16_t)sAck.DS.SNRMds == -512 ? -641 : (DSL_int16_t)sAck.DS.SNRMds):
-            ((DSL_int16_t)sAck.US.SNRMus == -512 ? -641 : (DSL_int16_t)sAck.US.SNRMus);
-
-         pData->ACTPS = nDirection == DSL_DOWNSTREAM ?
-            ((DSL_int16_t)sAck.DS.ACTPSDds == -512 ? -641 : (DSL_int16_t)sAck.DS.ACTPSDds):
-            ((DSL_int16_t)sAck.US.ACTPSDus == -512 ? -641 : (DSL_int16_t)sAck.US.ACTPSDus);
+         /* FW special value equals API special value */
+         pData->ACTPS = nDirection == DSL_DOWNSTREAM ? ((DSL_int16_t)sAck.DS.ACTPSDds):
+                                                       ((DSL_int16_t)sAck.US.ACTPSDus);
       }
       else
       {
-         pData->LATN = nDirection == DSL_DOWNSTREAM ? (DSL_int16_t)sAck.DS.LATNds :
-                                                      (DSL_int16_t)sAck.US.LATNus;
-
-         pData->SATN = nDirection == DSL_DOWNSTREAM ? (DSL_int16_t)sAck.DS.SATNds :
-                                                      (DSL_int16_t)sAck.US.SATNus;
-
-         pData->SNR  = nDirection == DSL_DOWNSTREAM ?
-            (sAck.DS.SNRMds == 0 ? -641 : (DSL_int16_t)sAck.DS.SNRMds):
-            (sAck.US.SNRMus == 0 ? -641 : (DSL_int16_t)sAck.US.SNRMus);
-
-         /* Not supported yet*/
+         /* Not supported */
          pData->ACTPS =  -901;
       }
 
-      pData->ATTNDR  = nDirection == DSL_DOWNSTREAM ?
-                          ((DSL_uint32_t)sAck.DS.ATTNDRds_LSW) |
-                          (((DSL_uint32_t)sAck.DS.ATTNDRds_MSW) << 16) :
-                          ((DSL_uint32_t)sAck.US.ATTNDRus_LSW) |
-                          (((DSL_uint32_t)sAck.US.ATTNDRus_MSW) << 16);
+      pData->LATN = nDirection == DSL_DOWNSTREAM ? sAck.DS.LATNds :
+                                                   sAck.US.LATNus;
+      /* Check for special FW value (1023) and map it to special API value (1271) */
+      pData->LATN = pData->LATN == 1023 ? 1271 : pData->LATN;
 
-      pData->ACTATP  = nDirection == DSL_DOWNSTREAM ? sAck.DS.ACTATPds :
+      pData->SATN = nDirection == DSL_DOWNSTREAM ? sAck.DS.SATNds :
+                                                   sAck.US.SATNus;
+      /* Check for special FW value (1023) and map it to special API value (1271) */
+      pData->SATN = pData->SATN == 1023 ? 1271 : pData->SATN;
+
+      pData->SNR = nDirection == DSL_DOWNSTREAM ? (DSL_int16_t)sAck.DS.SNRMds:
+                                                  (DSL_int16_t)sAck.US.SNRMus;
+      /* Check for special FW value (-512) and map it to special API value (-641) */
+      pData->SNR = pData->SNR == -512 ? -641 : pData->SNR;
+
+      /* If value equals zero than return warning code (incomplete values) */
+      pData->ATTNDR  = nDirection == DSL_DOWNSTREAM ?
+                    ((DSL_uint32_t)sAck.DS.ATTNDRds_LSW) |
+                    (((DSL_uint32_t)sAck.DS.ATTNDRds_MSW) << 16) :
+                    ((DSL_uint32_t)sAck.US.ATTNDRus_LSW) |
+                    (((DSL_uint32_t)sAck.US.ATTNDRus_MSW) << 16);
+
+      /* value is not ready yet (get by EOC), try later*/
+      if (pData->ATTNDR == 0)
+      {
+         nErrCode = DSL_WRN_INCOMPLETE_RETURN_VALUES;
+      }
+
+      /* FW special value equals API special value */
+      pData->ACTATP  = nDirection == DSL_DOWNSTREAM ? sAck.DS.ACTATPds:
                                                       sAck.US.ACTATPus;
    }
 
@@ -3302,9 +3373,20 @@ static DSL_Error_t DSL_DRV_VRX_TestParametersFeUpdate(
    }
    else
    {
+      if(DSL_DRV_MUTEX_LOCK(pContext->dataMutex))
+      {
+         DSL_DEBUG( DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: Couldn't lock data mutex"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+         return DSL_ERR_SEMAPHORE_GET;
+      }
+
       pContext->DELT_SHOWTIME->hlogDataUsVdsl.nMeasurementTime = pMsg->hlogTime;
       pContext->DELT_SHOWTIME->qlnDataUsVdsl.nMeasurementTime  = pMsg->qlnTime;
       pContext->DELT_SHOWTIME->snrDataUsVdsl.nMeasurementTime  = pMsg->snrTime;
+
+      DSL_DRV_MUTEX_UNLOCK(pContext->dataMutex);
 
       /* generate event only for the first time */
       if (pContext->eTestParametersFeReady == VRX_FE_TESTPARAMS_FIRST_UPDATING)
@@ -3573,6 +3655,7 @@ DSL_Error_t DSL_DRV_DEV_TrainingTimeoutSet(
    DSL_uint32_t nTimeout;
    DSL_DEV_CamStates_t nCamState = DSL_DRV_VRX_CamFsmStateGet(pContext);
    DSL_ActivationFsmConfigData_t nActivationCfg;
+   DSL_boolean_t bT1_413 = DSL_FALSE;
    DSL_uint8_t nVtse = 0;
 
    /* get the VDSL bits */
@@ -3584,36 +3667,46 @@ DSL_Error_t DSL_DRV_DEV_TrainingTimeoutSet(
       {
          case DSL_CAM_VDSL_SINGLE:
          case DSL_CAM_VDSL_DUAL:
-            nTimeout = DSL_AUTOBOOT_TRAINING_TIMEOUT_V_GHS;
+            nTimeout = DSL_AUTOBOOT_HANDSHAKE_TIMEOUT_V_GHS;
             break;
 
          case DSL_CAM_ADSL_SINGLE:
-            DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.nActivationCfg, nActivationCfg);
-            if (nActivationCfg.nActivationSequence == DSL_ACT_SEQ_NON_STD)
+            DSL_CTX_READ(pContext, nErrCode,
+                                    pDevCtx->data.nActivationCfg, nActivationCfg);
+            DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.bT1_413, bT1_413);
+
+            if ( (nActivationCfg.nActivationSequence == DSL_ACT_SEQ_AUTO ||
+                  nActivationCfg.nActivationSequence == DSL_ACT_SEQ_NON_STD)
+                  && bT1_413)
             {
                if (nActivationCfg.nActivationMode == DSL_ACT_MODE_ANSI_T1413)
                {
-                  nTimeout = DSL_AUTOBOOT_TRAINING_TIMEOUT_GOTO_V_ANSI;
+                  nTimeout = DSL_AUTOBOOT_HANDSHAKE_TIMEOUT_GOTO_V_ANSI;
                }
                else
                {
-                  nTimeout = DSL_AUTOBOOT_TRAINING_TIMEOUT_GOTO_V_GHS;
+                  nTimeout = DSL_AUTOBOOT_HANDSHAKE_TIMEOUT_GOTO_V_GHS;
                }
             }
             else
             {
-               nTimeout = DSL_AUTOBOOT_TRAINING_TIMEOUT_GOTO_V_STD;
+               nTimeout = DSL_AUTOBOOT_HANDSHAKE_TIMEOUT_GOTO_V_STD;
             }
             break;
 
          default:
-            nTimeout = DSL_AUTOBOOT_TRAINING_TIMEOUT_DEFAULT;
+            /* automode disabled case: no need to handshake wait/check, */
+            /* set default training timeout                             */
+            nTimeout = DSL_AUTOBOOT_PRE_TRAINING_TIMEOUT_DEFAULT;
             break;
       }
    }
    else
    {
-      nTimeout = DSL_AUTOBOOT_TRAINING_TIMEOUT_DEFAULT;
+      /* XTSE does not contain VDSL2 case: according to APS3 handshake  */
+      /* timeout is infinite (no need to handshake wait and check),     */
+      /* set default training timeout                                   */
+      nTimeout = DSL_AUTOBOOT_PRE_TRAINING_TIMEOUT_DEFAULT;
    }
 
    return DSL_DRV_AutobootTimeoutSet(pContext, nTimeout);
@@ -4542,16 +4635,35 @@ DSL_Error_t DSL_DRV_DEV_FwDownload(
       DSL_CTX_WRITE(pContext, nErrCode,
                     pDevCtx->data.fwFeatures, sFwVersion);
 
-      /* Used for special handling of default RA value for DSLCPE_SW-768
+      /* Used for special handling of default SRA value for DSLCPE_SW-768
          In case of VDSL FW is non-vectoring capable disable RA-mode for VDSL
-         only once after first FW download (set default value)! */
+         only once after first FW download and only if not already manually
+         re-configured by the user (set default value)! */
       DSL_CTX_READ(pContext, nErrCode, bDefaultRaModeSet, bDefaultRaModeSet);
 
       if ( bDefaultRaModeSet == DSL_FALSE )
       {
          DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bDefaultRaModeSet, DSL_TRUE);
 
-         if ( sFwVersion.nApplication == 6 )
+         DSL_DEBUG( DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+            "DSL[%02d]: Update API default values for SRA dependend on used FW."
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+         if (nFwFeatures.nFirmwareXdslModes & DSL_FW_XDSLMODE_VDSL2_VECTOR)
+         {
+            DSL_CTX_WRITE_SCALAR(pContext, nErrCode,
+               rateAdaptationMode[DSL_MODE_VDSL][DSL_UPSTREAM],
+               DSL_G997_RA_MODE_DYNAMIC);
+
+            DSL_CTX_WRITE_SCALAR(pContext, nErrCode,
+               rateAdaptationMode[DSL_MODE_VDSL][DSL_DOWNSTREAM],
+               DSL_G997_RA_MODE_DYNAMIC);
+
+            DSL_DEBUG( DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+               "DSL[%02d]: - Enable SRA for VDSL (vectoring capable FW)"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         }
+         else if(nFwFeatures.nFirmwareXdslModes & DSL_FW_XDSLMODE_VDSL2)
          {
             DSL_CTX_WRITE_SCALAR(pContext, nErrCode,
                rateAdaptationMode[DSL_MODE_VDSL][DSL_UPSTREAM],
@@ -4560,6 +4672,16 @@ DSL_Error_t DSL_DRV_DEV_FwDownload(
             DSL_CTX_WRITE_SCALAR(pContext, nErrCode,
                rateAdaptationMode[DSL_MODE_VDSL][DSL_DOWNSTREAM],
                DSL_G997_RA_MODE_AT_INIT);
+
+            DSL_DEBUG( DSL_DBG_MSG, (pContext, SYS_DBG_MSG
+               "DSL[%02d]: - Disable SRA for VDSL (non-vectoring capable FW)"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+         }
+         else
+         {
+            DSL_DEBUG(DSL_DBG_ERR, (pContext, SYS_DBG_ERR
+               "DSL[%02d]: Unexpected FW application type, cannot set default SRA config"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
          }
       }
 
@@ -4711,9 +4833,17 @@ DSL_Error_t DSL_DRV_DEV_DeviceInit(
 
    DSL_CTX_READ_SCALAR(pContext, nErrCode, xtseCfg[0], nXtse1);
    DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.nActivationCfg, nActivationCfg);
+
    if (nXtse1 & XTSE_1_01_A_T1_413)
    {
       DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->data.bT1_413, DSL_TRUE);
+      if (nActivationCfg.nActivationSequence == DSL_ACT_SEQ_STD)
+      {
+         DSL_DEBUG( DSL_DBG_WRN, (pContext,
+            SYS_DBG_ERR"DSL[%02d]: WARNING - Standard activation sequence configured "
+                       "with a enabled T1.413 mode" DSL_DRV_CRLF,
+            DSL_DEV_NUM(pContext)));
+      }
    }
    else
    {
@@ -5208,6 +5338,9 @@ DSL_Error_t DSL_DRV_DEV_HybridTypeGet(
    return DSL_SUCCESS;
 }
 
+#undef DSL_DBG_BLOCK
+#define DSL_DBG_BLOCK DSL_DBG_NOTIFICATIONS
+
 DSL_Error_t DSL_DRV_DEV_MeiShowtimeSignaling
 (
    DSL_Context_t *pContext,
@@ -5289,6 +5422,9 @@ DSL_Error_t DSL_DRV_DEV_MeiShowtimeSignaling
 
    return DSL_SUCCESS;
 }
+
+#undef DSL_DBG_BLOCK
+#define DSL_DBG_BLOCK DSL_DBG_DEVICE
 
 DSL_Error_t DSL_DRV_DEV_ChannelsStatusUpdate(
    DSL_Context_t *pContext)
@@ -5527,6 +5663,15 @@ DSL_Error_t DSL_DRV_DEV_ShowtimeStatusUpdate(
             return DSL_ERROR;
          }
 
+         if(DSL_DRV_MUTEX_LOCK(pContext->dataMutex))
+         {
+            DSL_DEBUG( DSL_DBG_ERR,
+               (pContext, SYS_DBG_ERR"DSL[%02d]: Couldn't lock data mutex"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+            return DSL_ERR_SEMAPHORE_GET;
+         }
+
          /* Update VDSL FE group size parameter*/
          pContext->DELT_SHOWTIME->hlogDataUsVdsl.nGroupSize = (DSL_uint8_t)(sAck.HLOGG);
          pContext->DELT_SHOWTIME->qlnDataUsVdsl.nGroupSize  = (DSL_uint8_t)(sAck.QLNG);
@@ -5535,6 +5680,9 @@ DSL_Error_t DSL_DRV_DEV_ShowtimeStatusUpdate(
          /* Request firts portion of DELT data from the FE*/
          pContext->eTestParametersFeReady = VRX_FE_TESTPARAMS_FIRST_UPDATING;
          pContext->nTestParametersFeRefreshTimeout = 0;
+
+         DSL_DRV_MUTEX_UNLOCK(pContext->dataMutex);
+
          nErrCode = DSL_DRV_VRX_SendMsgTestParamsFeRequest(pContext, 0,
                                       VRX_TESTPARAMS_FE_BLOCK_SIZE - 1);
       }
@@ -8120,7 +8268,7 @@ DSL_Error_t DSL_DRV_DEV_AutobootHandleTraining(
             (pContext, SYS_DBG_MSG"DSL[%02d]: HANDSHAKE state reached"
             DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-         DSL_DRV_AutobootTimeoutSet(pContext, 720);
+         DSL_DRV_AutobootTimeoutSet(pContext, DSL_AUTOBOOT_TRAINING_TIMEOUT_VRX);
 
          break;
       case DSL_LINESTATE_FULL_INIT:
@@ -8161,8 +8309,21 @@ DSL_Error_t DSL_DRV_DEV_AutobootHandleTraining(
                DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
          }
 #endif /* INCLUDE_DSL_SYSTEM_INTERFACE*/
+
+#if defined(INCLUDE_DSL_BONDING)
+         nErrCode = DSL_DRV_AutobootStateSet(
+                       pContext,
+                       DSL_AUTOBOOTSTATE_TRAIN,
+                       DSL_AUTOBOOT_TRAINING_POLL_TIME);
+#endif /* defined(INCLUDE_DSL_BONDING)*/
          break;
+
       case DSL_LINESTATE_LOOPDIAGNOSTIC_ACTIVE:
+         nErrCode = DSL_DRV_AutobootStateSet(
+                       pContext,
+                       DSL_AUTOBOOTSTATE_DIAGNOSTIC,
+                       DSL_AUTOBOOT_DIAGNOSTIC_POLL_TIME);
+
          DSL_DEBUG(DSL_DBG_MSG,
             (pContext, SYS_DBG_MSG"DSL[%02d]: LOOPDIAGNOSTIC_ACTIVE state reached"
             DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
@@ -8179,7 +8340,7 @@ DSL_Error_t DSL_DRV_DEV_AutobootHandleTraining(
 #endif /* INCLUDE_DSL_CPE_PM_LINE_COUNTERS*/
 #endif /* INCLUDE_DSL_PM*/
          }
-         DSL_DRV_AutobootTimeoutSet(pContext, 840);
+         DSL_DRV_AutobootTimeoutSet(pContext, DSL_AUTOBOOT_DELT_TIMEOUT_VRX);
          break;
       case DSL_LINESTATE_LOOPDIAGNOSTIC_COMPLETE:
          DSL_DEBUG(DSL_DBG_MSG,
@@ -8692,12 +8853,23 @@ DSL_Error_t DSL_DRV_DEV_DeltSNRGet(
       /* get the far end data from the internal buffer*/
       if( pContext->DELT != DSL_NULL )
       {
+         if(DSL_DRV_MUTEX_LOCK(pContext->dataMutex))
+         {
+            DSL_DEBUG( DSL_DBG_ERR,
+               (pContext, SYS_DBG_ERR"DSL[%02d]: Couldn't lock data mutex"
+               DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+            return DSL_ERR_SEMAPHORE_GET;
+         }
+
          memcpy(&pData->deltSnr,
                 (DSL_void_t*)&(pContext->DELT->snrDataDs.deltSnrVn),
                 sizeof(DSL_G997_NSCData8_t));
 
          pData->nGroupSize       = pContext->DELT->snrDataDs.nGroupSize;
          pData->nMeasurementTime = pContext->DELT->snrDataDs.nMeasurementTime;
+
+         DSL_DRV_MUTEX_UNLOCK(pContext->dataMutex);
       }
       else
       {

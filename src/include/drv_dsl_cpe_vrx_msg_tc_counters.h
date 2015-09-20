@@ -279,7 +279,7 @@ typedef struct ACK_ATM_BC0_TxStatsNE_Get ACK_ATM_BC0_TxStatsNE_Get_t;
 
 /**
    Writes the transmit data-path counters for BC0 of an ATM-TC link.For "Why
-   writing performance counters" see Page 648.
+   writing performance counters" see Page 649.
 */
 typedef struct CMD_ATM_BC0_TxStatsNE_Set CMD_ATM_BC0_TxStatsNE_Set_t;
 
@@ -538,10 +538,10 @@ struct CMD_MAC_FrameConfigure
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Source MAC Address Octets 2 to 3 */
-   DSL_uint16_t SrcMacAddrB2_3;
    /** Source MAC Address Octets 0 to 1 */
    DSL_uint16_t SrcMacAddrB0_1;
+   /** Source MAC Address Octets 2 to 3 */
+   DSL_uint16_t SrcMacAddrB2_3;
    /** Source MAC Address Octets 4 to 5 */
    DSL_uint16_t SrcMacAddrB4_5;
 #endif
@@ -581,74 +581,74 @@ struct CMD_DataPathFailuresAlarmConfigure
    /** Length */
    DSL_uint16_t Length;
    /** Reserved */
-   DSL_uint32_t Res0 : 6;
+   DSL_uint16_t Res0 : 6;
    /** OOS Failure FE, BC0 */
-   DSL_uint32_t OOS_FE_BC1 : 1;
+   DSL_uint16_t OOS_FE_BC1 : 1;
    /** OOS Failure FE, BC0 */
-   DSL_uint32_t OOS_FE_BC0 : 1;
+   DSL_uint16_t OOS_FE_BC0 : 1;
    /** Reserved */
-   DSL_uint32_t Res1 : 6;
+   DSL_uint16_t Res1 : 6;
    /** OOS Failure NE, BC1 */
-   DSL_uint32_t OOS_NE_BC1 : 1;
+   DSL_uint16_t OOS_NE_BC1 : 1;
    /** OOS Failure NE, BC0 */
-   DSL_uint32_t OOS_NE_BC0 : 1;
+   DSL_uint16_t OOS_NE_BC0 : 1;
    /** Reserved */
-   DSL_uint32_t Res2 : 4;
+   DSL_uint16_t Res2 : 4;
    /** LCD Failure FE, BC1 */
-   DSL_uint32_t LCD_FE_BC1 : 1;
+   DSL_uint16_t LCD_FE_BC1 : 1;
    /** NCD Failure FE, BC1 */
-   DSL_uint32_t NCD_FE_BC1 : 1;
+   DSL_uint16_t NCD_FE_BC1 : 1;
    /** LCD Failure FE, BC0 */
-   DSL_uint32_t LCD_FE_BC0 : 1;
+   DSL_uint16_t LCD_FE_BC0 : 1;
    /** NCD Failure FE, BC0 */
-   DSL_uint32_t NCD_FE_BC0 : 1;
+   DSL_uint16_t NCD_FE_BC0 : 1;
    /** Reserved */
-   DSL_uint32_t Res3 : 4;
+   DSL_uint16_t Res3 : 4;
    /** LCD Failure NE, BC1 */
-   DSL_uint32_t LCD_NE_BC1 : 1;
+   DSL_uint16_t LCD_NE_BC1 : 1;
    /** NCD Failure NE, BC1 */
-   DSL_uint32_t NCD_NE_BC1 : 1;
+   DSL_uint16_t NCD_NE_BC1 : 1;
    /** LCD Failure NE, BC0 */
-   DSL_uint32_t LCD_NE_BC0 : 1;
+   DSL_uint16_t LCD_NE_BC0 : 1;
    /** NCD Failure NE, BC0 */
-   DSL_uint32_t NCD_NE_BC0 : 1;
+   DSL_uint16_t NCD_NE_BC0 : 1;
 #else
    /** Index */
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** NCD Failure NE, BC0 */
-   DSL_uint32_t NCD_NE_BC0 : 1;
-   /** LCD Failure NE, BC0 */
-   DSL_uint32_t LCD_NE_BC0 : 1;
-   /** NCD Failure NE, BC1 */
-   DSL_uint32_t NCD_NE_BC1 : 1;
-   /** LCD Failure NE, BC1 */
-   DSL_uint32_t LCD_NE_BC1 : 1;
-   /** Reserved */
-   DSL_uint32_t Res3 : 4;
-   /** NCD Failure FE, BC0 */
-   DSL_uint32_t NCD_FE_BC0 : 1;
-   /** LCD Failure FE, BC0 */
-   DSL_uint32_t LCD_FE_BC0 : 1;
-   /** NCD Failure FE, BC1 */
-   DSL_uint32_t NCD_FE_BC1 : 1;
-   /** LCD Failure FE, BC1 */
-   DSL_uint32_t LCD_FE_BC1 : 1;
-   /** Reserved */
-   DSL_uint32_t Res2 : 4;
    /** OOS Failure NE, BC0 */
-   DSL_uint32_t OOS_NE_BC0 : 1;
+   DSL_uint16_t OOS_NE_BC0 : 1;
    /** OOS Failure NE, BC1 */
-   DSL_uint32_t OOS_NE_BC1 : 1;
+   DSL_uint16_t OOS_NE_BC1 : 1;
    /** Reserved */
-   DSL_uint32_t Res1 : 6;
+   DSL_uint16_t Res1 : 6;
    /** OOS Failure FE, BC0 */
-   DSL_uint32_t OOS_FE_BC0 : 1;
+   DSL_uint16_t OOS_FE_BC0 : 1;
    /** OOS Failure FE, BC0 */
-   DSL_uint32_t OOS_FE_BC1 : 1;
+   DSL_uint16_t OOS_FE_BC1 : 1;
    /** Reserved */
-   DSL_uint32_t Res0 : 6;
+   DSL_uint16_t Res0 : 6;
+   /** NCD Failure NE, BC0 */
+   DSL_uint16_t NCD_NE_BC0 : 1;
+   /** LCD Failure NE, BC0 */
+   DSL_uint16_t LCD_NE_BC0 : 1;
+   /** NCD Failure NE, BC1 */
+   DSL_uint16_t NCD_NE_BC1 : 1;
+   /** LCD Failure NE, BC1 */
+   DSL_uint16_t LCD_NE_BC1 : 1;
+   /** Reserved */
+   DSL_uint16_t Res3 : 4;
+   /** NCD Failure FE, BC0 */
+   DSL_uint16_t NCD_FE_BC0 : 1;
+   /** LCD Failure FE, BC0 */
+   DSL_uint16_t LCD_FE_BC0 : 1;
+   /** NCD Failure FE, BC1 */
+   DSL_uint16_t NCD_FE_BC1 : 1;
+   /** LCD Failure FE, BC1 */
+   DSL_uint16_t LCD_FE_BC1 : 1;
+   /** Reserved */
+   DSL_uint16_t Res2 : 4;
 #endif
 } __PACKED__ ;
 
@@ -703,74 +703,74 @@ struct ACK_DataPathFailuresGet
    /** Length */
    DSL_uint16_t Length;
    /** Reserved */
-   DSL_uint32_t Res0 : 6;
+   DSL_uint16_t Res0 : 6;
    /** OOS Failure FE, BC0 */
-   DSL_uint32_t OOS_FE_BC1 : 1;
+   DSL_uint16_t OOS_FE_BC1 : 1;
    /** OOS Failure FE, BC0 */
-   DSL_uint32_t OOS_FE_BC0 : 1;
+   DSL_uint16_t OOS_FE_BC0 : 1;
    /** Reserved */
-   DSL_uint32_t Res1 : 6;
+   DSL_uint16_t Res1 : 6;
    /** OOS Failure NE, BC1 */
-   DSL_uint32_t OOS_NE_BC1 : 1;
+   DSL_uint16_t OOS_NE_BC1 : 1;
    /** OOS Failure NE, BC0 */
-   DSL_uint32_t OOS_NE_BC0 : 1;
+   DSL_uint16_t OOS_NE_BC0 : 1;
    /** Reserved */
-   DSL_uint32_t Res2 : 4;
+   DSL_uint16_t Res2 : 4;
    /** LCD Failure FE, BC1 */
-   DSL_uint32_t LCD_FE_BC1 : 1;
+   DSL_uint16_t LCD_FE_BC1 : 1;
    /** NCD Failure FE, BC1 */
-   DSL_uint32_t NCD_FE_BC1 : 1;
+   DSL_uint16_t NCD_FE_BC1 : 1;
    /** LCD Failure FE, BC0 */
-   DSL_uint32_t LCD_FE_BC0 : 1;
+   DSL_uint16_t LCD_FE_BC0 : 1;
    /** NCD Failure FE, BC0 */
-   DSL_uint32_t NCD_FE_BC0 : 1;
+   DSL_uint16_t NCD_FE_BC0 : 1;
    /** Reserved */
-   DSL_uint32_t Res3 : 4;
+   DSL_uint16_t Res3 : 4;
    /** LCD Failure NE, BC1 */
-   DSL_uint32_t LCD_NE_BC1 : 1;
+   DSL_uint16_t LCD_NE_BC1 : 1;
    /** NCD Failure NE, BC1 */
-   DSL_uint32_t NCD_NE_BC1 : 1;
+   DSL_uint16_t NCD_NE_BC1 : 1;
    /** LCD Failure NE, BC0 */
-   DSL_uint32_t LCD_NE_BC0 : 1;
+   DSL_uint16_t LCD_NE_BC0 : 1;
    /** NCD Failure NE, BC0 */
-   DSL_uint32_t NCD_NE_BC0 : 1;
+   DSL_uint16_t NCD_NE_BC0 : 1;
 #else
    /** Index */
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** NCD Failure NE, BC0 */
-   DSL_uint32_t NCD_NE_BC0 : 1;
-   /** LCD Failure NE, BC0 */
-   DSL_uint32_t LCD_NE_BC0 : 1;
-   /** NCD Failure NE, BC1 */
-   DSL_uint32_t NCD_NE_BC1 : 1;
-   /** LCD Failure NE, BC1 */
-   DSL_uint32_t LCD_NE_BC1 : 1;
-   /** Reserved */
-   DSL_uint32_t Res3 : 4;
-   /** NCD Failure FE, BC0 */
-   DSL_uint32_t NCD_FE_BC0 : 1;
-   /** LCD Failure FE, BC0 */
-   DSL_uint32_t LCD_FE_BC0 : 1;
-   /** NCD Failure FE, BC1 */
-   DSL_uint32_t NCD_FE_BC1 : 1;
-   /** LCD Failure FE, BC1 */
-   DSL_uint32_t LCD_FE_BC1 : 1;
-   /** Reserved */
-   DSL_uint32_t Res2 : 4;
    /** OOS Failure NE, BC0 */
-   DSL_uint32_t OOS_NE_BC0 : 1;
+   DSL_uint16_t OOS_NE_BC0 : 1;
    /** OOS Failure NE, BC1 */
-   DSL_uint32_t OOS_NE_BC1 : 1;
+   DSL_uint16_t OOS_NE_BC1 : 1;
    /** Reserved */
-   DSL_uint32_t Res1 : 6;
+   DSL_uint16_t Res1 : 6;
    /** OOS Failure FE, BC0 */
-   DSL_uint32_t OOS_FE_BC0 : 1;
+   DSL_uint16_t OOS_FE_BC0 : 1;
    /** OOS Failure FE, BC0 */
-   DSL_uint32_t OOS_FE_BC1 : 1;
+   DSL_uint16_t OOS_FE_BC1 : 1;
    /** Reserved */
-   DSL_uint32_t Res0 : 6;
+   DSL_uint16_t Res0 : 6;
+   /** NCD Failure NE, BC0 */
+   DSL_uint16_t NCD_NE_BC0 : 1;
+   /** LCD Failure NE, BC0 */
+   DSL_uint16_t LCD_NE_BC0 : 1;
+   /** NCD Failure NE, BC1 */
+   DSL_uint16_t NCD_NE_BC1 : 1;
+   /** LCD Failure NE, BC1 */
+   DSL_uint16_t LCD_NE_BC1 : 1;
+   /** Reserved */
+   DSL_uint16_t Res3 : 4;
+   /** NCD Failure FE, BC0 */
+   DSL_uint16_t NCD_FE_BC0 : 1;
+   /** LCD Failure FE, BC0 */
+   DSL_uint16_t LCD_FE_BC0 : 1;
+   /** NCD Failure FE, BC1 */
+   DSL_uint16_t NCD_FE_BC1 : 1;
+   /** LCD Failure FE, BC1 */
+   DSL_uint16_t LCD_FE_BC1 : 1;
+   /** Reserved */
+   DSL_uint16_t Res2 : 4;
 #endif
 } __PACKED__ ;
 
@@ -788,74 +788,74 @@ struct ALM_DataPathFailuresGet
    /** Length */
    DSL_uint16_t Length;
    /** Reserved */
-   DSL_uint32_t Res0 : 6;
+   DSL_uint16_t Res0 : 6;
    /** OOS Failure FE, BC0 */
-   DSL_uint32_t OOS_FE_BC1 : 1;
+   DSL_uint16_t OOS_FE_BC1 : 1;
    /** OOS Failure FE, BC0 */
-   DSL_uint32_t OOS_FE_BC0 : 1;
+   DSL_uint16_t OOS_FE_BC0 : 1;
    /** Reserved */
-   DSL_uint32_t Res1 : 6;
+   DSL_uint16_t Res1 : 6;
    /** OOS Failure NE, BC1 */
-   DSL_uint32_t OOS_NE_BC1 : 1;
+   DSL_uint16_t OOS_NE_BC1 : 1;
    /** OOS Failure NE, BC0 */
-   DSL_uint32_t OOS_NE_BC0 : 1;
+   DSL_uint16_t OOS_NE_BC0 : 1;
    /** Reserved */
-   DSL_uint32_t Res2 : 4;
+   DSL_uint16_t Res2 : 4;
    /** LCD Failure FE, BC1 */
-   DSL_uint32_t LCD_FE_BC1 : 1;
+   DSL_uint16_t LCD_FE_BC1 : 1;
    /** NCD Failure FE, BC1 */
-   DSL_uint32_t NCD_FE_BC1 : 1;
+   DSL_uint16_t NCD_FE_BC1 : 1;
    /** LCD Failure FE, BC0 */
-   DSL_uint32_t LCD_FE_BC0 : 1;
+   DSL_uint16_t LCD_FE_BC0 : 1;
    /** NCD Failure FE, BC0 */
-   DSL_uint32_t NCD_FE_BC0 : 1;
+   DSL_uint16_t NCD_FE_BC0 : 1;
    /** Reserved */
-   DSL_uint32_t Res3 : 4;
+   DSL_uint16_t Res3 : 4;
    /** LCD Failure NE, BC1 */
-   DSL_uint32_t LCD_NE_BC1 : 1;
+   DSL_uint16_t LCD_NE_BC1 : 1;
    /** NCD Failure NE, BC1 */
-   DSL_uint32_t NCD_NE_BC1 : 1;
+   DSL_uint16_t NCD_NE_BC1 : 1;
    /** LCD Failure NE, BC0 */
-   DSL_uint32_t LCD_NE_BC0 : 1;
+   DSL_uint16_t LCD_NE_BC0 : 1;
    /** NCD Failure NE, BC0 */
-   DSL_uint32_t NCD_NE_BC0 : 1;
+   DSL_uint16_t NCD_NE_BC0 : 1;
 #else
    /** Index */
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** NCD Failure NE, BC0 */
-   DSL_uint32_t NCD_NE_BC0 : 1;
-   /** LCD Failure NE, BC0 */
-   DSL_uint32_t LCD_NE_BC0 : 1;
-   /** NCD Failure NE, BC1 */
-   DSL_uint32_t NCD_NE_BC1 : 1;
-   /** LCD Failure NE, BC1 */
-   DSL_uint32_t LCD_NE_BC1 : 1;
-   /** Reserved */
-   DSL_uint32_t Res3 : 4;
-   /** NCD Failure FE, BC0 */
-   DSL_uint32_t NCD_FE_BC0 : 1;
-   /** LCD Failure FE, BC0 */
-   DSL_uint32_t LCD_FE_BC0 : 1;
-   /** NCD Failure FE, BC1 */
-   DSL_uint32_t NCD_FE_BC1 : 1;
-   /** LCD Failure FE, BC1 */
-   DSL_uint32_t LCD_FE_BC1 : 1;
-   /** Reserved */
-   DSL_uint32_t Res2 : 4;
    /** OOS Failure NE, BC0 */
-   DSL_uint32_t OOS_NE_BC0 : 1;
+   DSL_uint16_t OOS_NE_BC0 : 1;
    /** OOS Failure NE, BC1 */
-   DSL_uint32_t OOS_NE_BC1 : 1;
+   DSL_uint16_t OOS_NE_BC1 : 1;
    /** Reserved */
-   DSL_uint32_t Res1 : 6;
+   DSL_uint16_t Res1 : 6;
    /** OOS Failure FE, BC0 */
-   DSL_uint32_t OOS_FE_BC0 : 1;
+   DSL_uint16_t OOS_FE_BC0 : 1;
    /** OOS Failure FE, BC0 */
-   DSL_uint32_t OOS_FE_BC1 : 1;
+   DSL_uint16_t OOS_FE_BC1 : 1;
    /** Reserved */
-   DSL_uint32_t Res0 : 6;
+   DSL_uint16_t Res0 : 6;
+   /** NCD Failure NE, BC0 */
+   DSL_uint16_t NCD_NE_BC0 : 1;
+   /** LCD Failure NE, BC0 */
+   DSL_uint16_t LCD_NE_BC0 : 1;
+   /** NCD Failure NE, BC1 */
+   DSL_uint16_t NCD_NE_BC1 : 1;
+   /** LCD Failure NE, BC1 */
+   DSL_uint16_t LCD_NE_BC1 : 1;
+   /** Reserved */
+   DSL_uint16_t Res3 : 4;
+   /** NCD Failure FE, BC0 */
+   DSL_uint16_t NCD_FE_BC0 : 1;
+   /** LCD Failure FE, BC0 */
+   DSL_uint16_t LCD_FE_BC0 : 1;
+   /** NCD Failure FE, BC1 */
+   DSL_uint16_t NCD_FE_BC1 : 1;
+   /** LCD Failure FE, BC1 */
+   DSL_uint16_t LCD_FE_BC1 : 1;
+   /** Reserved */
+   DSL_uint16_t Res2 : 4;
 #endif
 } __PACKED__ ;
 
@@ -913,22 +913,22 @@ struct ACK_PTM_BC0_StatsNE_Get
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** TPS-TC CRC Counter (CRC-P), NE, BC0, MSW */
-   DSL_uint16_t cntCRC_MSW;
    /** TPS-TC CRC Counter (CRC-P), NE, BC0, LSW */
    DSL_uint16_t cntCRC_LSW;
-   /** TPS-TC CV Counter (CV-P), NE, BC0, MSW */
-   DSL_uint16_t cntCV_MSW;
+   /** TPS-TC CRC Counter (CRC-P), NE, BC0, MSW */
+   DSL_uint16_t cntCRC_MSW;
    /** TPS-TC CV Counter (CV-P), NE, BC0, LSW */
    DSL_uint16_t cntCV_LSW;
-   /** TPS-TC CRC Counter (CRCP-P), NE, BC0, MSW */
-   DSL_uint16_t cntCRCP_MSW;
+   /** TPS-TC CV Counter (CV-P), NE, BC0, MSW */
+   DSL_uint16_t cntCV_MSW;
    /** TPS-TC CRC Counter (CRCP-P), NE, BC0, LSW */
    DSL_uint16_t cntCRCP_LSW;
-   /** TPS-TC CV Counter (CVP-P), NE, BC0, MSW */
-   DSL_uint16_t cntCVP_MSW;
+   /** TPS-TC CRC Counter (CRCP-P), NE, BC0, MSW */
+   DSL_uint16_t cntCRCP_MSW;
    /** TPS-TC CV Counter (CVP-P), NE, BC0, LSW */
    DSL_uint16_t cntCVP_LSW;
+   /** TPS-TC CV Counter (CVP-P), NE, BC0, MSW */
+   DSL_uint16_t cntCVP_MSW;
 #endif
 } __PACKED__ ;
 
@@ -970,22 +970,22 @@ struct CMD_PTM_BC0_StatsNE_Set
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** TPS-TC CRC Counter (CRC-P), NE, BC0, MSW */
-   DSL_uint16_t cntCRC_MSW;
    /** TPS-TC CRC Counter (CRC-P), NE, BC0, LSW */
    DSL_uint16_t cntCRC_LSW;
-   /** TPS-TC CV Counter (CV-P), NE, BC0, MSW */
-   DSL_uint16_t cntCV_MSW;
+   /** TPS-TC CRC Counter (CRC-P), NE, BC0, MSW */
+   DSL_uint16_t cntCRC_MSW;
    /** TPS-TC CV Counter (CV-P), NE, BC0, LSW */
    DSL_uint16_t cntCV_LSW;
-   /** TPS-TC CRC Counter (CRCP-P), NE, BC0, MSW */
-   DSL_uint16_t cntCRCP_MSW;
+   /** TPS-TC CV Counter (CV-P), NE, BC0, MSW */
+   DSL_uint16_t cntCV_MSW;
    /** TPS-TC CRC Counter (CRCP-P), NE, BC0, LSW */
    DSL_uint16_t cntCRCP_LSW;
-   /** TPS-TC CV Counter (CVP-P), NE, BC0, MSW */
-   DSL_uint16_t cntCVP_MSW;
+   /** TPS-TC CRC Counter (CRCP-P), NE, BC0, MSW */
+   DSL_uint16_t cntCRCP_MSW;
    /** TPS-TC CV Counter (CVP-P), NE, BC0, LSW */
    DSL_uint16_t cntCVP_LSW;
+   /** TPS-TC CV Counter (CVP-P), NE, BC0, MSW */
+   DSL_uint16_t cntCVP_MSW;
 #endif
 } __PACKED__ ;
 
@@ -1062,22 +1062,22 @@ struct ACK_ATM_BC0_StatsNE_Get
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** NE HEC Violation Count (HEC-P), MSW */
-   DSL_uint16_t hecp_MSW;
    /** NE HEC Violation Count (HEC-P), LSW */
    DSL_uint16_t hecp_LSW;
-   /** NE Delineated Total Cell Count (CD-P), MSW */
-   DSL_uint16_t cdp_MSW;
+   /** NE HEC Violation Count (HEC-P), MSW */
+   DSL_uint16_t hecp_MSW;
    /** NE Delineated Total Cell Count (CD-P), LSW */
    DSL_uint16_t cdp_LSW;
-   /** NE User Total Cell Count (CU-P), MSW */
-   DSL_uint16_t cup_MSW;
+   /** NE Delineated Total Cell Count (CD-P), MSW */
+   DSL_uint16_t cdp_MSW;
    /** NE User Total Cell Count (CU-P), LSW */
    DSL_uint16_t cup_LSW;
-   /** NE Idle Cell Bit Error Count (IBE-P), MSW */
-   DSL_uint16_t ibep_MSW;
+   /** NE User Total Cell Count (CU-P), MSW */
+   DSL_uint16_t cup_MSW;
    /** NE Idle Cell Bit Error Count (IBE-P), LSW */
    DSL_uint16_t ibep_LSW;
+   /** NE Idle Cell Bit Error Count (IBE-P), MSW */
+   DSL_uint16_t ibep_MSW;
 #endif
 } __PACKED__ ;
 
@@ -1134,22 +1134,22 @@ struct ACK_ATM_BC0_StatsFE_Get
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** FE HEC Violation Count (HEC-PFE), MSW */
-   DSL_uint16_t hecpfe_MSW;
    /** FE HEC Violation Count (HEC-PFE), LSW */
    DSL_uint16_t hecpfe_LSW;
-   /** FE Delineated Total Cell Count (CD-PFE), MSW */
-   DSL_uint16_t cdpfe_MSW;
+   /** FE HEC Violation Count (HEC-PFE), MSW */
+   DSL_uint16_t hecpfe_MSW;
    /** FE Delineated Total Cell Count (CD-PFE), LSW */
    DSL_uint16_t cdpfe_LSW;
-   /** FE User Total Cell Count (CU-PFE), MSW */
-   DSL_uint16_t cupfe_MSW;
+   /** FE Delineated Total Cell Count (CD-PFE), MSW */
+   DSL_uint16_t cdpfe_MSW;
    /** FE User Total Cell Count (CU-PFE), LSW */
    DSL_uint16_t cupfe_LSW;
-   /** FE Idle Cell Bit Error Count (IBE-PFE), MSW */
-   DSL_uint16_t ibepfe_MSW;
+   /** FE User Total Cell Count (CU-PFE), MSW */
+   DSL_uint16_t cupfe_MSW;
    /** FE Idle Cell Bit Error Count (IBE-PFE), LSW */
    DSL_uint16_t ibepfe_LSW;
+   /** FE Idle Cell Bit Error Count (IBE-PFE), MSW */
+   DSL_uint16_t ibepfe_MSW;
 #endif
 } __PACKED__ ;
 
@@ -1192,22 +1192,22 @@ struct CMD_ATM_BC0_StatsNE_Set
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** NE HEC Violation Count (HEC-P), MSW */
-   DSL_uint16_t hecp_MSW;
    /** NE HEC Violation Count (HEC-P), LSW */
    DSL_uint16_t hecp_LSW;
-   /** NE Delineated Total Cell Count (CD-P), MSW */
-   DSL_uint16_t cdp_MSW;
+   /** NE HEC Violation Count (HEC-P), MSW */
+   DSL_uint16_t hecp_MSW;
    /** NE Delineated Total Cell Count (CD-P), LSW */
    DSL_uint16_t cdp_LSW;
-   /** NE User Total Cell Count (CU-P), MSW */
-   DSL_uint16_t cup_MSW;
+   /** NE Delineated Total Cell Count (CD-P), MSW */
+   DSL_uint16_t cdp_MSW;
    /** NE User Total Cell Count (CU-P), LSW */
    DSL_uint16_t cup_LSW;
-   /** NE Idle Cell Bit Error Count (IBE-P), MSW */
-   DSL_uint16_t ibep_MSW;
+   /** NE User Total Cell Count (CU-P), MSW */
+   DSL_uint16_t cup_MSW;
    /** NE Idle Cell Bit Error Count (IBE-P), LSW */
    DSL_uint16_t ibep_LSW;
+   /** NE Idle Cell Bit Error Count (IBE-P), MSW */
+   DSL_uint16_t ibep_MSW;
 #endif
 } __PACKED__ ;
 
@@ -1276,21 +1276,21 @@ struct ACK_ATM_BC0_TxStatsNE_Get
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Near-end Tx User Cell Count (TxCU), Current Period, MSW */
-   DSL_uint16_t TxCU_MSW;
    /** Near-end Tx User Cell Count (TxCU), Current Period, LSW */
    DSL_uint16_t TxCU_LSW;
-   /** Near-end Tx Idle Cell Count (TxIdle), Current Period, MSW */
-   DSL_uint16_t TxIdle_MSW;
+   /** Near-end Tx User Cell Count (TxCU), Current Period, MSW */
+   DSL_uint16_t TxCU_MSW;
    /** Near-end Tx Idle Cell Count (TxIdle), Current Period, LSW */
    DSL_uint16_t TxIdle_LSW;
+   /** Near-end Tx Idle Cell Count (TxIdle), Current Period, MSW */
+   DSL_uint16_t TxIdle_MSW;
 #endif
 } __PACKED__ ;
 
 
 /**
    Writes the transmit data-path counters for BC0 of an ATM-TC link.For "Why
-   writing performance counters" see Page 648.
+   writing performance counters" see Page 649.
 */
 struct CMD_ATM_BC0_TxStatsNE_Set
 {
@@ -1312,14 +1312,14 @@ struct CMD_ATM_BC0_TxStatsNE_Set
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Near-end Tx User Cell Count (TxCU), Current Period, MSW */
-   DSL_uint16_t TxCU_MSW;
    /** Near-end Tx User Cell Count (TxCU), Current Period, LSW */
    DSL_uint16_t TxCU_LSW;
-   /** Near-end Tx Idle Cell Count (TxIdle), Current Period, MSW */
-   DSL_uint16_t TxIdle_MSW;
+   /** Near-end Tx User Cell Count (TxCU), Current Period, MSW */
+   DSL_uint16_t TxCU_MSW;
    /** Near-end Tx Idle Cell Count (TxIdle), Current Period, LSW */
    DSL_uint16_t TxIdle_LSW;
+   /** Near-end Tx Idle Cell Count (TxIdle), Current Period, MSW */
+   DSL_uint16_t TxIdle_MSW;
 #endif
 } __PACKED__ ;
 
@@ -1426,166 +1426,166 @@ struct ACK_ADSL_FeatureMapGet
    /** Length */
    DSL_uint16_t Length;
    /** Feature-Bit15 of Word 0: ATM Off-chip Bonding */
-   DSL_uint32_t W0F15 : 1;
+   DSL_uint16_t W0F15 : 1;
    /** Feature-Bit14 of Word 0: ATM On-chip Bonding */
-   DSL_uint32_t W0F14 : 1;
+   DSL_uint16_t W0F14 : 1;
    /** Feature-Bit13 of Word 0: PTM Off-chip Bonding BACP */
-   DSL_uint32_t W0F13 : 1;
+   DSL_uint16_t W0F13 : 1;
    /** Feature-Bit12 of Word 0: PTM On-chip Bonding BACP */
-   DSL_uint32_t W0F12 : 1;
+   DSL_uint16_t W0F12 : 1;
    /** Feature-Bit11 of Word 0: PTM Off-chip bonding (GHS-based) */
-   DSL_uint32_t W0F11 : 1;
+   DSL_uint16_t W0F11 : 1;
    /** Feature-Bit10 of Word 0: PTM On-chip bonding (GHS-based) */
-   DSL_uint32_t W0F10 : 1;
+   DSL_uint16_t W0F10 : 1;
    /** Feature-Bit9 of Word 0: Not used in ADSL */
-   DSL_uint32_t W0F09 : 1;
+   DSL_uint16_t W0F09 : 1;
    /** Feature-Bit8 of Word 0: PTM-TC for ADSL2x  */
-   DSL_uint32_t W0F08 : 1;
+   DSL_uint16_t W0F08 : 1;
    /** Feature-Bit7 of Word 0: AnnexM/J US PSD Shaping (ADSL only) */
-   DSL_uint32_t W0F07 : 1;
+   DSL_uint16_t W0F07 : 1;
    /** Feature-Bit6 of Word 0: AnnexM/J US Mask Selection (ADSL only) */
-   DSL_uint32_t W0F06 : 1;
+   DSL_uint16_t W0F06 : 1;
    /** Feature-Bit5 of Word 0: Annex M (ADSL only) */
-   DSL_uint32_t W0F05 : 1;
+   DSL_uint16_t W0F05 : 1;
    /** Feature-Bit4 of Word 0: Annex J (ADSL only) */
-   DSL_uint32_t W0F04 : 1;
+   DSL_uint16_t W0F04 : 1;
    /** Feature-Bit3 of Word 0: Annex I (ADSL only) */
-   DSL_uint32_t W0F03 : 1;
+   DSL_uint16_t W0F03 : 1;
    /** Feature-Bit2 of Word 0: Annex B (ADSL only) */
-   DSL_uint32_t W0F02 : 1;
+   DSL_uint16_t W0F02 : 1;
    /** Feature-Bit1 of Word 0: T1.413 (ADSL only) */
-   DSL_uint32_t W0F01 : 1;
+   DSL_uint16_t W0F01 : 1;
    /** Feature-Bit0 of Word 0: Annex A (incl. Annex L) (ADSL only) */
-   DSL_uint32_t W0F00 : 1;
+   DSL_uint16_t W0F00 : 1;
    /** Feature-Bit15 of Word 1: NTR */
-   DSL_uint32_t W1F15 : 1;
+   DSL_uint16_t W1F15 : 1;
    /** Feature-Bit14 of Word 1: CIPolicy */
-   DSL_uint32_t W1F14 : 1;
+   DSL_uint16_t W1F14 : 1;
    /** Feature-Bit13 of Word 1: Pre-emption & Short Packets  */
-   DSL_uint32_t W1F13 : 1;
+   DSL_uint16_t W1F13 : 1;
    /** Feature-Bit12 of Word 1: DELT */
-   DSL_uint32_t W1F12 : 1;
+   DSL_uint16_t W1F12 : 1;
    /** Feature-Bit11 of Word 1: Dual Latency */
-   DSL_uint32_t W1F11 : 1;
+   DSL_uint16_t W1F11 : 1;
    /** Feature-Bit10 of Word 1: Short init (ADSL only) */
-   DSL_uint32_t W1F10 : 1;
+   DSL_uint16_t W1F10 : 1;
    /** Feature-Bit9 of Word 1: Virtual Noise */
-   DSL_uint32_t W1F09 : 1;
+   DSL_uint16_t W1F09 : 1;
    /** Feature-Bit8 of Word 1: Erasure Decoding /FORCEINP */
-   DSL_uint32_t W1F08 : 1;
+   DSL_uint16_t W1F08 : 1;
    /** Feature-Bit7 of Word 1: L2 (ADSL only) */
-   DSL_uint32_t W1F07 : 1;
+   DSL_uint16_t W1F07 : 1;
    /** Feature-Bit6 of Word 1: G.INP Retransmission US + DS + SRA */
-   DSL_uint32_t W1F06 : 1;
+   DSL_uint16_t W1F06 : 1;
    /** Feature-Bit5 of Word 1: G.INP Retransmission DS + SRA */
-   DSL_uint32_t W1F05 : 1;
+   DSL_uint16_t W1F05 : 1;
    /** Feature-Bit4 of Word 1: G.INP Retransmission US + DS */
-   DSL_uint32_t W1F04 : 1;
+   DSL_uint16_t W1F04 : 1;
    /** Feature-Bit3 of Word 1: G.INP Retransmission DS */
-   DSL_uint32_t W1F03 : 1;
+   DSL_uint16_t W1F03 : 1;
    /** Feature-Bit2 of Word 1: Not used in ADSL */
-   DSL_uint32_t W1F02 : 1;
+   DSL_uint16_t W1F02 : 1;
    /** Feature-Bit1 of Word 1: SRA */
-   DSL_uint32_t W1F01 : 1;
+   DSL_uint16_t W1F01 : 1;
    /** Feature-Bit0 of Word 1: Bitswap */
-   DSL_uint32_t W1F00 : 1;
+   DSL_uint16_t W1F00 : 1;
    /** Reserved */
-   DSL_uint32_t Res0 : 13;
+   DSL_uint16_t Res0 : 13;
    /** Feature-Bit2 of Word 2: Microfilter Detection and Hybrid Data */
-   DSL_uint32_t W2F02 : 1;
+   DSL_uint16_t W2F02 : 1;
    /** Feature-Bit1 of Word 2: Real Time Trace (RTT) */
-   DSL_uint32_t W2F01 : 1;
+   DSL_uint16_t W2F01 : 1;
    /** Feature-Bit0 of Word 2: Clear EOC */
-   DSL_uint32_t W2F00 : 1;
+   DSL_uint16_t W2F00 : 1;
    /** Reserved */
-   DSL_uint32_t Res1 : 16;
+   DSL_uint16_t Res1 : 16;
    /** Reserved */
-   DSL_uint32_t Res2 : 16;
+   DSL_uint16_t Res2 : 16;
    /** Reserved */
-   DSL_uint32_t Res3 : 16;
+   DSL_uint16_t Res3 : 16;
 #else
    /** Index */
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Feature-Bit0 of Word 1: Bitswap */
-   DSL_uint32_t W1F00 : 1;
-   /** Feature-Bit1 of Word 1: SRA */
-   DSL_uint32_t W1F01 : 1;
-   /** Feature-Bit2 of Word 1: Not used in ADSL */
-   DSL_uint32_t W1F02 : 1;
-   /** Feature-Bit3 of Word 1: G.INP Retransmission DS */
-   DSL_uint32_t W1F03 : 1;
-   /** Feature-Bit4 of Word 1: G.INP Retransmission US + DS */
-   DSL_uint32_t W1F04 : 1;
-   /** Feature-Bit5 of Word 1: G.INP Retransmission DS + SRA */
-   DSL_uint32_t W1F05 : 1;
-   /** Feature-Bit6 of Word 1: G.INP Retransmission US + DS + SRA */
-   DSL_uint32_t W1F06 : 1;
-   /** Feature-Bit7 of Word 1: L2 (ADSL only) */
-   DSL_uint32_t W1F07 : 1;
-   /** Feature-Bit8 of Word 1: Erasure Decoding /FORCEINP */
-   DSL_uint32_t W1F08 : 1;
-   /** Feature-Bit9 of Word 1: Virtual Noise */
-   DSL_uint32_t W1F09 : 1;
-   /** Feature-Bit10 of Word 1: Short init (ADSL only) */
-   DSL_uint32_t W1F10 : 1;
-   /** Feature-Bit11 of Word 1: Dual Latency */
-   DSL_uint32_t W1F11 : 1;
-   /** Feature-Bit12 of Word 1: DELT */
-   DSL_uint32_t W1F12 : 1;
-   /** Feature-Bit13 of Word 1: Pre-emption & Short Packets  */
-   DSL_uint32_t W1F13 : 1;
-   /** Feature-Bit14 of Word 1: CIPolicy */
-   DSL_uint32_t W1F14 : 1;
-   /** Feature-Bit15 of Word 1: NTR */
-   DSL_uint32_t W1F15 : 1;
    /** Feature-Bit0 of Word 0: Annex A (incl. Annex L) (ADSL only) */
-   DSL_uint32_t W0F00 : 1;
+   DSL_uint16_t W0F00 : 1;
    /** Feature-Bit1 of Word 0: T1.413 (ADSL only) */
-   DSL_uint32_t W0F01 : 1;
+   DSL_uint16_t W0F01 : 1;
    /** Feature-Bit2 of Word 0: Annex B (ADSL only) */
-   DSL_uint32_t W0F02 : 1;
+   DSL_uint16_t W0F02 : 1;
    /** Feature-Bit3 of Word 0: Annex I (ADSL only) */
-   DSL_uint32_t W0F03 : 1;
+   DSL_uint16_t W0F03 : 1;
    /** Feature-Bit4 of Word 0: Annex J (ADSL only) */
-   DSL_uint32_t W0F04 : 1;
+   DSL_uint16_t W0F04 : 1;
    /** Feature-Bit5 of Word 0: Annex M (ADSL only) */
-   DSL_uint32_t W0F05 : 1;
+   DSL_uint16_t W0F05 : 1;
    /** Feature-Bit6 of Word 0: AnnexM/J US Mask Selection (ADSL only) */
-   DSL_uint32_t W0F06 : 1;
+   DSL_uint16_t W0F06 : 1;
    /** Feature-Bit7 of Word 0: AnnexM/J US PSD Shaping (ADSL only) */
-   DSL_uint32_t W0F07 : 1;
+   DSL_uint16_t W0F07 : 1;
    /** Feature-Bit8 of Word 0: PTM-TC for ADSL2x  */
-   DSL_uint32_t W0F08 : 1;
+   DSL_uint16_t W0F08 : 1;
    /** Feature-Bit9 of Word 0: Not used in ADSL */
-   DSL_uint32_t W0F09 : 1;
+   DSL_uint16_t W0F09 : 1;
    /** Feature-Bit10 of Word 0: PTM On-chip bonding (GHS-based) */
-   DSL_uint32_t W0F10 : 1;
+   DSL_uint16_t W0F10 : 1;
    /** Feature-Bit11 of Word 0: PTM Off-chip bonding (GHS-based) */
-   DSL_uint32_t W0F11 : 1;
+   DSL_uint16_t W0F11 : 1;
    /** Feature-Bit12 of Word 0: PTM On-chip Bonding BACP */
-   DSL_uint32_t W0F12 : 1;
+   DSL_uint16_t W0F12 : 1;
    /** Feature-Bit13 of Word 0: PTM Off-chip Bonding BACP */
-   DSL_uint32_t W0F13 : 1;
+   DSL_uint16_t W0F13 : 1;
    /** Feature-Bit14 of Word 0: ATM On-chip Bonding */
-   DSL_uint32_t W0F14 : 1;
+   DSL_uint16_t W0F14 : 1;
    /** Feature-Bit15 of Word 0: ATM Off-chip Bonding */
-   DSL_uint32_t W0F15 : 1;
-   /** Reserved */
-   DSL_uint32_t Res1 : 16;
+   DSL_uint16_t W0F15 : 1;
+   /** Feature-Bit0 of Word 1: Bitswap */
+   DSL_uint16_t W1F00 : 1;
+   /** Feature-Bit1 of Word 1: SRA */
+   DSL_uint16_t W1F01 : 1;
+   /** Feature-Bit2 of Word 1: Not used in ADSL */
+   DSL_uint16_t W1F02 : 1;
+   /** Feature-Bit3 of Word 1: G.INP Retransmission DS */
+   DSL_uint16_t W1F03 : 1;
+   /** Feature-Bit4 of Word 1: G.INP Retransmission US + DS */
+   DSL_uint16_t W1F04 : 1;
+   /** Feature-Bit5 of Word 1: G.INP Retransmission DS + SRA */
+   DSL_uint16_t W1F05 : 1;
+   /** Feature-Bit6 of Word 1: G.INP Retransmission US + DS + SRA */
+   DSL_uint16_t W1F06 : 1;
+   /** Feature-Bit7 of Word 1: L2 (ADSL only) */
+   DSL_uint16_t W1F07 : 1;
+   /** Feature-Bit8 of Word 1: Erasure Decoding /FORCEINP */
+   DSL_uint16_t W1F08 : 1;
+   /** Feature-Bit9 of Word 1: Virtual Noise */
+   DSL_uint16_t W1F09 : 1;
+   /** Feature-Bit10 of Word 1: Short init (ADSL only) */
+   DSL_uint16_t W1F10 : 1;
+   /** Feature-Bit11 of Word 1: Dual Latency */
+   DSL_uint16_t W1F11 : 1;
+   /** Feature-Bit12 of Word 1: DELT */
+   DSL_uint16_t W1F12 : 1;
+   /** Feature-Bit13 of Word 1: Pre-emption & Short Packets  */
+   DSL_uint16_t W1F13 : 1;
+   /** Feature-Bit14 of Word 1: CIPolicy */
+   DSL_uint16_t W1F14 : 1;
+   /** Feature-Bit15 of Word 1: NTR */
+   DSL_uint16_t W1F15 : 1;
    /** Feature-Bit0 of Word 2: Clear EOC */
-   DSL_uint32_t W2F00 : 1;
+   DSL_uint16_t W2F00 : 1;
    /** Feature-Bit1 of Word 2: Real Time Trace (RTT) */
-   DSL_uint32_t W2F01 : 1;
+   DSL_uint16_t W2F01 : 1;
    /** Feature-Bit2 of Word 2: Microfilter Detection and Hybrid Data */
-   DSL_uint32_t W2F02 : 1;
+   DSL_uint16_t W2F02 : 1;
    /** Reserved */
-   DSL_uint32_t Res0 : 13;
+   DSL_uint16_t Res0 : 13;
    /** Reserved */
-   DSL_uint32_t Res3 : 16;
+   DSL_uint16_t Res1 : 16;
    /** Reserved */
-   DSL_uint32_t Res2 : 16;
+   DSL_uint16_t Res2 : 16;
+   /** Reserved */
+   DSL_uint16_t Res3 : 16;
 #endif
 } __PACKED__ ;
 
@@ -1622,142 +1622,142 @@ struct ACK_VDSL_FeatureMapGet
    /** Length */
    DSL_uint16_t Length;
    /** Feature-Bit15 of Word 0: ATM Off-chip Bonding */
-   DSL_uint32_t W0F15 : 1;
+   DSL_uint16_t W0F15 : 1;
    /** Feature-Bit14 of Word 0: ATM On-chip Bonding */
-   DSL_uint32_t W0F14 : 1;
+   DSL_uint16_t W0F14 : 1;
    /** Feature-Bit13 of Word 0: PTM Off-chip Bonding BACP */
-   DSL_uint32_t W0F13 : 1;
+   DSL_uint16_t W0F13 : 1;
    /** Feature-Bit12 of Word 0: PTM On-chip Bonding BACP */
-   DSL_uint32_t W0F12 : 1;
+   DSL_uint16_t W0F12 : 1;
    /** Feature-Bit11 of Word 0: PTM Off-chip bonding (GHS-based) */
-   DSL_uint32_t W0F11 : 1;
+   DSL_uint16_t W0F11 : 1;
    /** Feature-Bit10 of Word 0: PTM On-chip bonding (GHS-based) */
-   DSL_uint32_t W0F10 : 1;
+   DSL_uint16_t W0F10 : 1;
    /** Feature-Bit9 of Word 0: Profile 30  (VDSL only) */
-   DSL_uint32_t W0F09 : 1;
+   DSL_uint16_t W0F09 : 1;
    /** Feature-Bits 8:0 of Word 0: Not used in VDSL */
-   DSL_uint32_t Res0 : 9;
+   DSL_uint16_t Res0 : 9;
    /** Feature-Bit15 of Word 1: NTR */
-   DSL_uint32_t W1F15 : 1;
+   DSL_uint16_t W1F15 : 1;
    /** Feature-Bit14 of Word 1: CIPolicy */
-   DSL_uint32_t W1F14 : 1;
+   DSL_uint16_t W1F14 : 1;
    /** Feature-Bit13 of Word 1: Pre-emption & Short Packets  */
-   DSL_uint32_t W1F13 : 1;
+   DSL_uint16_t W1F13 : 1;
    /** Feature-Bit12 of Word 1: DELT */
-   DSL_uint32_t W1F12 : 1;
+   DSL_uint16_t W1F12 : 1;
    /** Feature-Bit11 of Word 1: Dual Latency */
-   DSL_uint32_t W1F11 : 1;
+   DSL_uint16_t W1F11 : 1;
    /** Feature-Bit10 of Word 1: Not used in VDSL */
-   DSL_uint32_t Res1 : 1;
+   DSL_uint16_t Res1 : 1;
    /** Feature-Bit9 of Word 1: Virtual Noise */
-   DSL_uint32_t W1F09 : 1;
+   DSL_uint16_t W1F09 : 1;
    /** Feature-Bit8 of Word 1: Erasure Decoding /FORCEINP */
-   DSL_uint32_t W1F08 : 1;
+   DSL_uint16_t W1F08 : 1;
    /** Feature-Bit7 of Word 1: Not used in VDSL */
-   DSL_uint32_t Res2 : 1;
+   DSL_uint16_t Res2 : 1;
    /** Feature-Bit6 of Word 1: G.INP Retransmission US + DS + SRA */
-   DSL_uint32_t W1F06 : 1;
+   DSL_uint16_t W1F06 : 1;
    /** Feature-Bit5 of Word 1: G.INP Retransmission DS + SRA */
-   DSL_uint32_t W1F05 : 1;
+   DSL_uint16_t W1F05 : 1;
    /** Feature-Bit4 of Word 1: G.INP Retransmission US + DS */
-   DSL_uint32_t W1F04 : 1;
+   DSL_uint16_t W1F04 : 1;
    /** Feature-Bit3 of Word 1: G.INP Retransmission DS */
-   DSL_uint32_t W1F03 : 1;
+   DSL_uint16_t W1F03 : 1;
    /** Feature-Bit2 of Word 1: SOS (VDSL only) */
-   DSL_uint32_t W1F02 : 1;
+   DSL_uint16_t W1F02 : 1;
    /** Feature-Bit1 of Word 1: SRA */
-   DSL_uint32_t W1F01 : 1;
+   DSL_uint16_t W1F01 : 1;
    /** Feature-Bit0 of Word 1: Bitswap */
-   DSL_uint32_t W1F00 : 1;
+   DSL_uint16_t W1F00 : 1;
    /** Reserved */
-   DSL_uint32_t Res3 : 12;
+   DSL_uint16_t Res3 : 12;
    /** Feature-Bit3 of Word 2: AEC/2nd DAC */
-   DSL_uint32_t W2F03 : 1;
+   DSL_uint16_t W2F03 : 1;
    /** Feature-Bit2 of Word 2: Microfilter Detection and Hybrid Data */
-   DSL_uint32_t W2F02 : 1;
+   DSL_uint16_t W2F02 : 1;
    /** Feature-Bit1 of Word 2: Real Time Trace (RTT) */
-   DSL_uint32_t W2F01 : 1;
+   DSL_uint16_t W2F01 : 1;
    /** Feature-Bit0 of Word 2: Clear EOC */
-   DSL_uint32_t W2F00 : 1;
+   DSL_uint16_t W2F00 : 1;
    /** Reserved */
-   DSL_uint32_t Res4 : 15;
+   DSL_uint16_t Res4 : 15;
    /** Feature-Bit0 of Word 3: Vectoring (fully standard compliant) */
-   DSL_uint32_t W3F00 : 1;
+   DSL_uint16_t W3F00 : 1;
    /** Reserved */
-   DSL_uint32_t Res5 : 16;
+   DSL_uint16_t Res5 : 16;
    /** Reserved */
-   DSL_uint32_t Res6 : 16;
+   DSL_uint16_t Res6 : 16;
 #else
    /** Index */
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
-   /** Feature-Bit0 of Word 1: Bitswap */
-   DSL_uint32_t W1F00 : 1;
-   /** Feature-Bit1 of Word 1: SRA */
-   DSL_uint32_t W1F01 : 1;
-   /** Feature-Bit2 of Word 1: SOS (VDSL only) */
-   DSL_uint32_t W1F02 : 1;
-   /** Feature-Bit3 of Word 1: G.INP Retransmission DS */
-   DSL_uint32_t W1F03 : 1;
-   /** Feature-Bit4 of Word 1: G.INP Retransmission US + DS */
-   DSL_uint32_t W1F04 : 1;
-   /** Feature-Bit5 of Word 1: G.INP Retransmission DS + SRA */
-   DSL_uint32_t W1F05 : 1;
-   /** Feature-Bit6 of Word 1: G.INP Retransmission US + DS + SRA */
-   DSL_uint32_t W1F06 : 1;
-   /** Feature-Bit7 of Word 1: Not used in VDSL */
-   DSL_uint32_t Res2 : 1;
-   /** Feature-Bit8 of Word 1: Erasure Decoding /FORCEINP */
-   DSL_uint32_t W1F08 : 1;
-   /** Feature-Bit9 of Word 1: Virtual Noise */
-   DSL_uint32_t W1F09 : 1;
-   /** Feature-Bit10 of Word 1: Not used in VDSL */
-   DSL_uint32_t Res1 : 1;
-   /** Feature-Bit11 of Word 1: Dual Latency */
-   DSL_uint32_t W1F11 : 1;
-   /** Feature-Bit12 of Word 1: DELT */
-   DSL_uint32_t W1F12 : 1;
-   /** Feature-Bit13 of Word 1: Pre-emption & Short Packets  */
-   DSL_uint32_t W1F13 : 1;
-   /** Feature-Bit14 of Word 1: CIPolicy */
-   DSL_uint32_t W1F14 : 1;
-   /** Feature-Bit15 of Word 1: NTR */
-   DSL_uint32_t W1F15 : 1;
    /** Feature-Bits 8:0 of Word 0: Not used in VDSL */
-   DSL_uint32_t Res0 : 9;
+   DSL_uint16_t Res0 : 9;
    /** Feature-Bit9 of Word 0: Profile 30  (VDSL only) */
-   DSL_uint32_t W0F09 : 1;
+   DSL_uint16_t W0F09 : 1;
    /** Feature-Bit10 of Word 0: PTM On-chip bonding (GHS-based) */
-   DSL_uint32_t W0F10 : 1;
+   DSL_uint16_t W0F10 : 1;
    /** Feature-Bit11 of Word 0: PTM Off-chip bonding (GHS-based) */
-   DSL_uint32_t W0F11 : 1;
+   DSL_uint16_t W0F11 : 1;
    /** Feature-Bit12 of Word 0: PTM On-chip Bonding BACP */
-   DSL_uint32_t W0F12 : 1;
+   DSL_uint16_t W0F12 : 1;
    /** Feature-Bit13 of Word 0: PTM Off-chip Bonding BACP */
-   DSL_uint32_t W0F13 : 1;
+   DSL_uint16_t W0F13 : 1;
    /** Feature-Bit14 of Word 0: ATM On-chip Bonding */
-   DSL_uint32_t W0F14 : 1;
+   DSL_uint16_t W0F14 : 1;
    /** Feature-Bit15 of Word 0: ATM Off-chip Bonding */
-   DSL_uint32_t W0F15 : 1;
-   /** Feature-Bit0 of Word 3: Vectoring (fully standard compliant) */
-   DSL_uint32_t W3F00 : 1;
-   /** Reserved */
-   DSL_uint32_t Res4 : 15;
+   DSL_uint16_t W0F15 : 1;
+   /** Feature-Bit0 of Word 1: Bitswap */
+   DSL_uint16_t W1F00 : 1;
+   /** Feature-Bit1 of Word 1: SRA */
+   DSL_uint16_t W1F01 : 1;
+   /** Feature-Bit2 of Word 1: SOS (VDSL only) */
+   DSL_uint16_t W1F02 : 1;
+   /** Feature-Bit3 of Word 1: G.INP Retransmission DS */
+   DSL_uint16_t W1F03 : 1;
+   /** Feature-Bit4 of Word 1: G.INP Retransmission US + DS */
+   DSL_uint16_t W1F04 : 1;
+   /** Feature-Bit5 of Word 1: G.INP Retransmission DS + SRA */
+   DSL_uint16_t W1F05 : 1;
+   /** Feature-Bit6 of Word 1: G.INP Retransmission US + DS + SRA */
+   DSL_uint16_t W1F06 : 1;
+   /** Feature-Bit7 of Word 1: Not used in VDSL */
+   DSL_uint16_t Res2 : 1;
+   /** Feature-Bit8 of Word 1: Erasure Decoding /FORCEINP */
+   DSL_uint16_t W1F08 : 1;
+   /** Feature-Bit9 of Word 1: Virtual Noise */
+   DSL_uint16_t W1F09 : 1;
+   /** Feature-Bit10 of Word 1: Not used in VDSL */
+   DSL_uint16_t Res1 : 1;
+   /** Feature-Bit11 of Word 1: Dual Latency */
+   DSL_uint16_t W1F11 : 1;
+   /** Feature-Bit12 of Word 1: DELT */
+   DSL_uint16_t W1F12 : 1;
+   /** Feature-Bit13 of Word 1: Pre-emption & Short Packets  */
+   DSL_uint16_t W1F13 : 1;
+   /** Feature-Bit14 of Word 1: CIPolicy */
+   DSL_uint16_t W1F14 : 1;
+   /** Feature-Bit15 of Word 1: NTR */
+   DSL_uint16_t W1F15 : 1;
    /** Feature-Bit0 of Word 2: Clear EOC */
-   DSL_uint32_t W2F00 : 1;
+   DSL_uint16_t W2F00 : 1;
    /** Feature-Bit1 of Word 2: Real Time Trace (RTT) */
-   DSL_uint32_t W2F01 : 1;
+   DSL_uint16_t W2F01 : 1;
    /** Feature-Bit2 of Word 2: Microfilter Detection and Hybrid Data */
-   DSL_uint32_t W2F02 : 1;
+   DSL_uint16_t W2F02 : 1;
    /** Feature-Bit3 of Word 2: AEC/2nd DAC */
-   DSL_uint32_t W2F03 : 1;
+   DSL_uint16_t W2F03 : 1;
    /** Reserved */
-   DSL_uint32_t Res3 : 12;
+   DSL_uint16_t Res3 : 12;
+   /** Feature-Bit0 of Word 3: Vectoring (fully standard compliant) */
+   DSL_uint16_t W3F00 : 1;
    /** Reserved */
-   DSL_uint32_t Res6 : 16;
+   DSL_uint16_t Res4 : 15;
    /** Reserved */
-   DSL_uint32_t Res5 : 16;
+   DSL_uint16_t Res5 : 16;
+   /** Reserved */
+   DSL_uint16_t Res6 : 16;
 #endif
 } __PACKED__ ;
 
@@ -1775,18 +1775,18 @@ struct CMD_PAF_HS_Control
    /** Length */
    DSL_uint16_t Length;
    /** Reserved */
-   DSL_uint32_t Res0 : 15;
+   DSL_uint16_t Res0 : 15;
    /** PCS Control Register (Register 3.61, Bit 0) */
-   DSL_uint32_t PAF_Enable : 1;
+   DSL_uint16_t PAF_Enable : 1;
 #else
    /** Index */
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
    /** PCS Control Register (Register 3.61, Bit 0) */
-   DSL_uint32_t PAF_Enable : 1;
+   DSL_uint16_t PAF_Enable : 1;
    /** Reserved */
-   DSL_uint32_t Res0 : 15;
+   DSL_uint16_t Res0 : 15;
 #endif
 } __PACKED__ ;
 
@@ -1842,18 +1842,18 @@ struct ACK_PAF_HS_ControlGet
    /** Length */
    DSL_uint16_t Length;
    /** Reserved */
-   DSL_uint32_t Res0 : 15;
+   DSL_uint16_t Res0 : 15;
    /** PCS Control Register (Register 3.61, Bit 0) */
-   DSL_uint32_t PAF_Enable : 1;
+   DSL_uint16_t PAF_Enable : 1;
 #else
    /** Index */
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
    /** PCS Control Register (Register 3.61, Bit 0) */
-   DSL_uint32_t PAF_Enable : 1;
+   DSL_uint16_t PAF_Enable : 1;
    /** Reserved */
-   DSL_uint32_t Res0 : 15;
+   DSL_uint16_t Res0 : 15;
 #endif
 } __PACKED__ ;
 
@@ -1895,19 +1895,19 @@ struct ACK_PAF_HS_StatusGet
    /** Length */
    DSL_uint16_t Length;
    /** Reserved */
-   DSL_uint32_t Res0 : 9;
+   DSL_uint16_t Res0 : 9;
    /** Discovery Clear-If-Same */
-   DSL_uint32_t discoveryClearIfSame : 1;
+   DSL_uint16_t discoveryClearIfSame : 1;
    /** Discovery Set-If-Clear */
-   DSL_uint32_t discoverySetIfClear : 1;
+   DSL_uint16_t discoverySetIfClear : 1;
    /** Aggregation Clear */
-   DSL_uint32_t aggregClear : 1;
+   DSL_uint16_t aggregClear : 1;
    /** Aggregation Set */
-   DSL_uint32_t aggregSet : 1;
+   DSL_uint16_t aggregSet : 1;
    /** Reserved */
-   DSL_uint32_t Res1 : 2;
+   DSL_uint16_t Res1 : 2;
    /** PCS Control Register (Register 3.60, Bit 12) */
-   DSL_uint32_t PAF_Enable : 1;
+   DSL_uint16_t PAF_Enable : 1;
    /** Aggregation Discovery Code (Register 6.18) */
    DSL_uint16_t discoveryCode1;
    /** Aggregation Discovery Code (Registers 6.19) */
@@ -1923,30 +1923,30 @@ struct ACK_PAF_HS_StatusGet
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
+   /** PCS Control Register (Register 3.60, Bit 12) */
+   DSL_uint16_t PAF_Enable : 1;
+   /** Reserved */
+   DSL_uint16_t Res1 : 2;
+   /** Aggregation Set */
+   DSL_uint16_t aggregSet : 1;
+   /** Aggregation Clear */
+   DSL_uint16_t aggregClear : 1;
+   /** Discovery Set-If-Clear */
+   DSL_uint16_t discoverySetIfClear : 1;
+   /** Discovery Clear-If-Same */
+   DSL_uint16_t discoveryClearIfSame : 1;
+   /** Reserved */
+   DSL_uint16_t Res0 : 9;
    /** Aggregation Discovery Code (Register 6.18) */
    DSL_uint16_t discoveryCode1;
-   /** PCS Control Register (Register 3.60, Bit 12) */
-   DSL_uint32_t PAF_Enable : 1;
-   /** Reserved */
-   DSL_uint32_t Res1 : 2;
-   /** Aggregation Set */
-   DSL_uint32_t aggregSet : 1;
-   /** Aggregation Clear */
-   DSL_uint32_t aggregClear : 1;
-   /** Discovery Set-If-Clear */
-   DSL_uint32_t discoverySetIfClear : 1;
-   /** Discovery Clear-If-Same */
-   DSL_uint32_t discoveryClearIfSame : 1;
-   /** Reserved */
-   DSL_uint32_t Res0 : 9;
-   /** Aggregation Discovery Code (Registers 6.20) */
-   DSL_uint16_t discoveryCode3;
    /** Aggregation Discovery Code (Registers 6.19) */
    DSL_uint16_t discoveryCode2;
-   /** Partner PME Aggregate Data (Registers 6.23) */
-   DSL_uint16_t aggregateData2;
+   /** Aggregation Discovery Code (Registers 6.20) */
+   DSL_uint16_t discoveryCode3;
    /** Partner PME Aggregate Data (Registers 6.22) */
    DSL_uint16_t aggregateData1;
+   /** Partner PME Aggregate Data (Registers 6.23) */
+   DSL_uint16_t aggregateData2;
 #endif
 } __PACKED__ ;
 
@@ -1971,9 +1971,9 @@ struct CMD_PAF_HS_Continue
    /** Length */
    DSL_uint16_t Length;
    /** Reserved */
-   DSL_uint32_t Res0 : 15;
+   DSL_uint16_t Res0 : 15;
    /** Continue Trigger */
-   DSL_uint32_t trigger : 1;
+   DSL_uint16_t trigger : 1;
    /** Aggregation Discovery Code (Register 6.18) */
    DSL_uint16_t discoveryCode1;
    /** Aggregation Discovery Code (Registers 6.19) */
@@ -1989,20 +1989,20 @@ struct CMD_PAF_HS_Continue
    DSL_uint16_t Index;
    /** Length */
    DSL_uint16_t Length;
+   /** Continue Trigger */
+   DSL_uint16_t trigger : 1;
+   /** Reserved */
+   DSL_uint16_t Res0 : 15;
    /** Aggregation Discovery Code (Register 6.18) */
    DSL_uint16_t discoveryCode1;
-   /** Continue Trigger */
-   DSL_uint32_t trigger : 1;
-   /** Reserved */
-   DSL_uint32_t Res0 : 15;
-   /** Aggregation Discovery Code (Registers 6.20) */
-   DSL_uint16_t discoveryCode3;
    /** Aggregation Discovery Code (Registers 6.19) */
    DSL_uint16_t discoveryCode2;
-   /** Partner PME Aggregate Data (Registers 6.23) */
-   DSL_uint16_t aggregateData2;
+   /** Aggregation Discovery Code (Registers 6.20) */
+   DSL_uint16_t discoveryCode3;
    /** Partner PME Aggregate Data (Registers 6.22) */
    DSL_uint16_t aggregateData1;
+   /** Partner PME Aggregate Data (Registers 6.23) */
+   DSL_uint16_t aggregateData2;
 #endif
 } __PACKED__ ;
 

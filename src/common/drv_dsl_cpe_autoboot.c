@@ -562,7 +562,9 @@ DSL_Error_t DSL_DRV_AutobootStateCheck(
             nErrCode = DSL_DRV_AutobootStateSet(
                           pContext,
                           DSL_AUTOBOOTSTATE_TRAIN,
-                          DSL_AUTOBOOT_TRAINING_POLL_TIME);
+                          DSL_DRV_BondingEnableCheck(pContext) ?
+                                       DSL_AUTOBOOT_BONDING_TRAINING_POLL_TIME:
+                                       DSL_AUTOBOOT_TRAINING_POLL_TIME);
 
             if( nErrCode != DSL_SUCCESS )
             {
@@ -709,7 +711,6 @@ static DSL_Error_t DSL_DRV_AutobootHandleStart(
    DSL_boolean_t bFirst = DSL_FALSE;
    DSL_boolean_t bWaitBeforeLinkActivation = DSL_FALSE;
    DSL_Autoboot_State_t nState = DSL_AUTOBOOTSTATE_UNKNOWN;
-
 #if defined(INCLUDE_DSL_CPE_API_VRX)
    DSL_boolean_t bT1_413 = DSL_FALSE;
    DSL_CTX_READ(pContext, nErrCode, pDevCtx->data.bT1_413, bT1_413);
@@ -859,7 +860,9 @@ static DSL_Error_t DSL_DRV_AutobootHandleStart(
          nErrCode = DSL_DRV_AutobootStateSet(
                        pContext,
                        DSL_AUTOBOOTSTATE_TRAIN,
-                       DSL_AUTOBOOT_TRAINING_POLL_TIME);
+                       DSL_DRV_BondingEnableCheck(pContext) ?
+                                    DSL_AUTOBOOT_BONDING_TRAINING_POLL_TIME :
+                                    DSL_AUTOBOOT_TRAINING_POLL_TIME);
 
          if( nErrCode != DSL_SUCCESS )
          {
@@ -895,7 +898,7 @@ static DSL_Error_t DSL_DRV_AutobootHandleOrderlyShutdownRequest(
 #endif
 
    DSL_DEBUG(DSL_DBG_MSG, (pContext, SYS_DBG_MSG
-      "DSL[%02d]: IN - DSL_DRV_AutobootHandleOrderlyShutdown"
+      "DSL[%02d]: IN - DSL_DRV_AutobootHandleOrderlyShutdownRequest"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
 #if defined(INCLUDE_DSL_BONDING)
@@ -966,7 +969,7 @@ static DSL_Error_t DSL_DRV_AutobootHandleOrderlyShutdownRequest(
    }
 
    DSL_DEBUG(DSL_DBG_MSG, (pContext, SYS_DBG_MSG
-      "DSL[%02d]: OUT - DSL_DRV_AutobootHandleOrderlyShutdown, retCode=%d"
+      "DSL[%02d]: OUT - DSL_DRV_AutobootHandleOrderlyShutdownRequest, retCode=%d"
       DSL_DRV_CRLF, nErrCode, DSL_DEV_NUM(pContext)));
 
    return nErrCode;
@@ -1004,8 +1007,8 @@ static DSL_Error_t DSL_DRV_AutobootHandleOrderlyShutdownWait(
                                        currentTime : pContext->autobootStartTime;
 
          /* Check for timeout*/
-         if ((pContext->autobootStartTime + (DSL_uint32_t)(pContext->nAutobootTimeoutLimit*1000))
-                  < currentTime )
+         if (currentTime - pContext->autobootStartTime >
+                          (DSL_uint32_t)(pContext->nAutobootTimeoutLimit*1000))
          {
             DSL_DEBUG(DSL_DBG_ERR, (pContext, SYS_DBG_ERR
                "DSL[%02d]: ERROR - Timeout, FW doesn't enter FAILSTATE"
@@ -1276,7 +1279,7 @@ static DSL_Error_t DSL_DRV_AutobootHandleRestart(
          }
 
          /* Activate Autoboot timeout for the Firmware Wait state*/
-         DSL_DRV_AutobootTimeoutSet(pContext, 10);
+         DSL_DRV_AutobootTimeoutSet(pContext, DSL_AUTOBOOT_FW_WAIT_TIMEOUT);
       }
       else
       {
@@ -1356,8 +1359,8 @@ static DSL_Error_t DSL_DRV_AutobootHandleTraining(
          pContext->autobootStartTime = pContext->autobootStartTime > currentTime ?
                                        currentTime : pContext->autobootStartTime;
 
-         if ((pContext->autobootStartTime + (DSL_uint32_t)(pContext->nAutobootTimeoutLimit*1000))
-                < currentTime )
+         if (currentTime - pContext->autobootStartTime >
+                          (DSL_uint32_t)(pContext->nAutobootTimeoutLimit*1000))
          {
             DSL_CTX_READ_SCALAR(pContext, nErrCode, nTestModeControl, nTestMode);
             if (nTestMode == DSL_TESTMODE_TRAINING_LOCK ||
@@ -1369,6 +1372,7 @@ static DSL_Error_t DSL_DRV_AutobootHandleTraining(
             }
             else
             {
+
 #if defined(INCLUDE_DSL_G997_STATUS) || defined(INCLUDE_DSL_G997_ALARM) || \
     defined(INCLUDE_DSL_CPE_API_VRX)
                /* Generate LINIT event on timeout*/
@@ -1681,7 +1685,7 @@ static DSL_Error_t DSL_DRV_AutobootHandleFwRequest(
          }
 
          /* Activate Autoboot timeout for the Firmware Wait state*/
-         DSL_DRV_AutobootTimeoutSet(pContext, 10);
+         DSL_DRV_AutobootTimeoutSet(pContext, DSL_AUTOBOOT_FW_WAIT_TIMEOUT);
 
          DSL_DEBUG( DSL_DBG_MSG,
             (pContext, SYS_DBG_MSG"DSL[%02d]: No stored FW, entering FW wait state..."
@@ -1724,7 +1728,7 @@ static DSL_Error_t DSL_DRV_AutobootHandleFwRequest(
       }
 
       /* Activate Autoboot timeout for the Firmware Wait state*/
-      DSL_DRV_AutobootTimeoutSet(pContext, 10);
+      DSL_DRV_AutobootTimeoutSet(pContext, DSL_AUTOBOOT_FW_WAIT_TIMEOUT);
 #endif
       break;
    } /* while(1)*/
@@ -1803,8 +1807,8 @@ static DSL_Error_t DSL_DRV_AutobootHandleFwWait(
                                     currentTime : pContext->autobootStartTime;
 
       /* Check for the Firmware Wait state timeout*/
-      if ((pContext->autobootStartTime + (DSL_uint32_t)(pContext->nAutobootTimeoutLimit*1000))
-             < currentTime )
+      if (currentTime - pContext->autobootStartTime >
+                          (DSL_uint32_t)(pContext->nAutobootTimeoutLimit*1000))
       {
          /* Try to request FW again */
          nErrCode = DSL_DRV_AutobootStateSet(
@@ -1904,7 +1908,7 @@ static DSL_Error_t DSL_DRV_AutobootHandleL3(
    nErrCode = DSL_DRV_DEV_AutobootHandleL3(pContext, bL3Forced);
 
    DSL_DEBUG(DSL_DBG_MSG,
-      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_AutobootHandleFwRequest, retCode=%d"
+      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_AutobootHandleL3, retCode=%d"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
 
    return(nErrCode);

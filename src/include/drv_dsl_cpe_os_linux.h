@@ -47,7 +47,9 @@
 #include <linux/poll.h>
 #include <asm/uaccess.h>
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(3,8,0))
+#ifndef DSL_VRX_DEVICE_VR10_320
    #include <linux/smp_lock.h>
+#endif
 #else
 #include <linux/smp.h>
 #endif

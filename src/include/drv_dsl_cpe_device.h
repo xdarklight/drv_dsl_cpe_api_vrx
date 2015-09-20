@@ -305,6 +305,56 @@ DSL_Error_t DSL_DRV_DEV_AuxLineInventoryGet(
    DSL_Context_t *pContext,
    DSL_AuxLineInventory_t *pData);
 #endif /* INCLUDE_DSL_G997_LINE_INVENTORY*/
+
+/**
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_UTOPIA_ADDRESS_CONFIG_SET
+*/
+#ifndef SWIG
+DSL_Error_t DSL_DRV_DEV_UtopiaAddressConfigSet(
+   DSL_Context_t *pContext,
+   DSL_uint8_t nChannel,
+   DSL_PhyAddressConfigData_t *pData);
+#endif
+
+/**
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_UTOPIA_ADDRESS_CONFIG_GET
+*/
+#ifdef INCLUDE_DSL_CONFIG_GET
+#ifndef SWIG
+DSL_Error_t DSL_DRV_DEV_UtopiaAddressConfigGet(
+   DSL_Context_t *pContext,
+   DSL_uint8_t nChannel,
+   DSL_PhyAddressConfigData_t *pData);
+#endif
+#endif /* INCLUDE_DSL_CONFIG_GET*/
+#endif /* #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)*/
+
+#if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
+/**
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_UTOPIA_BUS_WIDTH_CONFIG_SET
+*/
+#ifndef SWIG
+DSL_Error_t DSL_DRV_DEV_UtopiaBusWidthConfigSet(
+   DSL_Context_t *pContext,
+   DSL_UtopiaBusWidthConfigData_t *pData
+);
+#endif
+
+/**
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_UTOPIA_BUS_WIDTH_CONFIG_GET
+*/
+#ifdef INCLUDE_DSL_CONFIG_GET
+#ifndef SWIG
+DSL_Error_t DSL_DRV_DEV_UtopiaBusWidthConfigGet(
+   DSL_Context_t *pContext,
+   DSL_UtopiaBusWidthConfigData_t *pData
+);
+#endif
+#endif /* INCLUDE_DSL_CONFIG_GET*/
 #endif /* #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)*/
 
 /**

@@ -559,6 +559,11 @@ DSL_Error_t DSL_DRV_G997_RateAdaptationConfigSet(
          return DSL_ERR_NOT_SUPPORTED_BY_FIRMWARE;
       }
 #endif /* INCLUDE_DSL_CPE_API_DANUBE*/
+      /* Used for special handling of default SRA value for DSLCPE_SW-768
+         Take care that user defined configuration values have the higher
+         priority here. */
+      DSL_CTX_WRITE_SCALAR(pContext, nErrCode, bDefaultRaModeSet, DSL_TRUE);
+
       /* Update internal Rate Adaptation Mode Settings for the selected
          xDSL mode and direction */
       DSL_CTX_WRITE(pContext, nErrCode,

@@ -408,6 +408,12 @@ typedef enum
    DSL_DBG_LOW_LEVEL_DRIVER = 13,
    /** Multimode debug messages */
    DSL_DBG_MULTIMODE = 14,
+   /** Debug output for notification related information's.
+       The related output can be used to checked that DSL Subsystem behaves
+       as expected according to the preparation/generation of inter-module
+       related information. For example the PP subsystem needs to be informed
+       about showtime entry and showtime exit. */
+   DSL_DBG_NOTIFICATIONS = 15,
    /** Last entry for debug blocks - only used as delimiter! */
    DSL_DBG_LAST_BLOCK
 } DSL_debugModules_t;
@@ -538,9 +544,9 @@ typedef enum
        This line state indicates that the line has been deactivated for one of
        the following reasons
        - line "tear down" has been performed within context of activated on-chip
-         bonding handling (currently only valid for VRX200 or VRX300).
-         DSL firmware was started in dual-port mode but the CO indicated that
-         bonding is not used (remote PAF_Enable status is false).
+         bonding handling (currently only valid for XWAY(TM) VRX200 or XWAY(TM)
+         VRX300). DSL firmware was started in dual-port mode but the CO
+         indicated that bonding is not used (remote PAF_Enable status is false).
        - line was manually disabled by the user via following command
          \ref DSL_FIO_AUTOBOOT_CONTROL_SET with nCommand equals
          \ref DSL_AUTOBOOT_CTRL_DISABLE. */
@@ -574,7 +580,7 @@ typedef enum
        dsl_cpe_control.
        Corresponds to the following device specific state
        - ADSL only patforms: Not supported
-       - VRX200 and VRX300: Modem status:
+       - XWAY(TM) VRX200 and XWAY(TM) VRX300: Modem status:
          GHS_BONDING_CLR_STATE */
    DSL_LINESTATE_BONDING_CLR       = 0x00000310,
    /** Line State: T1413.
@@ -629,7 +635,7 @@ typedef enum
       DSL_LINESTATE_EXCEPTION).
       Corresponds to the following device specific state
        - ADSL only platforms: Currently not supported
-       - VRX200 and VRX300: Modem status: PRE_FAIL_STATE */
+       - XWAY(TM) VRX200 and XWAY(TM) VRX300: Modem status: PRE_FAIL_STATE */
    DSL_LINESTATE_ORDERLY_SHUTDOWN = 0x00000860,
    /** Line State: FASTRETRAIN.
        Currently not supported. */
@@ -701,7 +707,7 @@ typedef struct
          API. This handling requires that the hardware related functionality is
          foreseen in every hybrid design!
          - This functionality is only available on VDSL capable platforms
-           (VRX200 and VRX300)
+           (XWAY(TM) VRX200 and XWAY(TM) VRX300)
          - For ADSL only platforms please refer to the low level configuration
            instead (drv_dsl_cpe_danube_ctx.h:DSL_DEV_Hybrid_t()).
 */
@@ -754,13 +760,13 @@ typedef struct
    hw_platform.feature_set.major_ver.minor_ver.rel_indication.application
 
    Hardware platform (hw_platform):
-   - 0x01: AMAZON Family (not covered by DSL CPE API!)
-   - 0x02: DANUBE Family (not supported anymore)
-   - 0x03: AMAZON-SE Family (not supported anymore)
-   - 0x04: ARX100 Family (not supported anymore)
-   - 0x05: VRX200 Family
-   - 0x06: ARX300 Family
-   - 0x07: VRX300 Family
+   - 0x01: XWAY(TM) AMAZON Family (not covered by DSL CPE API!)
+   - 0x02: XWAY(TM) DANUBE Family (not supported anymore)
+   - 0x03: XWAY(TM) AMAZON-SE Family (not supported anymore)
+   - 0x04: XWAY(TM) ARX100 Family
+   - 0x05: XWAY(TM) VRX200 Family
+   - 0x06: XWAY(TM) ARX300 Family
+   - 0x07: XWAY(TM) VRX300 Family
 
    Feature set (feature_set)
    - Indicates the major feature set implementation for firmware (please refer
@@ -796,7 +802,7 @@ typedef struct
    - Lantiq-Danube      (not supported anymore)
    - Lantiq-Amazon      (not supported)
    - Lantiq-Amazon_SE   (not supported anymore)
-   - Lantiq-ARX100      (not supported anymore)
+   - Lantiq-ARX100
    - Lantiq-VRX200
    - Lantiq-ARX300
    - Lantiq-VRX300 */
@@ -887,8 +893,8 @@ typedef enum
    DSL_FW_STATUS_ADSL = 1,
    /**
    Firmware status indicates VDSL successful firmware download.
-   \note This value is only available for VRX200 and VRX300 versions of
-         DSL CPE API. */
+   \note This value is only available for XWAY(TM) VRX200 and XWAY(TM) VRX300
+         versions of DSL CPE API. */
    DSL_FW_STATUS_VDSL = 2,
    /**
    Delimiter only! */
@@ -1126,7 +1132,7 @@ typedef struct
    \note The status value for virtual noise is directly derived from the
          configuration value (configuration value only) for ADSL only capable
          platforms.
-   \note Supported by VR200 and VR300 */
+   \note Supported by XWAY(TM) VR200 and XWAY(TM) VR300  */
    DSL_CFG DSL_boolean_t bVirtualNoiseSupport;
    /**
    20 bit constellation config/status value.
@@ -1446,6 +1452,88 @@ typedef struct
    Structure that contains all necessary loop length status data */
    DSL_IN_OUT DSL_LoopLengthStatusData_t data;
 } DSL_LoopLengthStatus_t;
+
+#if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
+/**
+   Structure used for configuration access of the assignment from the logical
+   DSL line to the used UTOPIA/POS PHY Address.
+ */
+typedef struct
+{
+   /**
+   UTOPIA/POS PHY Address number */
+   DSL_CFG DSL_uint8_t nPhyAdr;
+} DSL_PhyAddressConfigData_t;
+
+/**
+   Structure used for configuration access of the assignment from the logical
+   DSL line to the used UTOPIA/POS PHY Address.
+   This structure has to be used for ioctl
+   - \ref DSL_FIO_UTOPIA_ADDRESS_CONFIG_SET
+   - \ref DSL_FIO_UTOPIA_ADDRESS_CONFIG_GET
+   - \ref DSL_FIO_POSPHY_ADDRESS_CONFIG_SET
+   - \ref DSL_FIO_POSPHY_ADDRESS_CONFIG_GET
+ */
+typedef struct
+{
+   /**
+   Driver control/status structure */
+   DSL_IN_OUT DSL_AccessCtl_t accessCtl;
+   /**
+   Specifies for which (bearer) channel the function will apply */
+   DSL_IN DSL_uint8_t nChannel;
+   /**
+   Structure that contains configuration data */
+   DSL_CFG DSL_PhyAddressConfigData_t data;
+} DSL_PhyAddressConfig_t;
+
+/**
+   Definitions for possible UTOPIA bus width.
+*/
+typedef enum
+{
+   /**
+   select the UTOPIA default bus width (16bit)*/
+   DSL_BUS_WIDTH_NA = -1,
+   /**
+   select the UTOPIA 8bit bus width */
+   DSL_BUS_WIDTH_8B = 1,
+   /**
+   select the UTOPIA 16bit bus width */
+   DSL_BUS_WIDTH_16B = 2,
+   /*
+   Delimiter */
+   DSL_BUS_WIDTH_LAST
+} DSL_UtopiaBusWidth_t;
+
+/**
+   Structure used for configuration access of the assignment from the logical
+   DSL line to the used UTOPIA bus width.
+ */
+typedef struct
+{
+   /**
+   UTOPIA bus width*/
+   DSL_CFG DSL_UtopiaBusWidth_t nDataWidth;
+} DSL_UtopiaBusWidthConfigData_t;
+
+/**
+   Structure used for configuration access of the assignment from the logical
+   DSL line to the used UTOPIA data bus width.
+   This structure has to be used for ioctl
+   - \ref DSL_FIO_UTOPIA_BUS_WIDTH_CONFIG_SET
+   - \ref DSL_FIO_UTOPIA_BUS_WIDTH_CONFIG_GET
+ */
+typedef struct
+{
+   /**
+   Driver control/status structure */
+   DSL_IN_OUT DSL_AccessCtl_t accessCtl;
+   /**
+   Structure that contains configuration data */
+   DSL_CFG DSL_UtopiaBusWidthConfigData_t data;
+} DSL_UtopiaBusWidthConfig_t;
+#endif /* #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)*/
 
 /**
    Definitions for possible Customer Interfaces.
@@ -1948,6 +2036,141 @@ typedef struct
    Structure that contains all necessary version information data */
    DSL_OUT DSL_BandPlanSupportData_t data;
 } DSL_BandPlanSupport_t;
+
+/**
+   EFM Speed */
+typedef enum
+{
+   /**
+      Speed is 100 Mbps */
+   DSL_EFM_SPEED_100 = 0,
+   /**
+      Speed is 10 Mbps */
+   DSL_EFM_SPEED_10 = 1,
+   /**
+      Delimiter only! */
+   DSL_EFM_SPEED_LAST = 2
+} DSL_EFM_Speed_t;
+
+/**
+   EFM Duplex Mode */
+typedef enum
+{
+   /**
+      EFM Duplex mode is: Full Duplex */
+   DSL_EFM_DUPLEX_FULL = 0,
+   /**
+      EFM Duplex mode is: Half Duplex */
+   DSL_EFM_DUPLEX_HALF = 1,
+   /**
+      Delimiter only! */
+   DSL_EFM_DUPLEX_LAST = 2
+} DSL_EFM_Duplex_t;
+
+/**
+   Flow Control by pause frames on the MII.
+*/
+typedef enum
+{
+   /**
+      Flow Control is off */
+   DSL_EFM_FLOWCTRL_OFF    = 0,
+   /**
+      Flow Control is on */
+   DSL_EFM_FLOWCTRL_ON   = 1,
+   /**
+      Delimiter only! */
+   DSL_EFM_FLOWCTRL_LAST
+} DSL_EFM_FlowCtrl_t;
+
+/**
+   This type defines the autonegotiation mode for the MAC in the device.
+   If the autonegotiation is enabled, then the device will poll via MDIO
+   register access the status of an attached ethernet phy and configure
+   the speed and the duplex mode of the MAC accordingly.
+   This only represents the status of the MAC and not of an attached
+   ethernet phy. The autonegotiation function in the ethernet phy has
+   to be enabled with a separate MDIO access.
+*/
+typedef enum
+{
+  /**
+     Autonegotiation is disabled.
+  */
+  DSL_EFM_AUTONEG_OFF = 0,
+  /**
+     Autonegotiation is enabled
+  */
+  DSL_EFM_AUTONEG_ON = 1,
+   /**
+      Delimiter only! */
+  DSL_EFM_AUTONEG_LAST
+} DSL_EFM_AutoNegotiation_t;
+
+/**
+   This struct represents the MAC configuration settings. This only represents
+   the settings of the MAC in the device and not of a possibly attached
+   ethernet phy.
+*/
+typedef struct{
+   /**
+      Speed setting of the MAC interface. This can be 10MBit/s or 100MBit/s
+   */
+   DSL_CFG DSL_EFM_Speed_t nEfmSpeed;
+   /**
+      Duplex mode of the MAC interface. This can be Full Duplex or Half Duplex.
+   */
+   DSL_CFG DSL_EFM_Duplex_t nEfmDuplex;
+   /**
+      Flow Control mode of the MAC interface. This can be on or off. When flow
+      control is activated in full duplex mode, then PAUSE frame according to
+      IEEE 802.3 Annex 31B are used for flow control. In half-duplex mode a
+      jam pattern is generated.
+   */
+   DSL_CFG DSL_EFM_FlowCtrl_t nFlowControl;
+   /**
+      Autonegotiation mode of the MAC interface. This can be enabled or disabled.
+      When enabled, the device will poll via MDIO register access the speed and
+      duplex state of an attached ethernet phy. Note that the ethernet
+      autonegotiation in the ethernet phy has to be activated separately via a
+      MDIO access.
+   */
+   DSL_CFG DSL_EFM_AutoNegotiation_t nAutoNegotiation;
+   /**
+      MAC Address
+   */
+   DSL_CFG DSL_uint8_t nMacAddress[DSL_MAC_ADDRESS_OCTETS];
+
+   /**
+      Maximum Frame Size for Link 0
+   */
+   DSL_CFG DSL_uint16_t nMaxFrameSize;
+   /**
+      Enable Support of external Slow Protocol Handling
+   */
+   DSL_CFG DSL_boolean_t bExtEthernetOam;
+} DSL_EFM_MacConfigData_t;
+
+/**
+   Structure used for configuration of MAC related network parameters.
+   This structure has to be used for ioctl
+   - \ref DSL_FIO_EFM_MAC_CONFIG_SET
+   - \ref DSL_FIO_EFM_MAC_CONFIG_GET
+*/
+typedef struct
+{
+   /**
+   Driver control/status structure */
+   DSL_IN_OUT DSL_AccessCtl_t accessCtl;
+   /**
+   Specifies the direction (DSL_NEAR_END / DSL_FAR_END) to which the function
+   will apply */
+   DSL_IN DSL_XTUDir_t nDirection;
+   /**
+   Structure that contains configuration data */
+   DSL_CFG DSL_EFM_MacConfigData_t data;
+} DSL_EFM_MacConfig_t;
+
 
 /**
    This structure is used to get total data path counters of the
@@ -2951,8 +3174,8 @@ typedef struct
    the Firmware.
    Device specific mapping as follows
    - ADSL only platforms: Not used (always 0)
-   - VRX200 and VRX300: ACK_ModemFSM_FailReasonGet::ErrorCode (System Error
-     Code)
+   - XWAY(TM) VRX200 and XWAY(TM) VRX300: ACK_ModemFSM_FailReasonGet::ErrorCode
+     (System Error Code)
    \note This value references to the reason for the last fail state
          transition */
    DSL_uint8_t nErrorCode1;
@@ -2960,7 +3183,7 @@ typedef struct
    This value returns the sub error code as it is given by the Firmware.
    Device specific mapping as follows
    - ADSL only platforms: Not used (always 0)
-   - VRX200 and VRX300:
+   - XWAY(TM) VRX200 and XWAY(TM) VRX300:
      ACK_ModemFSM_FailReasonGet::SubErrorCode (System Sub Error Code)
    \note This value references to the reason for the last fail state
          transition */
@@ -2970,7 +3193,7 @@ typedef struct
    A value of 0 means that there is no error or the value is not used.
    Device specific mapping as follows
    - ADSL only platforms: STAT 5 0  (Current link exception code)
-   - VRX200 and VRX300:
+   - XWAY(TM) VRX200 and XWAY(TM) VRX300:
      ACK_ModemFSM_FailReasonGet::FW_FailCode (Firmware Failure Code)
    \note This value references to the reason for the last fail state
          transition */
@@ -3233,14 +3456,17 @@ typedef enum
 typedef enum
 {
    /**
+   Automatic detection activation sequence */
+   DSL_ACT_SEQ_AUTO = 0,
+   /**
    Standard G.HS activation sequence (using G.994.1 AnnexA) */
-   DSL_ACT_SEQ_STD = 0,
+   DSL_ACT_SEQ_STD = 1,
    /**
    Non-standard ANSI-T1.413 activation sequence ("Telefonica switching mode") */
-   DSL_ACT_SEQ_NON_STD = 1,
+   DSL_ACT_SEQ_NON_STD = 2,
    /**
    Delimiter only! */
-   DSL_ACT_SEQ_LAST = 2
+   DSL_ACT_SEQ_LAST = 3
 } DSL_ActivationSequence_t;
 
 /**
@@ -3340,7 +3566,7 @@ typedef struct
    This anomaly occurs when a received DTU (Data Transfer Unit) is detected to
    be a retransmission of a previous sent DTU.
    \note This parameter is only valid for NEAR-END direction and in case of
-         NOT using VRX200 or VRX300. */
+         NOT using XWAY(TM) VRX200 or XWAY(TM) VRX300. */
    DSL_OUT DSL_uint32_t nRxRetransmitted;
    /**
    This anomaly occurs when a received DTU with detected errors is corrected by
@@ -4104,9 +4330,9 @@ typedef enum
    Restarts the firmware and the DSL CPE API for usage of updated configurations.
    \note The standard handling for this command is to perform a hard reset (full
          firmware download, including a reset and writing the firmware)
-   \note In case of using VRX200 and activated bonded (dual-port mode, on-chip
-         bonding) operation this command performs a soft reset instead (using
-         firmware message CMD_ModemFSM_StateSet:LinkControl=0) */
+   \note In case of using XWAY(TM) VRX200 and activated bonded (dual-port mode,
+         on-chip bonding) operation this command performs a soft reset instead
+         (using firmware message CMD_ModemFSM_StateSet:LinkControl=0) */
    DSL_AUTOBOOT_CTRL_RESTART = 2,
    /**
    Continues at any wait state of the autoboot handling.
@@ -4135,10 +4361,10 @@ typedef enum
    and writing the firmware).
    \attention In non-bonded operation this command is equivalent to the standard
               autoboot restart command \ref DSL_AUTOBOOT_CTRL_RESTART. In case
-              of using VRX200 and activated bonded (dual-port mode, on-chip
-              bonding) operation this command forces a hard reset whereas the
-              standard command does a soft reset only to avoid tearing down
-              both lines. */
+              of using XWAY(TM) VRX200 and activated bonded (dual-port mode,
+              on-chip bonding) operation this command forces a hard reset
+              whereas the standard command does a soft reset only to avoid
+              tearing down both lines. */
    DSL_AUTOBOOT_CTRL_RESTART_FULL = 6
 } DSL_AutobootCtrlSet_t;
 
@@ -4368,7 +4594,7 @@ typedef struct
 /**
    Defines the control functionalities of the autoboot handling
    \note Please note that this configurations are only used for ADSL only
-         platforms such like ARX100 and ARX300
+         platforms such like XWAY(TM) ARX100 and XWAY(TM) ARX300
 */
 typedef enum
 {
@@ -4423,7 +4649,7 @@ typedef enum
 /**
    Structure used for configuration of MinSnrMarging reboot criteria.
    \note Please note that this configurations are only used for ADSL only
-         platforms such like ARX100 and ARX300
+         platforms such like XWAY(TM) ARX100 and XWAY(TM) ARX300
 */
 typedef struct
 {
@@ -4949,7 +5175,7 @@ typedef enum
    Loss-of-Frame.
 
    \note This criteria is used for ADSL and VDSL modes of VDSL capable
-         platforms (VRX200 and VRX300).
+         platforms (XWAY(TM) VRX200 and XWAY(TM) VRX300).
    \note Default is DSL_TRUE */
    DSL_REBOOT_CRITERIA_LOF = 0x00000002,
    /**
@@ -4961,25 +5187,25 @@ typedef enum
    Excessive Severe Errors (ESE) Failure, (10 seconds SES).
 
    \note This criteria is used for VDSL mode of VDSL capable plaforms
-         (VRX200 and VRX300).
+         (XWAY(TM) VRX200 and XWAY(TM) VRX300).
    \note Default is DSL_TRUE */
    DSL_REBOOT_CRITERIA_ESE = 0x00000008,
    /**
    90 consecutive errored seconds (ES).
 
    \note This criteria is used for ADSL only platforms
-         - ARX100
-         - ARX300
+         - XWAY(TM) ARX100
+         - XWAY(TM) ARX300)
          and ADSL mode of VDSL capable plaforms
-         - VRX200
-         - VRX300
+         - XWAY(TM) VRX200
+         - XWAY(TM) VRX300).
    \note Default is DSL_FALSE */
    DSL_REBOOT_CRITERIA_ES90 = 0x00000010,
    /**
    30 consecutive severely errored seconds (SES).
 
    \note This criteria is used for ADSL mode of ADSL only platforms and ADSL
-         mode of VDSL capable platforms (VRX200 and VRX300).
+         mode of VDSL capable platforms (XWAY(TM) VRX200 and XWAY(TM) VRX300).
    \note Default is DSL_FALSE */
    DSL_REBOOT_CRITERIA_SES30 = 0x00000020,
    /**

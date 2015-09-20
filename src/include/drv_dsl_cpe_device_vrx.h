@@ -70,7 +70,7 @@
 #define DSL_MIN_FW_VERSION_SRA_VDSL         5,   0,   4,  -1,  -1
 #define DSL_MIN_FW_VERSION_R6_RELEASE       6,  -1,  -1,  -1,  -1
 #define DSL_MIN_FW_VERSION_TC_STAT_ADSL     4,   0,   8,  -1,  -1
-#define DSL_MIN_FW_VERSION_RTXAMD2          7,   1,   1,   1,   1
+#define DSL_MIN_FW_VERSION_RTXAMD2          7,   1,   1,   1,  -1
 
 /*
    Internal device dependent configuration options
@@ -87,9 +87,11 @@
 #if defined (DSL_VRX_DEVICE_VR9)
    #define DSL_CHIPSET_TYPE_STRING "Lantiq-VRX200"
 #elif defined (DSL_VRX_DEVICE_VR10)
-   #define DSL_CHIPSET_TYPE_STRING "Lantiq-VRX300"
+   #define DSL_CHIPSET_TYPE_STRING "Lantiq-VRX318"
+#elif defined (DSL_VRX_DEVICE_VR10_320)
+   #define DSL_CHIPSET_TYPE_STRING "Lantiq-VRX320"
 #else
-   #error Please defined a valid VRX device (VR9|VR10)!!!
+   #error Please defined a valid VRX device (VR9|VR10|VR10_320)!!!
 #endif
 
 /** Timeout setting for far end status in mili seconds */
@@ -299,8 +301,6 @@ typedef struct
    DSL_uint16_t nLen;
 } DSL_FctWaiting_t;
 
-#define DSL_CAM_MAX_FW_REINITS   10
-
 /**
    VRX specific device data*/
 typedef struct
@@ -317,6 +317,9 @@ typedef struct
    DSL_DEV_CamStates_t nCamState;
    DSL_uint8_t nCamReinits;
    DSL_uint8_t nCamFwReinits;
+#ifdef INCLUDE_DEVICE_EXCEPTION_CODES
+   DSL_uint8_t nCamGhsReinits;
+#endif /* INCLUDE_DEVICE_EXCEPTION_CODES*/
    DSL_boolean_t bCamDualPortModeSteady;
    DSL_boolean_t bCamSinglePortModeSteady;
 
@@ -654,6 +657,8 @@ DSL_Error_t DSL_DRV_VRX_ShowtimeMeasurementCompleted(
    Number activation retries for the
    CPE Auto Mode (CAM) state machine. */
 #define DSL_CAM_MAX_REINITS      3
+#define DSL_CAM_MAX_GHS_REINITS  3
+#define DSL_CAM_MAX_FW_REINITS   10
 
 /**
    FW Features for use inside the DSL CPE API
