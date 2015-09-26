@@ -116,6 +116,8 @@ typedef enum
    /* *********************************************************************** */
    /* *** Common Error Codes                                              *** */
    /* *********************************************************************** */
+   /** invalid DSL mode */
+   DSL_ERR_NO_FIRMWARE_LOADED = -43,
    /** Data is currently not available.
        Update handling for the relevant interval was not completed before and
        is just in progress. Please request the data at a later point in time
@@ -141,6 +143,9 @@ typedef enum
          \ref DSL_FIO_LINE_FEATURE_STATUS_GET that needs to be called in
          showtime. */
    DSL_ERR_RETRANSMISSION_DISABLED = -38,
+   /** CPE triggered L3 request has been rejected by the CO side,
+       reason - not desired*/
+   DSL_ERR_L3_REJECTED_NOT_DESIRED = -37,
    /** ioctl not supported by DSL CPE API.
        The reason might be because of current configure options. */
    DSL_ERR_IOCTL_NOT_SUPPORTED = -36,
@@ -159,9 +164,6 @@ typedef enum
    /** The event that should be processed are not active for the current
        instance */
    DSL_ERR_EVENTS_NOT_ACTIVE = -29,
-   /** CPE triggered L3 request has been rejected by the CO side,
-       reason - not desired*/
-   DSL_ERR_L3_REJECTED_NOT_DESIRED = -37,
    /** During CPE triggered L3 request an error occurred that could not be
        classified more in detail. Please check if the L3 entry is allowed on
        the CO side.*/

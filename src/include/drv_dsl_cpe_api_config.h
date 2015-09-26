@@ -1,187 +1,188 @@
+/* src/include/drv_dsl_cpe_api_config.h.  Generated from drv_dsl_cpe_api_config.h.in by configure.  */
 /* src/include/drv_dsl_cpe_api_config.h.in.  Generated from configure.in by autoheader.  */
 
 /* Channels per line to support */
-#undef DSL_CHANNELS_PER_LINE
+#define DSL_CHANNELS_PER_LINE 1
 
 /* Enable building only library file */
-#undef DSL_CPE_API_LIBRARY_BUILD_2_6
+/* #undef DSL_CPE_API_LIBRARY_BUILD_2_6 */
 
 /* Include DSL DELT static data support */
-#undef DSL_CPE_STATIC_DELT_DATA
+/* #undef DSL_CPE_STATIC_DELT_DATA */
 
 /* Debug level = local */
-#undef DSL_DBG_MAX_LEVEL_PRE
+#define DSL_DBG_MAX_LEVEL_PRE 0x80
 
 /* Preselection of max. debug level = no (using default) */
-#undef DSL_DBG_MAX_LEVEL_SET
+#define DSL_DBG_MAX_LEVEL_SET /**/
 
 /* Disabled debug prints */
-#undef DSL_DEBUG_DISABLE
+/* #undef DSL_DEBUG_DISABLE */
 
 /* Maximum lines per DSL device to support */
-#undef DSL_DRV_LINES_PER_DEVICE
+#define DSL_DRV_LINES_PER_DEVICE 1
 
 /* Maximum DSL devices to support */
-#undef DSL_DRV_MAX_DEVICE_NUMBER
+#define DSL_DRV_MAX_DEVICE_NUMBER 2
 
 /* Add VR10 support */
-#undef DSL_VRX_DEVICE_VR10
+#define DSL_VRX_DEVICE_VR10 /**/
 
 /* Add VR10_320 support */
-#undef DSL_VRX_DEVICE_VR10_320
+/* #undef DSL_VRX_DEVICE_VR10_320 */
 
 /* Add VR9 support */
-#undef DSL_VRX_DEVICE_VR9
+/* #undef DSL_VRX_DEVICE_VR9 */
 
 /* Include deprecated functions */
-#undef INCLUDE_DEPRECATED
+#define INCLUDE_DEPRECATED /**/
 
 /* Include Device Exception Codes */
-#undef INCLUDE_DEVICE_EXCEPTION_CODES
+#define INCLUDE_DEVICE_EXCEPTION_CODES /**/
 
 /* Include ADSL MIB support */
-#undef INCLUDE_DSL_ADSL_MIB
+/* #undef INCLUDE_DSL_ADSL_MIB */
 
 /* Include DSL BONDING support */
-#undef INCLUDE_DSL_BONDING
+#define INCLUDE_DSL_BONDING /**/
 
 /* Include DSL CEOC support */
-#undef INCLUDE_DSL_CEOC
+/* #undef INCLUDE_DSL_CEOC */
 
 /* Include configuration get support */
-#undef INCLUDE_DSL_CONFIG_GET
+#define INCLUDE_DSL_CONFIG_GET /**/
 
 /* Add DANUBE support */
-#undef INCLUDE_DSL_CPE_API_DANUBE
+/* #undef INCLUDE_DSL_CPE_API_DANUBE */
 
 /* Include IFXOS support */
-#undef INCLUDE_DSL_CPE_API_IFXOS_SUPPORT
+#define INCLUDE_DSL_CPE_API_IFXOS_SUPPORT /**/
 
 /* Add VRX support */
-#undef INCLUDE_DSL_CPE_API_VRX
+#define INCLUDE_DSL_CPE_API_VRX /**/
 
 /* Include Misc Line Status support */
-#undef INCLUDE_DSL_CPE_MISC_LINE_STATUS
+#define INCLUDE_DSL_CPE_MISC_LINE_STATUS /**/
 
 /* Include DSL PM channel counters support */
-#undef INCLUDE_DSL_CPE_PM_CHANNEL_COUNTERS
+#define INCLUDE_DSL_CPE_PM_CHANNEL_COUNTERS /**/
 
 /* Include DSL PM channel extended counters support */
-#undef INCLUDE_DSL_CPE_PM_CHANNEL_EXT_COUNTERS
+/* #undef INCLUDE_DSL_CPE_PM_CHANNEL_EXT_COUNTERS */
 
 /* Include DSL PM channel thresholds support */
-#undef INCLUDE_DSL_CPE_PM_CHANNEL_THRESHOLDS
+#define INCLUDE_DSL_CPE_PM_CHANNEL_THRESHOLDS /**/
 
 /* Include PM config support */
-#undef INCLUDE_DSL_CPE_PM_CONFIG
+#define INCLUDE_DSL_CPE_PM_CONFIG /**/
 
 /* Include DSL PM datapath counters support */
-#undef INCLUDE_DSL_CPE_PM_DATA_PATH_COUNTERS
+#define INCLUDE_DSL_CPE_PM_DATA_PATH_COUNTERS /**/
 
 /* Include DSL PM datapath failure counters support */
-#undef INCLUDE_DSL_CPE_PM_DATA_PATH_FAILURE_COUNTERS
+#define INCLUDE_DSL_CPE_PM_DATA_PATH_FAILURE_COUNTERS /**/
 
 /* Include DSL PM datapath thresholds support */
-#undef INCLUDE_DSL_CPE_PM_DATA_PATH_THRESHOLDS
+#define INCLUDE_DSL_CPE_PM_DATA_PATH_THRESHOLDS /**/
 
 /* Include DSL PM history support */
-#undef INCLUDE_DSL_CPE_PM_HISTORY
+#define INCLUDE_DSL_CPE_PM_HISTORY /**/
 
 /* Include DSL PM line counters support */
-#undef INCLUDE_DSL_CPE_PM_LINE_COUNTERS
+#define INCLUDE_DSL_CPE_PM_LINE_COUNTERS /**/
 
 /* Include DSL PM line event showtime counters support */
-#undef INCLUDE_DSL_CPE_PM_LINE_EVENT_SHOWTIME_COUNTERS
+#define INCLUDE_DSL_CPE_PM_LINE_EVENT_SHOWTIME_COUNTERS /**/
 
 /* Include DSL PM line thresholds support */
-#undef INCLUDE_DSL_CPE_PM_LINE_THRESHOLDS
+#define INCLUDE_DSL_CPE_PM_LINE_THRESHOLDS /**/
 
 /* Include DSL PM optional parameters support */
-#undef INCLUDE_DSL_CPE_PM_OPTIONAL_PARAMETERS
+#define INCLUDE_DSL_CPE_PM_OPTIONAL_PARAMETERS /**/
 
 /* Include DSL PM retransmission counters support */
-#undef INCLUDE_DSL_CPE_PM_RETX_COUNTERS
+#define INCLUDE_DSL_CPE_PM_RETX_COUNTERS /**/
 
 /* Include DSL PM retransmission thresholds support */
-#undef INCLUDE_DSL_CPE_PM_RETX_THRESHOLDS
+#define INCLUDE_DSL_CPE_PM_RETX_THRESHOLDS /**/
 
 /* Include DSL PM showtime counters support */
-#undef INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS
+#define INCLUDE_DSL_CPE_PM_SHOWTIME_COUNTERS /**/
 
 /* Include DSL PM total counters support */
-#undef INCLUDE_DSL_CPE_PM_TOTAL_COUNTERS
+#define INCLUDE_DSL_CPE_PM_TOTAL_COUNTERS /**/
 
 /* Include ADSL showtime event logging support */
-#undef INCLUDE_DSL_CPE_TRACE_BUFFER
+/* #undef INCLUDE_DSL_CPE_TRACE_BUFFER */
 
 /* Include DELT support */
-#undef INCLUDE_DSL_DELT
+#define INCLUDE_DSL_DELT /**/
 
 /* Include Filter Detection support */
-#undef INCLUDE_DSL_FILTER_DETECTION
+#define INCLUDE_DSL_FILTER_DETECTION /**/
 
 /* Include FW memory free support */
-#undef INCLUDE_DSL_FIRMWARE_MEMORY_FREE
+#define INCLUDE_DSL_FIRMWARE_MEMORY_FREE /**/
 
 /* Include Framing Parameters support */
-#undef INCLUDE_DSL_FRAMING_PARAMETERS
+#define INCLUDE_DSL_FRAMING_PARAMETERS /**/
 
 /* Include G997 alarm support */
-#undef INCLUDE_DSL_G997_ALARM
+#define INCLUDE_DSL_G997_ALARM /**/
 
 /* Include G997 Framing Parameters support */
-#undef INCLUDE_DSL_G997_FRAMING_PARAMETERS
+#define INCLUDE_DSL_G997_FRAMING_PARAMETERS /**/
 
 /* Include G997 Line Inventory support */
-#undef INCLUDE_DSL_G997_LINE_INVENTORY
+#define INCLUDE_DSL_G997_LINE_INVENTORY /**/
 
 /* Include G997 per tone values support */
-#undef INCLUDE_DSL_G997_PER_TONE
+#define INCLUDE_DSL_G997_PER_TONE /**/
 
 /* Include G997 status support */
-#undef INCLUDE_DSL_G997_STATUS
+#define INCLUDE_DSL_G997_STATUS /**/
 
 /* Include DSL PM support */
-#undef INCLUDE_DSL_PM
+#define INCLUDE_DSL_PM /**/
 
 /* Include Resource Statistics support */
-#undef INCLUDE_DSL_RESOURCE_STATISTICS
+#define INCLUDE_DSL_RESOURCE_STATISTICS /**/
 
 /* Include System Interface configuration support */
-#undef INCLUDE_DSL_SYSTEM_INTERFACE
+#define INCLUDE_DSL_SYSTEM_INTERFACE /**/
 
 /* Include FW request support */
-#undef INCLUDE_FW_REQUEST_SUPPORT
+#define INCLUDE_FW_REQUEST_SUPPORT /**/
 
 /* Pilot Tones Status support */
-#undef INCLUDE_PILOT_TONES_STATUS
+#define INCLUDE_PILOT_TONES_STATUS /**/
 
 /* Include real time trace support */
-#undef INCLUDE_REAL_TIME_TRACE
+/* #undef INCLUDE_REAL_TIME_TRACE */
 
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
-#undef NO_MINUS_C_MINUS_O
+/* #undef NO_MINUS_C_MINUS_O */
 
 /* Name of package */
-#undef PACKAGE
+#define PACKAGE "drv_dsl_cpe_api"
 
 /* Define to the address where bug reports for this package should be sent. */
-#undef PACKAGE_BUGREPORT
+#define PACKAGE_BUGREPORT ""
 
 /* Define to the full name of this package. */
-#undef PACKAGE_NAME
+#define PACKAGE_NAME "DSL CPE API driver"
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING
+#define PACKAGE_STRING "DSL CPE API driver 4.16.5.4"
 
 /* Define to the one symbol short name of this package. */
-#undef PACKAGE_TARNAME
+#define PACKAGE_TARNAME "drv_dsl_cpe_api"
 
 /* Define to the home page for this package. */
-#undef PACKAGE_URL
+#define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION
+#define PACKAGE_VERSION "4.16.5.4"
 
 /* Version number of package */
-#undef VERSION
+#define VERSION "4.16.5.4"

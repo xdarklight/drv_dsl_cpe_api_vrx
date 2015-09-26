@@ -313,12 +313,16 @@ DSL_Error_t DSL_DRV_PM_DEV_ChannelCountersGet(
    sCmd.CrcStatsFE.Index  = sCmd.CrcStatsNE.Index  = 0x0;
    sCmd.CrcStatsFE.Length = sCmd.CrcStatsNE.Length = 4;
 
-   /* Get Code Violations*/
-   nErrCode = DSL_DRV_VRX_SendMessage(
-      pContext,
-      nDirection == DSL_NEAR_END ? CMD_CRC_STATSNE_GET : CMD_CRC_STATSFE_GET,
-      sizeof(sCmd.CrcStatsNE), (DSL_uint8_t*)&(sCmd.CrcStatsNE),
-      sizeof(sAck.CrcStatsNE), (DSL_uint8_t*)&(sAck.CrcStatsNE));
+   /* skip fw exchange during training */
+   if (pContext->bGotShowtime)
+   {
+      /* Get Code Violations*/
+      nErrCode = DSL_DRV_VRX_SendMessage(
+         pContext,
+         nDirection == DSL_NEAR_END ? CMD_CRC_STATSNE_GET : CMD_CRC_STATSFE_GET,
+         sizeof(sCmd.CrcStatsNE), (DSL_uint8_t*)&(sCmd.CrcStatsNE),
+         sizeof(sAck.CrcStatsNE), (DSL_uint8_t*)&(sAck.CrcStatsNE));
+   }
 
    /* Check nErrCode and return on error*/
    if( nErrCode < 0 )
@@ -343,12 +347,16 @@ DSL_Error_t DSL_DRV_PM_DEV_ChannelCountersGet(
    sCmd.FecStatsFE.Index  = sCmd.FecStatsNE.Index  = 0x0;
    sCmd.FecStatsFE.Length = sCmd.FecStatsNE.Length = 12;
 
-   /* Get Forward Error Corrections*/
-   nErrCode = DSL_DRV_VRX_SendMessage(
-      pContext,
-      nDirection == DSL_NEAR_END ? CMD_FEC_STATSNE_GET : CMD_FEC_STATSFE_GET,
-      sizeof(sCmd.FecStatsNE), (DSL_uint8_t*)&(sCmd.FecStatsNE),
-      sizeof(sAck.FecStatsNE), (DSL_uint8_t*)&(sAck.FecStatsNE));
+   /* skip fw exchange during training */
+   if (pContext->bGotShowtime)
+   {
+      /* Get Forward Error Corrections*/
+      nErrCode = DSL_DRV_VRX_SendMessage(
+         pContext,
+         nDirection == DSL_NEAR_END ? CMD_FEC_STATSNE_GET : CMD_FEC_STATSFE_GET,
+         sizeof(sCmd.FecStatsNE), (DSL_uint8_t*)&(sCmd.FecStatsNE),
+         sizeof(sAck.FecStatsNE), (DSL_uint8_t*)&(sAck.FecStatsNE));
+   }
 
    /* Check nErrCode and return on error*/
    if( nErrCode < 0 )
@@ -605,11 +613,15 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersGet(
          sCmd.cmdPtmStatsGet.Index  = 0x0;
          sCmd.cmdPtmStatsGet.Length = 8;
 
-         /* Get PTM statistics*/
-         nErrCode = DSL_DRV_VRX_SendMessage(
-            pContext, CMD_PTM_BC0_STATSNE_GET,
-            sizeof(sCmd.cmdPtmStatsGet), (DSL_uint8_t*)&(sCmd.cmdPtmStatsGet),
-            sizeof(sAck.ackPtmStatsGet), (DSL_uint8_t*)&(sAck.ackPtmStatsGet));
+         /* skip fw exchange during training */
+         if (pContext->bGotShowtime)
+         {
+            /* Get PTM statistics*/
+            nErrCode = DSL_DRV_VRX_SendMessage(
+               pContext, CMD_PTM_BC0_STATSNE_GET,
+               sizeof(sCmd.cmdPtmStatsGet), (DSL_uint8_t*)&(sCmd.cmdPtmStatsGet),
+               sizeof(sAck.ackPtmStatsGet), (DSL_uint8_t*)&(sAck.ackPtmStatsGet));
+         }
 
          /* Check nErrCode and return on error*/
          if( nErrCode < 0 )
@@ -634,11 +646,15 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersGet(
          sCmd.cmdAtmStatsNE_Get.Index  = 0x0;
          sCmd.cmdAtmStatsNE_Get.Length = 8;
 
-         /* Get ATM statistics*/
-         nErrCode = DSL_DRV_VRX_SendMessage(
-            pContext, CMD_ATM_BC0_STATSNE_GET,
-            sizeof(sCmd.cmdAtmStatsNE_Get), (DSL_uint8_t*)&(sCmd.cmdAtmStatsNE_Get),
-            sizeof(sAck.ackAtmStatsNE_Get), (DSL_uint8_t*)&(sAck.ackAtmStatsNE_Get));
+         /* skip fw exchange during training */
+         if (pContext->bGotShowtime)
+         {
+            /* Get ATM statistics*/
+            nErrCode = DSL_DRV_VRX_SendMessage(
+               pContext, CMD_ATM_BC0_STATSNE_GET,
+               sizeof(sCmd.cmdAtmStatsNE_Get), (DSL_uint8_t*)&(sCmd.cmdAtmStatsNE_Get),
+               sizeof(sAck.ackAtmStatsNE_Get), (DSL_uint8_t*)&(sAck.ackAtmStatsNE_Get));
+         }
 
          /* Check nErrCode and return on error*/
          if( nErrCode < 0 )
@@ -662,11 +678,15 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersGet(
          sCmd.cmdAtmTxStatsGet.Index  = 0;
          sCmd.cmdAtmTxStatsGet.Length = 0x4;
 
-         /* Get ATM Tx statistics*/
-         nErrCode = DSL_DRV_VRX_SendMessage(
-            pContext, CMD_ATM_BC0_TXSTATSNE_GET,
-            sizeof(sCmd.cmdAtmTxStatsGet), (DSL_uint8_t*)&(sCmd.cmdAtmTxStatsGet),
-            sizeof(sAck.ackAtmTxStatsGet), (DSL_uint8_t*)&(sAck.ackAtmTxStatsGet));
+         /* skip fw exchange during training */
+         if (pContext->bGotShowtime)
+         {
+            /* Get ATM Tx statistics*/
+            nErrCode = DSL_DRV_VRX_SendMessage(
+               pContext, CMD_ATM_BC0_TXSTATSNE_GET,
+               sizeof(sCmd.cmdAtmTxStatsGet), (DSL_uint8_t*)&(sCmd.cmdAtmTxStatsGet),
+               sizeof(sAck.ackAtmTxStatsGet), (DSL_uint8_t*)&(sAck.ackAtmTxStatsGet));
+         }
 
          /* Check nErrCode and return on error*/
          if( nErrCode < 0 )
@@ -692,11 +712,15 @@ DSL_Error_t DSL_DRV_PM_DEV_DataPathCountersGet(
          sCmd.cmdAtmStatsFE_Get.Index  = 0x0;
          sCmd.cmdAtmStatsFE_Get.Length = 8;
 
-         /* Get ATM statistics*/
-         nErrCode = DSL_DRV_VRX_SendMessage(
-            pContext, CMD_ATM_BC0_STATSFE_GET,
-            sizeof(sCmd.cmdAtmStatsFE_Get), (DSL_uint8_t*)&(sCmd.cmdAtmStatsFE_Get),
-            sizeof(sAck.ackAtmStatsFE_Get), (DSL_uint8_t*)&(sAck.ackAtmStatsFE_Get));
+         /* skip fw exchange during training */
+         if (pContext->bGotShowtime)
+         {
+            /* Get ATM statistics*/
+            nErrCode = DSL_DRV_VRX_SendMessage(
+               pContext, CMD_ATM_BC0_STATSFE_GET,
+               sizeof(sCmd.cmdAtmStatsFE_Get), (DSL_uint8_t*)&(sCmd.cmdAtmStatsFE_Get),
+               sizeof(sAck.ackAtmStatsFE_Get), (DSL_uint8_t*)&(sAck.ackAtmStatsFE_Get));
+         }
 
          /* Check nErrCode and return on error*/
          if( nErrCode < 0 )
@@ -977,6 +1001,7 @@ DSL_Error_t DSL_DRV_PM_DEV_LineSecCountersGet(
    {
       sCmd.NE.Length = 10;
 
+      /* do not skip fw exchange during training because of UAS counter*/
       nErrCode = DSL_DRV_VRX_SendMessage(
          pContext,
          nDirection == DSL_NEAR_END ? CMD_LINEPERFCOUNTNE_GET : CMD_LINEPERFCOUNTFE_GET,
@@ -1003,6 +1028,7 @@ DSL_Error_t DSL_DRV_PM_DEV_LineSecCountersGet(
    {
       sCmd.NE.Length = 10;
 
+      /* do not skip fw exchange during training because of UAS counter*/
       nErrCode = DSL_DRV_VRX_SendMessage(
          pContext,
          nDirection == DSL_NEAR_END ? CMD_LINEPERFCOUNTNE_GET : CMD_LINEPERFCOUNTFE_GET,

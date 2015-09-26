@@ -28,6 +28,7 @@ VRX_MsgId_t DSL_DRV_VRX_g_MsgDumpBlacklist[]=
    {(DSL_uint16_t)(CMD_PTM_BC0_STATSNE_GET)  },
    {(DSL_uint16_t)(CMD_ATM_BC0_STATSNE_GET)  },
    {(DSL_uint16_t)(CMD_ATM_BC0_STATSFE_GET)  },
+   {(DSL_uint16_t)(CMD_ATM_BC0_TXSTATSNE_GET)},
    {(DSL_uint16_t)(CMD_CRC_STATSNE_GET)      },
    {(DSL_uint16_t)(CMD_FEC_STATSNE_GET)      },
    {(DSL_uint16_t)(CMD_CRC_STATSFE_GET)      },
@@ -716,10 +717,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgSelectedProfileVdsl2Get(
    memset(&sAck, 0, sizeof(sAck));
 
    /* Read data from data base */
-   for (i = 0; i < DSL_G997_NUM_XTSE_OCTETS; i++)
-   {
-      data.XTSE[i] = pContext->xtseCurr[i];
-   }
+   DSL_CTX_READ(pContext, nErrCode, xtseCurr, data.XTSE);
 
    sCmd.Length = DSL_VRX_16BIT_RD_MSG_LEN_GET(sAck);
    nErrCode = DSL_DRV_VRX_SendMessage(pContext, CMD_HS_SELECTEDPROFILEVDSL2GET,
@@ -1034,7 +1032,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgXtseStatusGet(
    }
 
    /* Copy data to the DSL CPE internal memory*/
-   memcpy(pContext->xtseCurr, data.XTSE, DSL_G997_NUM_XTSE_OCTETS);
+   DSL_CTX_WRITE(pContext, nErrCode, xtseCurr, data.XTSE);
 
    return (nErrCode);
 }
@@ -3841,24 +3839,27 @@ DSL_Error_t DSL_DRV_VRX_SendMsgRtxControl(
       sCmd.RtxMode = CMD_RTX_Control_RTX_DS_ENABLE;
    }
 
-   /* Get G.998.4 Amendment 2 support */
-   nErrCode = DSL_DRV_VRX_FirmwareVersionCheck(pContext,
-                  DSL_MIN_FW_VERSION_RTXAMD2, &nVerCheckAmd2);
-   if (nErrCode != DSL_SUCCESS)
-   {
-      DSL_DEBUG(DSL_DBG_ERR,
-         (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
-         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-         return nErrCode;
-   }
-
    sCmd.RtxModeAmd2 = VRX_DISABLE;
-   if (nVerCheckAmd2 >= DSL_VERSION_EQUAL)
+   if (DSL_DRV_VRX_FirmwareXdslModeCheck(pContext, DSL_VRX_FW_VDSL2))
    {
-      if ((sCmd.RtxMode == CMD_RTX_Control_RTX_DS_ENABLE) ||
-          (sCmd.RtxMode == CMD_RTX_Control_RTX_DSUS_ENABLE))
+      /* Get G.998.4 Amendment 2 support */
+      nErrCode = DSL_DRV_VRX_FirmwareVersionCheck(pContext,
+                     DSL_MIN_FW_VERSION_RTXAMD2, &nVerCheckAmd2);
+      if (nErrCode != DSL_SUCCESS)
       {
-         sCmd.RtxModeAmd2 = VRX_ENABLE;
+         DSL_DEBUG(DSL_DBG_ERR,
+            (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - FW version check failed!"
+            DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+            return nErrCode;
+      }
+
+      if (nVerCheckAmd2 >= DSL_VERSION_EQUAL)
+      {
+         if ((sCmd.RtxMode == CMD_RTX_Control_RTX_DS_ENABLE) ||
+             (sCmd.RtxMode == CMD_RTX_Control_RTX_DSUS_ENABLE))
+         {
+            sCmd.RtxModeAmd2 = VRX_ENABLE;
+         }
       }
    }
 
@@ -5804,7 +5805,8 @@ DSL_Error_t DSL_DRV_VRX_SendMsgMiscConfigSet(
 
    if (DSL_DRV_VRX_CamFsmStateGet(pContext) == DSL_CAM_ADSL_SINGLE && bT1_413)
    {
-      if (nActivationCfg.nActivationSequence == DSL_ACT_SEQ_NON_STD)
+      if (nActivationCfg.nActivationSequence == DSL_ACT_SEQ_AUTO ||
+          nActivationCfg.nActivationSequence == DSL_ACT_SEQ_NON_STD)
       {
          sCmd.GhsAnsiSeq = VRX_ENABLE;
          sCmd.StartMode =

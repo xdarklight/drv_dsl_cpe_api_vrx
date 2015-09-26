@@ -218,6 +218,8 @@ struct DSL_DeviceConfig
    \note The value for \ref nSystemIf ist not used because it set API
          internally fixed to \ref DSL_SYSTEMIF_MII */
    DSL_SystemInterfaceConfigData_t sysCIF[DSL_MODE_LAST];
+   /** MAC configuration settings*/
+   DSL_EFM_MacConfigData_t MacCfg;
    /** Common channel configuration parameters
        (see chapter 7.3.2.1 of G.997.1), for the UPSTREAM and DOWNSTREAM direction
        Only for the bearer channel 0*/

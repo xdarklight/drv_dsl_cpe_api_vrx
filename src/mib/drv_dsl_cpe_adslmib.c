@@ -544,7 +544,7 @@ DSL_Error_t DSL_DRV_MIB_ADSL_ChanEntryGet(
    DSL_uint8_t origFlags = 0, handledFlags = 0;
    adslAturChanInfo_t *pAturData = (adslAturChanInfo_t *)pData;
    adslAtucChanInfo_t *pAtucData = (adslAtucChanInfo_t *)pData;
-
+   DSL_uint8_t xtseCurr[DSL_G997_NUM_XTSE_OCTETS] = {0};
    DSL_G997_ChannelStatus_t channelSts;
 #ifdef INCLUDE_DSL_FRAMING_PARAMETERS
    DSL_FramingParameterStatus_t FramingParameterStatus;
@@ -641,30 +641,32 @@ DSL_Error_t DSL_DRV_MIB_ADSL_ChanEntryGet(
 
       if (nErrCode == DSL_SUCCESS)
       {
+         /* Get current xTSE octets*/
+         DSL_CTX_READ(pContext, nErrCode, xtseCurr, xtseCurr);
          /* Check for ADSL2/2+ modes*/
-         if ((pContext->xtseCurr[2] & XTSE_3_03_A_3_NO) ||
-             (pContext->xtseCurr[3] & XTSE_4_05_I_3_NO) ||
-             (pContext->xtseCurr[4] & XTSE_5_03_L_3_NO) ||
-             (pContext->xtseCurr[4] & XTSE_5_04_L_3_NO) ||
-             (pContext->xtseCurr[4] & XTSE_5_07_M_3_NO) ||
-             (pContext->xtseCurr[5] & XTSE_6_01_A_5_NO) ||
-             (pContext->xtseCurr[5] & XTSE_6_07_I_5_NO) ||
-             (pContext->xtseCurr[6] & XTSE_7_03_M_5_NO) ||
-             (pContext->xtseCurr[2] & XTSE_3_05_B_3_NO) ||
-             (pContext->xtseCurr[3] & XTSE_4_07_J_3_NO) ||
-             (pContext->xtseCurr[5] & XTSE_6_03_B_5_NO) ||
-             (pContext->xtseCurr[6] & XTSE_7_01_J_5_NO))
+         if ((xtseCurr[2] & XTSE_3_03_A_3_NO) ||
+             (xtseCurr[3] & XTSE_4_05_I_3_NO) ||
+             (xtseCurr[4] & XTSE_5_03_L_3_NO) ||
+             (xtseCurr[4] & XTSE_5_04_L_3_NO) ||
+             (xtseCurr[4] & XTSE_5_07_M_3_NO) ||
+             (xtseCurr[5] & XTSE_6_01_A_5_NO) ||
+             (xtseCurr[5] & XTSE_6_07_I_5_NO) ||
+             (xtseCurr[6] & XTSE_7_03_M_5_NO) ||
+             (xtseCurr[2] & XTSE_3_05_B_3_NO) ||
+             (xtseCurr[3] & XTSE_4_07_J_3_NO) ||
+             (xtseCurr[5] & XTSE_6_03_B_5_NO) ||
+             (xtseCurr[6] & XTSE_7_01_J_5_NO))
          {
             pAturData->crcBlkLen = FramingParameterStatus.data.nSEQ;
             CLR_FLAG(pAturData->flags, ATUR_CHAN_CRC_BLK_LEN_FLAG);
          }
 #ifdef INCLUDE_DSL_G997_FRAMING_PARAMETERS
          /* Check for ADSL1 mode*/
-         else if ((pContext->xtseCurr[0] & XTSE_1_03_A_1_NO)   ||
-                  (pContext->xtseCurr[0] & XTSE_1_01_A_T1_413) ||
-                  (pContext->xtseCurr[1] & XTSE_2_01_A_2_NO)   ||
-                  (pContext->xtseCurr[0] & XTSE_1_01_A_T1_413) ||
-                  (pContext->xtseCurr[0] & XTSE_1_05_B_1_NO))
+         else if ((xtseCurr[0] & XTSE_1_03_A_1_NO)   ||
+                  (xtseCurr[0] & XTSE_1_01_A_T1_413) ||
+                  (xtseCurr[1] & XTSE_2_01_A_2_NO)   ||
+                  (xtseCurr[0] & XTSE_1_01_A_T1_413) ||
+                  (xtseCurr[0] & XTSE_1_05_B_1_NO))
          {
             g997FramingParameterStatus.nChannel   = nChannel;
             g997FramingParameterStatus.nDirection = DSL_UPSTREAM;
@@ -3672,6 +3674,8 @@ DSL_Error_t DSL_DRV_MIB_IoctlHandle(
 {
    DSL_Error_t nErrCode = DSL_ERROR;
    DSL_IOCTL_MIB_arg_t *pIOCTL_arg = DSL_NULL;
+   DSL_uint8_t xtseCfg[DSL_G997_NUM_XTSE_OCTETS] = {0};
+   DSL_uint8_t xtseCurr[DSL_G997_NUM_XTSE_OCTETS] = {0};
 
    pIOCTL_arg = (DSL_IOCTL_MIB_arg_t*)DSL_DRV_VMalloc(sizeof(DSL_IOCTL_MIB_arg_t));
    if(pIOCTL_arg == DSL_NULL)
@@ -3887,31 +3891,36 @@ DSL_Error_t DSL_DRV_MIB_IoctlHandle(
 
    if (nErrCode >= DSL_SUCCESS)
    {
+      /* Get current xTSE octets*/
+      DSL_CTX_READ(pContext, nErrCode, xtseCurr, xtseCurr);
+      /* Get config xTSE octets*/
+      DSL_CTX_READ(pContext, nErrCode, xtseCfg, xtseCfg);
+
       /* ADSL MIB entries only valid in the ADSL1 mode*/
-      if ((pContext->xtseCfg[0] & XTSE_1_03_A_1_NO)   ||
-          (pContext->xtseCfg[0] & XTSE_1_01_A_T1_413) ||
-          (pContext->xtseCfg[1] & XTSE_2_01_A_2_NO)   ||
-          (pContext->xtseCfg[0] & XTSE_1_01_A_T1_413) ||
-          (pContext->xtseCfg[0] & XTSE_1_05_B_1_NO))
+      if ((xtseCfg[0] & XTSE_1_03_A_1_NO)   ||
+          (xtseCfg[0] & XTSE_1_01_A_T1_413) ||
+          (xtseCfg[1] & XTSE_2_01_A_2_NO)   ||
+          (xtseCfg[0] & XTSE_1_01_A_T1_413) ||
+          (xtseCfg[0] & XTSE_1_05_B_1_NO))
       {
-         if ((pContext->xtseCurr[2] & XTSE_3_03_A_3_NO) ||
-             (pContext->xtseCurr[3] & XTSE_4_05_I_3_NO) ||
-             (pContext->xtseCurr[4] & XTSE_5_03_L_3_NO) ||
-             (pContext->xtseCurr[4] & XTSE_5_04_L_3_NO) ||
-             (pContext->xtseCurr[4] & XTSE_5_07_M_3_NO) ||
-             (pContext->xtseCurr[5] & XTSE_6_01_A_5_NO) ||
-             (pContext->xtseCurr[5] & XTSE_6_07_I_5_NO) ||
-             (pContext->xtseCurr[6] & XTSE_7_03_M_5_NO) ||
-             (pContext->xtseCurr[2] & XTSE_3_05_B_3_NO) ||
-             (pContext->xtseCurr[3] & XTSE_4_07_J_3_NO) ||
-             (pContext->xtseCurr[5] & XTSE_6_03_B_5_NO) ||
-             (pContext->xtseCurr[6] & XTSE_7_01_J_5_NO))
+         if ((xtseCurr[2] & XTSE_3_03_A_3_NO) ||
+             (xtseCurr[3] & XTSE_4_05_I_3_NO) ||
+             (xtseCurr[4] & XTSE_5_03_L_3_NO) ||
+             (xtseCurr[4] & XTSE_5_04_L_3_NO) ||
+             (xtseCurr[4] & XTSE_5_07_M_3_NO) ||
+             (xtseCurr[5] & XTSE_6_01_A_5_NO) ||
+             (xtseCurr[5] & XTSE_6_07_I_5_NO) ||
+             (xtseCurr[6] & XTSE_7_03_M_5_NO) ||
+             (xtseCurr[2] & XTSE_3_05_B_3_NO) ||
+             (xtseCurr[3] & XTSE_4_07_J_3_NO) ||
+             (xtseCurr[5] & XTSE_6_03_B_5_NO) ||
+             (xtseCurr[6] & XTSE_7_01_J_5_NO))
          {
-            if (!(pContext->xtseCurr[0] & XTSE_1_03_A_1_NO)   &&
-                !(pContext->xtseCurr[0] & XTSE_1_01_A_T1_413) &&
-                !(pContext->xtseCurr[1] & XTSE_2_01_A_2_NO)   &&
-                !(pContext->xtseCurr[0] & XTSE_1_01_A_T1_413) &&
-                !(pContext->xtseCurr[0] & XTSE_1_05_B_1_NO))
+            if (!(xtseCurr[0] & XTSE_1_03_A_1_NO)   &&
+                !(xtseCurr[0] & XTSE_1_01_A_T1_413) &&
+                !(xtseCurr[1] & XTSE_2_01_A_2_NO)   &&
+                !(xtseCurr[0] & XTSE_1_01_A_T1_413) &&
+                !(xtseCurr[0] & XTSE_1_05_B_1_NO))
             {
                nErrCode = DSL_WRN_NOT_SUPPORTED_IN_CURRENT_ADSL_MODE_OR_ANNEX;
             }

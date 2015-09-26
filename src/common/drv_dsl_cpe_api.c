@@ -862,6 +862,33 @@ DSL_Error_t DSL_DRV_ModulesInit(
    For a detailed description of the function, its arguments and return value
    please refer to the description in the header file 'drv_dsl_cpe_intern.h'
 */
+DSL_boolean_t DSL_DRV_BondingEnableCheck(
+   DSL_Context_t *pContext)
+{
+   DSL_boolean_t bPafEnable = DSL_FALSE;
+#if defined(INCLUDE_DSL_CPE_API_VRX) && defined(INCLUDE_DSL_BONDING)
+   DSL_Error_t nErrCode = DSL_SUCCESS;
+
+   /* Bonding is always enabled for both lines/devices together so using the
+   configuration from the current line/device is ok. */
+   DSL_CTX_READ_SCALAR( pContext, nErrCode, BndConfig.bPafEnable, bPafEnable);
+
+   if (nErrCode != DSL_SUCCESS)
+   {
+      DSL_DEBUG(DSL_DBG_ERR,
+         (pContext, SYS_DBG_ERR "DSL[%02d]: ERROR - bPafEnable get failed!"
+         DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+   }
+
+#endif /* #if defined(INCLUDE_DSL_CPE_API_VRX) && defined(INCLUDE_DSL_BONDING) */
+
+   return bPafEnable;
+}
+
+/*
+   For a detailed description of the function, its arguments and return value
+   please refer to the description in the header file 'drv_dsl_cpe_intern.h'
+*/
 DSL_Error_t DSL_DRV_XtseSettingsCheck(
    DSL_IN DSL_Context_t *pContext,
    DSL_IN DSL_uint8_t *pXTSE)
@@ -1000,6 +1027,10 @@ DSL_Error_t DSL_DRV_Init(
 
       dbgModLev.data.nDbgModule = DSL_DBG_MESSAGE_DUMP;
       dbgModLev.data.nDbgLevel = DSL_g_dbgLvl[DSL_DBG_MESSAGE_DUMP].nDbgLvl;
+      DSL_DRV_DBG_ModuleLevelSet(pContext, &dbgModLev);
+
+      dbgModLev.data.nDbgModule = DSL_DBG_NOTIFICATIONS;
+      dbgModLev.data.nDbgLevel = DSL_g_dbgLvl[DSL_DBG_NOTIFICATIONS].nDbgLvl;
       DSL_DRV_DBG_ModuleLevelSet(pContext, &dbgModLev);
    #endif /* #ifndef DSL_DEBUG_DISABLE*/
 #endif /* INCLUDE_DSL_CPE_API_VRX */
@@ -1143,7 +1174,11 @@ DSL_Error_t DSL_DRV_Init(
    pContext->rateAdaptationMode[DSL_MODE_ADSL][DSL_UPSTREAM] = DSL_G997_RA_MODE_AT_INIT;
    pContext->rateAdaptationMode[DSL_MODE_ADSL][DSL_DOWNSTREAM] = DSL_G997_RA_MODE_AT_INIT;
    /* SRA enabled by default for VRX in VDSL mode (see DSLCPE_SW-755) */
-   /* Also refer to DSLCPE_SW-768 for special handling within context of F7 FW */
+   /* Also refer to DSLCPE_SW-768 for special handling within context of F7 FW.
+      The defualts for VDSL are dependend on VDSL-FW capabilities and will be
+      therefore updated within FW download context (because only there FW
+      capabilities are known). Search for Jira DSLCPE_SW-768 to locate that
+      implementation. */
    pContext->rateAdaptationMode[DSL_MODE_VDSL][DSL_UPSTREAM] = DSL_G997_RA_MODE_DYNAMIC;
    pContext->rateAdaptationMode[DSL_MODE_VDSL][DSL_DOWNSTREAM] = DSL_G997_RA_MODE_DYNAMIC;
 #else
@@ -1714,10 +1749,10 @@ DSL_Error_t DSL_DRV_AutobootControlSet(
             case DSL_AUTOBOOT_CTRL_START:
                if (bFirmwareReady == DSL_FALSE)
                {
-                  DSL_DEBUG(DSL_DBG_WRN,
-                     (pContext, SYS_DBG_ERR"DSL[%02d]: WARNING - Autoboot Start failed, no FW loaded!"
+                  DSL_DEBUG(DSL_DBG_ERR,
+                     (pContext, SYS_DBG_ERR"DSL[%02d]: ERROR - Autoboot Start failed, no FW loaded!"
                      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
-                  nErrCode = DSL_WRN_CONFIG_PARAM_IGNORED;
+                  nErrCode = DSL_ERR_NO_FIRMWARE_LOADED;
                   break;
                }
 
@@ -2020,6 +2055,8 @@ DSL_Error_t DSL_DRV_AutobootStatusGet(
    DSL_OUT DSL_AutobootStatus_t *pData)
 {
    DSL_Error_t nErrCode = DSL_SUCCESS;
+   DSL_boolean_t bAutobootThreadStarted = DSL_FALSE;
+   DSL_AutobootStatGet_t nStatus = DSL_AUTOBOOT_STATUS_LAST;
 
    DSL_CHECK_POINTER(pContext, pData);
    DSL_CHECK_ERR_CODE();
@@ -2028,8 +2065,17 @@ DSL_Error_t DSL_DRV_AutobootStatusGet(
       (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_AutobootStatusGet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
-   /* Get Autoboot Status from the DSL CPE context*/
-   DSL_CTX_READ(pContext, nErrCode, nAutobootStatus.nStatus, pData->data.nStatus);
+   DSL_CTX_READ_SCALAR(pContext, nErrCode, nAutobootStatus.nStatus, nStatus);
+   DSL_CTX_READ_SCALAR(pContext, nErrCode, bAutobootThreadStarted, bAutobootThreadStarted);
+
+   if (!bAutobootThreadStarted)
+   {
+      pData->data.nStatus = DSL_AUTOBOOT_STATUS_STOPPED;
+   }
+   else
+   {
+      pData->data.nStatus = nStatus;
+   }
 
    DSL_CTX_READ(pContext, nErrCode, nAutobootStatus.nFirmwareRequestType,
       pData->data.nFirmwareRequestType);
@@ -3894,6 +3940,41 @@ DSL_Error_t DSL_DRV_DBG_ModuleLevelSet(
       {
          dev = DSL_DEVICE_LOWHANDLE(pContext);
          fioVrxDrvDbgLevelSet.eDbgModule = e_MEI_DBGMOD_MEI_DRV;
+         switch (pData->data.nDbgLevel)
+         {
+            case DSL_DBG_NONE:
+            case DSL_DBG_PRN:
+            default:
+               fioVrxDrvDbgLevelSet.valLevel = MEI_DBG_LEVEL_OFF;
+               break;
+
+            case DSL_DBG_ERR:
+               fioVrxDrvDbgLevelSet.valLevel = MEI_DBG_LEVEL_HIGH;
+               break;
+
+            case DSL_DBG_WRN:
+               fioVrxDrvDbgLevelSet.valLevel = MEI_DBG_LEVEL_NORMAL;
+               break;
+
+            case DSL_DBG_MSG:
+            case DSL_DBG_LOCAL:
+               fioVrxDrvDbgLevelSet.valLevel = MEI_DBG_LEVEL_LOW;
+               break;
+         }
+         if (DSL_DRV_VRX_InternalDebugLevelSet((MEI_DYN_CNTRL_T*)dev, &fioVrxDrvDbgLevelSet) < 0)
+         {
+            DSL_DEBUG( DSL_DBG_ERR, (pContext,
+               SYS_DBG_ERR"DSL[%02d]: MEI debug level set failed, error %d" DSL_DRV_CRLF,
+               DSL_DEV_NUM(pContext), fioVrxDrvDbgLevelSet.ictl.retCode));
+
+            return DSL_ERROR;
+         }
+      }
+
+      if (pData->data.nDbgModule == DSL_DBG_NOTIFICATIONS)
+      {
+         dev = DSL_DEVICE_LOWHANDLE(pContext);
+         fioVrxDrvDbgLevelSet.eDbgModule = e_MEI_DBGMOD_MEI_NOTIFICATIONS;
          switch (pData->data.nDbgLevel)
          {
             case DSL_DBG_NONE:

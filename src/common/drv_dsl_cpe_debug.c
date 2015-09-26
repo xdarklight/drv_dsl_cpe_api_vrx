@@ -49,7 +49,8 @@ DSL_debugLevelEntry_t DSL_g_dbgLvl[DSL_DBG_MAX_ENTRIES] =
    { DSL_DBG_NONE,   "DSL_DBG_MESSAGE_DUMP"        },   /* 12 */
    { DSL_DBG_ERR,    "DSL_DBG_LOW_LEVEL_DRIVER"    },   /* 13 */
    { DSL_DBG_NONE,   "DSL_DBG_MULTIMODE"           },   /* 14 */
-   { DSL_DBG_NONE,   "not used"                    },   /* 15 */
+   { DSL_DBG_NONE,   "DSL_DBG_NOTIFICATIONS"       },   /* 15 */
+   { DSL_DBG_NONE,   "not used"                    },   /* 16 */
 };
 
 /* Initialization for all debug levels */

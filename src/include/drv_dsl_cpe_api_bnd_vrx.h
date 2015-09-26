@@ -128,7 +128,7 @@ DSL_Error_t DSL_DRV_BND_VRX_ConfigWrite(
    DSL_Context_t *pContext);
 
 /**
-   VRX200 device specific Bonding HW initialization.
+   XWAY(TM) VRX200 device specific Bonding HW initialization.
 
    \param pContext - Pointer to dsl cpe library context structure, [I/O]
    \param pData    - Pointer to the Bonding HW initialization data, [I]

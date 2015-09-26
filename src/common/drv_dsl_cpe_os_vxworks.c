@@ -469,6 +469,7 @@ DSL_DRV_STATIC void DSL_DRV_DebugInit(void)
          DSL_g_dbgLvl[DSL_DBG_MESSAGE_DUMP].nDbgLvl = DSL_DBG_ERR;
          DSL_g_dbgLvl[DSL_DBG_LOW_LEVEL_DRIVER].nDbgLvl = DSL_DBG_MSG;
          DSL_g_dbgLvl[DSL_DBG_MULTIMODE].nDbgLvl = DSL_DBG_MSG;
+         DSL_g_dbgLvl[DSL_DBG_NOTIFICATIONS].nDbgLvl = DSL_DBG_MSG;
          break;
       case 2:
          DSL_g_dbgLvl[DSL_DBG_CPE_API].nDbgLvl = DSL_DBG_WRN;
@@ -485,6 +486,7 @@ DSL_DRV_STATIC void DSL_DRV_DebugInit(void)
          DSL_g_dbgLvl[DSL_DBG_MESSAGE_DUMP].nDbgLvl = DSL_DBG_NONE;
          DSL_g_dbgLvl[DSL_DBG_LOW_LEVEL_DRIVER].nDbgLvl = DSL_DBG_WRN;
          DSL_g_dbgLvl[DSL_DBG_MULTIMODE].nDbgLvl = DSL_DBG_WRN;
+         DSL_g_dbgLvl[DSL_DBG_NOTIFICATIONS].nDbgLvl = DSL_DBG_WRN;
          break;
       case 3:
          DSL_g_dbgLvl[DSL_DBG_CPE_API].nDbgLvl = DSL_DBG_ERR;
@@ -501,6 +503,7 @@ DSL_DRV_STATIC void DSL_DRV_DebugInit(void)
          DSL_g_dbgLvl[DSL_DBG_MESSAGE_DUMP].nDbgLvl = DSL_DBG_NONE;
          DSL_g_dbgLvl[DSL_DBG_LOW_LEVEL_DRIVER].nDbgLvl = DSL_DBG_ERR;
          DSL_g_dbgLvl[DSL_DBG_MULTIMODE].nDbgLvl = DSL_DBG_ERR;
+         DSL_g_dbgLvl[DSL_DBG_NOTIFICATIONS].nDbgLvl = DSL_DBG_ERR;
          break;
       case 4:
          DSL_g_dbgLvl[DSL_DBG_CPE_API].nDbgLvl = DSL_DBG_NONE;
@@ -517,6 +520,7 @@ DSL_DRV_STATIC void DSL_DRV_DebugInit(void)
          DSL_g_dbgLvl[DSL_DBG_MESSAGE_DUMP].nDbgLvl = DSL_DBG_NONE;
          DSL_g_dbgLvl[DSL_DBG_LOW_LEVEL_DRIVER].nDbgLvl = DSL_DBG_NONE;
          DSL_g_dbgLvl[DSL_DBG_MULTIMODE].nDbgLvl = DSL_DBG_NONE;
+         DSL_g_dbgLvl[DSL_DBG_NOTIFICATIONS].nDbgLvl = DSL_DBG_NONE;
          break;
       default:
          /* Nothing to do */
