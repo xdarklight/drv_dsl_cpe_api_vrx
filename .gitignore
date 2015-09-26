@@ -2,8 +2,6 @@
 *.o
 *.ko
 
-src/include/drv_dsl_cpe_api_config.h
-
 # http://www.gnu.org/software/automake
 
 Makefile.in
