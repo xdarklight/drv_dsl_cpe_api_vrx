@@ -227,6 +227,8 @@ DSL_char_t* DSL_DBG_IoctlName(DSL_uint_t nIoctlCode)
    case DSL_FIO_RTT_STATISTICS_GET:
       return "DSL_FIO_RTT_STATISTICS_GET";
 #endif /*#ifdef INCLUDE_REAL_TIME_TRACE*/
+   case DSL_FIO_FIRMWARE_DOWNLOAD_STATUS_GET:
+      return "DSL_FIO_FIRMWARE_DOWNLOAD_STATUS_GET";
    default:
       return "<unknown>";
    }

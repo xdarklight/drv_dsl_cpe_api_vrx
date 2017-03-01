@@ -290,6 +290,8 @@ typedef union
 #ifdef INCLUDE_DSL_CPE_API_VRX
    DSL_G997_LowPowerModeConfig_t    lpmConfig;
 #endif /* INCLUDE_DSL_CPE_API_VRX*/
+
+   DSL_FirmwareDownloadStatus_t     fwDwnlStatus;
 } DSL_IOCTL_arg_t;
 
 
@@ -2052,6 +2054,107 @@ typedef union
    \ingroup DRV_DSL_CPE_COMMON */
 #define DSL_FIO_DELT_SNR_GET \
    _IOWR(DSL_IOC_MAGIC_CPE_API, 62, DSL_G997_DeltSnr_t)
+
+/**
+   This ioctl makes it possible to get the current firmware download.
+
+   CLI
+   - long command: FirmwareDownloadStatusGet
+   - short command: fdsg
+
+   \param DSL_FirmwareDownloadStatus_t*
+      The parameter points to a \ref DSL_FirmwareDownloadStatus_t structure
+
+   \return
+      0 if successful and -1 in case of an error/warning
+      In case of an error/warning please refer to the value of 'nReturn' which
+      is included within accessCtl structure of user data.
+
+   \remarks
+   Supported by all platforms.
+
+   \code
+      DSL_FirmwareDownloadStatus_t status;
+      DSL_int_t ret = 0;
+
+      memset(&status, 0x00, sizeof(DSL_FirmwareDownloadStatus_t));
+      ret = ioctl(fd, DSL_FIO_FIRMWARE_DOWNLOAD_STATUS_GET, &status);
+   \endcode
+
+   \ingroup DRV_DSL_CPE_INIT */
+#define DSL_FIO_FIRMWARE_DOWNLOAD_STATUS_GET \
+   _IOWR(DSL_IOC_MAGIC_CPE_API, 63, DSL_FirmwareDownloadStatus_t)
+
+/**
+   This function configures the VDSL profile selection.
+
+   CLI
+   - long command: VdslProfileConfigSet
+   - short command: vpcs
+
+   \note
+   Please note that a change of this configuration setting will be only
+   effective after restarting the autoboot handling using ioctl
+   \ref DSL_FIO_AUTOBOOT_CONTROL_SET with command \ref DSL_AUTOBOOT_CTRL_RESTART
+
+   \param DSL_VdslProfileConfig_t*
+   The parameter points to a \ref DSL_VdslProfileConfig_t structure
+
+   \return
+      0 if successful and -1 in case of an error/warning
+      In case of an error/warning please refer to the value of 'nReturn' which
+      is included within accessCtl structure of user data.
+
+   \remarks
+   Supported by
+   - XWAY(TM) VRX200: xDSL-CPE
+   - XWAY(TM) VRX300: xDSL-CPE
+
+   \code
+      DSL_VdslProfileConfig_t vdslProfileConfig;
+      DSL_int_t ret = 0;
+
+      memset(&vdslProfileConfig, 0x00, sizeof(DSL_VdslProfileConfig_t));
+      // Set configuration settings here before calling the ioctl...
+      ret = ioctl(fd, DSL_FIO_VDSL_PROFILE_CONFIG_SET, &vdslProfileConfig);
+   \endcode
+
+   \ingroup DRV_DSL_CPE_COMMON */
+#define DSL_FIO_VDSL_PROFILE_CONFIG_SET \
+   _IOWR(DSL_IOC_MAGIC_CPE_API, 64, DSL_VdslProfileConfig_t)
+
+/**
+   This function returns the VDSL profile selection that is currently used.
+
+   CLI
+   - long command: VdslProfileConfigGet
+   - short command: vpcg
+
+   \param DSL_VdslProfileConfig_t*
+   The parameter points to a \ref DSL_VdslProfileConfig_t structure
+
+   \return
+      0 if successful and -1 in case of an error/warning
+      In case of an error/warning please refer to the value of 'nReturn' which
+      is included within accessCtl structure of user data.
+
+   \remarks
+   Supported by
+   - XWAY(TM) VRX200: xDSL-CPE
+   - XWAY(TM) VRX300: xDSL-CPE
+
+   \code
+      DSL_VdslProfileConfig_t vdslProfileConfig;
+      DSL_int_t ret = 0;
+
+      memset(&vdslProfileConfig, 0x00, sizeof(DSL_VdslProfileConfig_t));
+      ret = ioctl(fd, DSL_FIO_VDSL_PROFILE_CONFIG_GET, &vdslProfileConfig); //
+      Process returned values after ioctl call here ...
+   \endcode
+
+   \ingroup DRV_DSL_CPE_COMMON */
+#define DSL_FIO_VDSL_PROFILE_CONFIG_GET \
+   _IOWR(DSL_IOC_MAGIC_CPE_API, 65, DSL_VdslProfileConfig_t)
 
 #ifdef INCLUDE_DSL_BONDING
 /* ************************************************************************** */

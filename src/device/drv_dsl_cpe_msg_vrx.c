@@ -804,28 +804,28 @@ DSL_Error_t DSL_DRV_VRX_SendMsgSelectedProfileVdsl2Get(
    /* Decode Actual Profile*/
    switch(actualProfile)
    {
-   case DSL_VRX_PROFILES_8A:
+   case DSL_BF_PROFILE_8A:
       nProfile = DSL_PROFILE_8A;
       break;
-   case DSL_VRX_PROFILES_8B:
+   case DSL_BF_PROFILE_8B:
       nProfile = DSL_PROFILE_8B;
       break;
-   case DSL_VRX_PROFILES_8C:
+   case DSL_BF_PROFILE_8C:
       nProfile = DSL_PROFILE_8C;
       break;
-   case DSL_VRX_PROFILES_8D:
+   case DSL_BF_PROFILE_8D:
       nProfile = DSL_PROFILE_8D;
       break;
-   case DSL_VRX_PROFILES_12A:
+   case DSL_BF_PROFILE_12A:
       nProfile = DSL_PROFILE_12A;
       break;
-   case DSL_VRX_PROFILES_12B:
+   case DSL_BF_PROFILE_12B:
       nProfile = DSL_PROFILE_12B;
       break;
-   case DSL_VRX_PROFILES_17A:
+   case DSL_BF_PROFILE_17A:
       nProfile = DSL_PROFILE_17A;
       break;
-   case DSL_VRX_PROFILES_30A:
+   case DSL_BF_PROFILE_30A:
       nProfile = DSL_PROFILE_30A;
       break;
    default:
@@ -4023,6 +4023,7 @@ DSL_Error_t DSL_DRV_VRX_SendMsgVdsl2ProfileControl(
    DSL_uint32_t i = 0;
    DSL_G997_XTUSystemEnablingData_t XTSE;
    DSL_PortMode_t nPortMode;
+   DSL_BF_VdslProfileConfigData_t VdslProfileConfigData;
    CMD_HS_VDSL2ProfileControl_t   sCmd;
    ACK_HS_VDSL2ProfileControl_t   sAck;
 
@@ -4048,20 +4049,42 @@ DSL_Error_t DSL_DRV_VRX_SendMsgVdsl2ProfileControl(
    /* get port mode type*/
    DSL_CTX_READ_SCALAR(pContext, nErrCode, pDevCtx->data.nPortMode, nPortMode);
 
+   /* get Vdsl profiles config*/
+   DSL_CTX_READ_SCALAR(pContext, nErrCode, VdslProfileConfigData, VdslProfileConfigData);
+
    sCmd.Length = DSL_VRX_16BIT_RD_MSG_LEN_GET(sCmd);
 
    /* enable only profiles 8 a/b/c/d and its related US0 support bits. */
    if (nPortMode == DSL_PORT_MODE_DUAL)
    {
-      sCmd.profileSup3 = sCmd.profileSup2 =
-      sCmd.profileSup1 = sCmd.profileSup0 = 1;
+      sCmd.profileSup3 = (VdslProfileConfigData & DSL_BF_PROFILE_8D)  ? 1 : 0;
+      sCmd.profileSup2 = (VdslProfileConfigData & DSL_BF_PROFILE_8C)  ? 1 : 0;
+      sCmd.profileSup1 = (VdslProfileConfigData & DSL_BF_PROFILE_8B)  ? 1 : 0;
+      sCmd.profileSup0 = (VdslProfileConfigData & DSL_BF_PROFILE_8A)  ? 1 : 0;
+
+      if (VdslProfileConfigData & DSL_BF_PROFILE_30A ||
+          VdslProfileConfigData & DSL_BF_PROFILE_17A ||
+          VdslProfileConfigData & DSL_BF_PROFILE_12B ||
+          VdslProfileConfigData & DSL_BF_PROFILE_12A)
+      {
+         DSL_DEBUG(DSL_DBG_ERR, (pContext, SYS_DBG_ERR
+            "DSL[%02d]: ERROR - Vdsl profiles 12A/12B/17A/30A are not supported"
+            " for the dual port mode!" DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+         return DSL_ERR_NOT_SUPPORTED;
+      }
    }
    /* enable all profiles and its related US0 support bits. */
    else
    {
-      sCmd.profileSup7 = sCmd.profileSup6 = sCmd.profileSup5 =
-      sCmd.profileSup4 = sCmd.profileSup3 = sCmd.profileSup2 =
-      sCmd.profileSup1 = sCmd.profileSup0 = 1;
+      sCmd.profileSup7 = (VdslProfileConfigData & DSL_BF_PROFILE_30A) ? 1 : 0;
+      sCmd.profileSup6 = (VdslProfileConfigData & DSL_BF_PROFILE_17A) ? 1 : 0;
+      sCmd.profileSup5 = (VdslProfileConfigData & DSL_BF_PROFILE_12B) ? 1 : 0;
+      sCmd.profileSup4 = (VdslProfileConfigData & DSL_BF_PROFILE_12A) ? 1 : 0;
+      sCmd.profileSup3 = (VdslProfileConfigData & DSL_BF_PROFILE_8D)  ? 1 : 0;
+      sCmd.profileSup2 = (VdslProfileConfigData & DSL_BF_PROFILE_8C)  ? 1 : 0;
+      sCmd.profileSup1 = (VdslProfileConfigData & DSL_BF_PROFILE_8B)  ? 1 : 0;
+      sCmd.profileSup0 = (VdslProfileConfigData & DSL_BF_PROFILE_8A)  ? 1 : 0;
 
       /* ------- US0 support bits for profiles != 8 ------- */
       /* Message parameter #5 - Annex A US0 PSDs Supported Bits */

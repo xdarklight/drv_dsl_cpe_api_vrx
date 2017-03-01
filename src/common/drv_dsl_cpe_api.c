@@ -995,6 +995,9 @@ DSL_Error_t DSL_DRV_Init(
       DSL_DBG_ModuleLevel_t dbgModLev;
    #endif /* #ifndef DSL_DEBUG_DISABLE*/
 #endif /* INCLUDE_DSL_CPE_API_VRX */
+#if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
+   DSL_PortMode_t nPortMode;
+#endif /* (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)*/
 
    DSL_CHECK_CTX_POINTER(pContext);
    DSL_CHECK_ERR_CODE();
@@ -1201,6 +1204,22 @@ DSL_Error_t DSL_DRV_Init(
 
       return nErrCode;
    }
+
+#if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
+   /* Set default Vdsl profile*/
+   DSL_CTX_READ_SCALAR(pContext, nErrCode, pDevCtx->data.nPortMode, nPortMode);
+   if (nPortMode == DSL_PORT_MODE_DUAL)
+   {
+      pContext->VdslProfileConfigData =
+         DSL_BF_PROFILE_8A  | DSL_BF_PROFILE_8B  | DSL_BF_PROFILE_8C  | DSL_BF_PROFILE_8D;
+   }
+   else
+   {
+      pContext->VdslProfileConfigData =
+         DSL_BF_PROFILE_8A  | DSL_BF_PROFILE_8B  | DSL_BF_PROFILE_8C  | DSL_BF_PROFILE_8D |
+         DSL_BF_PROFILE_12A | DSL_BF_PROFILE_12B | DSL_BF_PROFILE_17A | DSL_BF_PROFILE_30A;
+   }
+#endif /* (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)*/
 
    memcpy(&(pContext->nFwFeatures), &(pData->data.nFirmwareFeatures),
       sizeof(DSL_FirmwareFeatures_t));
@@ -2041,6 +2060,59 @@ DSL_Error_t DSL_DRV_AutobootConfigSet(
 
    DSL_DEBUG(DSL_DBG_MSG,
       (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_AutobootConfigSet"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   return nErrCode;
+}
+
+/*
+   For a detailed description of the function, its arguments and return value
+   please refer to the description in the header file 'drv_dsl_cpe_intern.h'
+*/
+DSL_Error_t DSL_DRV_FirmwareDownloadStatusGet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_OUT DSL_FirmwareDownloadStatus_t *pData)
+{
+   DSL_Error_t nErrCode = DSL_SUCCESS;
+
+   DSL_CHECK_POINTER(pContext, pData);
+   DSL_CHECK_ERR_CODE();
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_FirmwareDownloadStatusGet"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   DSL_CTX_READ_SCALAR(pContext, nErrCode, nFwDownloadStatus, pData->data.nStatus);
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_FirmwareDownloadStatusGet"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   return nErrCode;
+}
+
+/*
+   For a detailed description of the function, its arguments and return value
+   please refer to the description in the header file 'drv_dsl_cpe_intern.h'
+*/
+DSL_Error_t DSL_DRV_FirmwareDownloadStatusSet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_FirmwareDownloadStatusType_t nStatus)
+{
+   DSL_Error_t nErrCode = DSL_SUCCESS;
+
+   DSL_CHECK_CTX_POINTER(pContext);;
+   DSL_CHECK_ERR_CODE();
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_FirmwareDownloadStatusSet"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   /* Set Firmware Download Status in the DSL CPE context*/
+   DSL_CTX_WRITE_SCALAR(pContext, nErrCode, nFwDownloadStatus, nStatus);
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_FirmwareDownloadStatusSet"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
 
    return nErrCode;
@@ -3466,6 +3538,60 @@ DSL_Error_t DSL_DRV_BandPlanSupportedGet(
    return (nErrCode);
 }
 
+/*
+   For a detailed description of the function, its arguments and return value
+   please refer to the description in the header file 'drv_dsl_cpe_intern.h'
+*/
+DSL_Error_t DSL_DRV_VdslProfileConfigSet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_VdslProfileConfig_t *pData)
+{
+   DSL_Error_t nErrCode = DSL_SUCCESS;
+
+   DSL_CHECK_POINTER(pContext, pData);
+   DSL_CHECK_ERR_CODE();
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_VdslProfileConfigSet"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   DSL_CTX_WRITE(pContext, nErrCode, VdslProfileConfigData, pData->data.nVdslProfile);
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_VdslProfileConfigSet, "
+      "retCode(%d)"DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
+
+   return nErrCode;
+}
+
+#ifdef INCLUDE_DSL_CONFIG_GET
+/*
+   For a detailed description of the function, its arguments and return value
+   please refer to the description in the header file 'drv_dsl_cpe_intern.h'
+*/
+DSL_Error_t DSL_DRV_VdslProfileConfigGet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_VdslProfileConfig_t *pData)
+{
+   DSL_Error_t nErrCode = DSL_SUCCESS;
+
+   DSL_CHECK_POINTER(pContext, pData);
+   DSL_CHECK_ERR_CODE();
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_VdslProfileConfigGet"
+      DSL_DRV_CRLF, DSL_DEV_NUM(pContext)));
+
+   DSL_CTX_READ(pContext, nErrCode, VdslProfileConfigData, pData->data.nVdslProfile);
+
+   DSL_DEBUG(DSL_DBG_MSG,
+      (pContext, SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_VdslProfileConfigGet, "
+      "retCode(%d)"DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
+
+   return nErrCode;
+}
+#endif /* INCLUDE_DSL_CONFIG_GET*/
+
 #endif /* #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)*/
 
 /*
@@ -3973,6 +4099,12 @@ DSL_Error_t DSL_DRV_DBG_ModuleLevelSet(
 
       if (pData->data.nDbgModule == DSL_DBG_NOTIFICATIONS)
       {
+/*
+   This API version (V4.16.6.x) is used together with VDSL MEI driver (V1.4.4.x)
+   which does not support these extended debug level, so exclude it here from
+   the build.
+*/
+#if 0
          dev = DSL_DEVICE_LOWHANDLE(pContext);
          fioVrxDrvDbgLevelSet.eDbgModule = e_MEI_DBGMOD_MEI_NOTIFICATIONS;
          switch (pData->data.nDbgLevel)
@@ -4004,6 +4136,7 @@ DSL_Error_t DSL_DRV_DBG_ModuleLevelSet(
 
             return DSL_ERROR;
          }
+#endif
       }
 #endif /* INCLUDE_DSL_CPE_API_VRX */
    }
@@ -4696,6 +4829,7 @@ DSL_IOCTL_REGISTER(DSL_FIO_AUTOBOOT_STATUS_GET, DSL_IOCTL_HELPER_GET,
 DSL_IOCTL_REGISTER(DSL_FIO_LINE_STATE_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_LineStateGet,
                    sizeof(DSL_LineState_t)),
+
 /* DSL_FIO_AUTOBOOT_CONFIG_SET */
 DSL_IOCTL_REGISTER(DSL_FIO_AUTOBOOT_CONFIG_SET, DSL_IOCTL_HELPER_SET,
                    DSL_FALSE, DSL_DRV_AutobootConfigSet,
@@ -5328,6 +5462,11 @@ DSL_IOCTL_REGISTER(DSL_FIO_G997_DELT_FREE_RESOURCES, DSL_IOCTL_HELPER_SET,
                    sizeof(DSL_G997_DeltFreeResources_t)),
 #endif /* INCLUDE_DSL_DELT*/
 
+/* DSL_FIO_FIRMWARE_DOWNLOAD_STATUS_GET */
+DSL_IOCTL_REGISTER(DSL_FIO_FIRMWARE_DOWNLOAD_STATUS_GET, DSL_IOCTL_HELPER_GET,
+                   DSL_FALSE, DSL_DRV_FirmwareDownloadStatusGet,
+                   sizeof(DSL_FirmwareDownloadStatus_t)),
+
 #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
 /* DSL_FIO_G997_LINE_STATUS_PER_BAND_GET */
 DSL_IOCTL_REGISTER(DSL_FIO_G997_LINE_STATUS_PER_BAND_GET, DSL_IOCTL_HELPER_GET,
@@ -5512,6 +5651,16 @@ DSL_IOCTL_REGISTER(DSL_FIO_BAND_PLAN_SUPPORT_GET, DSL_IOCTL_HELPER_GET,
 DSL_IOCTL_REGISTER(DSL_FIO_BAND_PLAN_STATUS_GET, DSL_IOCTL_HELPER_GET,
                    DSL_FALSE, DSL_DRV_BandPlanStatusGet,
                    sizeof(DSL_BandPlanStatus_t)),
+/* DSL_FIO_VDSL_PROFILE_CONFIG_SET */
+DSL_IOCTL_REGISTER(DSL_FIO_VDSL_PROFILE_CONFIG_SET, DSL_IOCTL_HELPER_SET,
+                   DSL_FALSE, DSL_DRV_VdslProfileConfigSet,
+                   sizeof(DSL_VdslProfileConfig_t)),
+#ifdef INCLUDE_DSL_CONFIG_GET
+/* DSL_FIO_VDSL_PROFILE_CONFIG_GET */
+DSL_IOCTL_REGISTER(DSL_FIO_VDSL_PROFILE_CONFIG_GET, DSL_IOCTL_HELPER_GET,
+                   DSL_FALSE, DSL_DRV_VdslProfileConfigGet,
+                   sizeof(DSL_VdslProfileConfig_t)),
+#endif /* INCLUDE_DSL_CONFIG_GET */
 #endif /* (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)*/
 
 #ifdef INCLUDE_DSL_RESOURCE_STATISTICS
