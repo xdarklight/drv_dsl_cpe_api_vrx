@@ -346,7 +346,7 @@ DSL_Error_t DSL_DRV_BND_DEV_HsContinue(
    DSL_int_t i;
 
    DSL_DEBUG(DSL_DBG_MSG, (pContext,
-      SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_BND_DEV_HsContinue" DSL_DRV_CRLF,
+      SYS_DBG_MSG"DSL[%02d]: IN - DSL_DRV_BND_HsContinue" DSL_DRV_CRLF,
       DSL_DEV_NUM(pContext)));
 
    /* Copy 6 octets of the Discovery code*/
@@ -366,7 +366,7 @@ DSL_Error_t DSL_DRV_BND_DEV_HsContinue(
    nErrCode = DSL_DRV_BND_VRX_PafHsContinue(pContext, &pafHsContinue);
 
    DSL_DEBUG(DSL_DBG_MSG, (pContext,
-      SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_BND_DEV_HsContinue, retCode=%d"
+      SYS_DBG_MSG"DSL[%02d]: OUT - DSL_DRV_BND_HsContinue, retCode=%d"
       DSL_DRV_CRLF, DSL_DEV_NUM(pContext), nErrCode));
 
    return nErrCode;

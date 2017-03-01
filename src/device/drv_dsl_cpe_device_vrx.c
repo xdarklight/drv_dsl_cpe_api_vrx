@@ -4158,6 +4158,7 @@ DSL_Error_t DSL_DRV_DEV_ModemWriteConfig(
          return nErrCode;
       }
 
+#ifdef INCLUDE_DSL_CPE_API_VDSL_SUPPORT
       nErrCode = DSL_DRV_VRX_SendMsgVdsl2ProfileControl(pContext);
       if( nErrCode!=DSL_SUCCESS )
       {
@@ -4167,6 +4168,7 @@ DSL_Error_t DSL_DRV_DEV_ModemWriteConfig(
 
          return nErrCode;
       }
+#endif /* INCLUDE_DSL_CPE_API_VDSL_SUPPORT*/
    }
 
    /* Send Rate Adaptation Mode Settings */
@@ -4534,6 +4536,7 @@ DSL_Error_t DSL_DRV_DEV_FwDownload(
          {
             /* Reset bFirmwareReady flag*/
             DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->bFirmwareReady, DSL_FALSE);
+            DSL_DRV_FirmwareDownloadStatusSet(pContext, DSL_FW_DWNLD_STATUS_NA);
          }
 
          /* Set VRX device FW mode*/
@@ -4553,14 +4556,18 @@ DSL_Error_t DSL_DRV_DEV_FwDownload(
       {
          /* Reset bFirmwareReady flag*/
          DSL_CTX_WRITE_SCALAR(pContext, nErrCode, pDevCtx->bFirmwareReady, DSL_FALSE);
+         DSL_DRV_FirmwareDownloadStatusSet(pContext, DSL_FW_DWNLD_STATUS_NA);
       }
 
       /* Do the FW Download*/
+      DSL_DRV_FirmwareDownloadStatusSet(pContext, DSL_FW_DWNLD_STATUS_PENDING);
       if( DSL_DRV_VRX_InternalFirmwareDownload( (MEI_DYN_CNTRL_T*)dev, &Vdsl2_FwDl) != 0 )
       {
          DSL_DEBUG( DSL_DBG_ERR, (pContext,
             SYS_DBG_ERR"DSL[%02d]: ERROR - VRx FW downloading failed, (nReturn = %d)!"
             DSL_DRV_CRLF, DSL_DEV_NUM(pContext), Vdsl2_FwDl.ictl.retCode));
+
+         DSL_DRV_FirmwareDownloadStatusSet(pContext, DSL_FW_DWNLD_STATUS_FAILED);
 
          if (Vdsl2_FwDl.ictl.retCode == -e_MEI_ERR_INVAL_FW_IMAGE)
          {
@@ -4742,6 +4749,8 @@ DSL_Error_t DSL_DRV_DEV_FwDownload(
 
       break;
    } /* for(;;)*/
+
+   DSL_DRV_FirmwareDownloadStatusSet(pContext, DSL_FW_DWNLD_STATUS_READY);
 
    /* Fill DSL_EVENT_S_FIRMWARE_DOWNLOAD_STATUS event structure*/
    fwDwnlStatus.nError  = nErrCode == DSL_SUCCESS ? DSL_FW_LOAD_SUCCESS: DSL_FW_LOAD_ERROR;

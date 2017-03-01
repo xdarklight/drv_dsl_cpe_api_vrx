@@ -902,6 +902,57 @@ typedef enum
 } DSL_FirmwareStatusType_t;
 
 /**
+   Defines the the possible types of the firmware download status.
+   Used within startup script to trigger firmware ready.
+*/
+typedef enum
+{
+   /**
+   No dedicated information available for the firmware status. */
+   DSL_FW_DWNLD_STATUS_NA = 0,
+
+   /**
+   Firmware download started, but not finished. */
+   DSL_FW_DWNLD_STATUS_PENDING = 1,
+
+   /**
+   Firmware download finished. */
+   DSL_FW_DWNLD_STATUS_READY = 2,
+
+   /**
+   Firmware download failed. */
+   DSL_FW_DWNLD_STATUS_FAILED = 3,
+
+   /**
+   Delimiter only! */
+   DSL_FW_DWNLD_STATUS_LAST = 4,
+} DSL_FirmwareDownloadStatusType_t;
+
+/**
+   Structure used for controlling the firmware download status.
+*/
+typedef struct
+{
+   /**
+   Firmware download status. */
+   DSL_IN DSL_FirmwareDownloadStatusType_t nStatus;
+} DSL_FirmwareDownloadStatusData_t;
+
+/**
+   Structure used for controlling the firmware download status.
+   This structure has to be used for ioctl \ref DSL_FIO_FIRMWARE_DOWNLOAD_STATUS_GET.
+*/
+typedef struct
+{
+   /**
+   Driver control/status structure */
+   DSL_IN_OUT DSL_AccessCtl_t accessCtl;
+   /**
+   Structure that contains firmware download status data */
+   DSL_IN_OUT DSL_FirmwareDownloadStatusData_t data;
+} DSL_FirmwareDownloadStatus_t;
+
+/**
    Defines the the possible DSL firmware operation types for VDSL capable
    platforms.
 */
@@ -1959,27 +2010,88 @@ typedef enum
 */
 typedef enum
 {
-   /** Profile 8a */
+   /** 1  G.993.2 Profile 8a. */
    DSL_PROFILE_8A = 0,
-   /** Profile 8b */
+   /** 2  G.993.2 Profile 8b. */
    DSL_PROFILE_8B = 1,
-   /** Profile 8c */
+   /** 3  G.993.2 Profile 8c. */
    DSL_PROFILE_8C = 2,
-   /** Profile 8d */
+   /** 4  G.993.2 Profile 8d. */
    DSL_PROFILE_8D = 3,
-   /** Profile 12a */
+   /** 5  G.993.2 Profile 12a.*/
    DSL_PROFILE_12A = 4,
-   /** Profile 12b */
+   /** 6  G.993.2 Profile 12b.*/
    DSL_PROFILE_12B = 5,
-   /** Profile 17a */
+   /** 6  G.993.2 Profile 17a.*/
    DSL_PROFILE_17A = 6,
-   /** Bandplan 30a */
+   /** 7  G.993.2 Profile 30a.*/
    DSL_PROFILE_30A = 7,
-   /** Profile 17b */
-   DSL_PROFILE_17B = 8,
 
-   DSL_PROFILE_LAST = 9
+   /** Delimiter only! */
+   DSL_PROFILE_LAST = 8
 } DSL_ProfileType_t;
+
+/**
+   VDSL profiles bit field definitions.
+
+   \note All bits within this bit field have the following meaning:
+         0: Profile is *not* enabled
+         1: Profile is enabled
+
+   \note Please note that in case of using on-chip bonding (dual port mode
+         operation) *only* profiles 8A/8B/8C/8D are supported.
+         Trying to enable not supported profiles will result in an error
+         \ref DSL_ERR_NOT_SUPPORTED and configuration will be ignored!
+*/
+typedef enum
+{
+   /** 1  G.993.2 Profile 8a. */
+   DSL_BF_PROFILE_8A = 0x00000001,
+   /** 2  G.993.2 Profile 8b. */
+   DSL_BF_PROFILE_8B = 0x00000002,
+   /** 3  G.993.2 Profile 8c. */
+   DSL_BF_PROFILE_8C = 0x00000004,
+   /** 4  G.993.2 Profile 8d. */
+   DSL_BF_PROFILE_8D = 0x00000008,
+   /** 5  G.993.2 Profile 12a.*/
+   DSL_BF_PROFILE_12A = 0x00000010,
+   /** 6  G.993.2 Profile 12b.*/
+   DSL_BF_PROFILE_12B = 0x00000020,
+   /** 6  G.993.2 Profile 17a.*/
+   DSL_BF_PROFILE_17A = 0x00000040,
+   /** 7  G.993.2 Profile 30a.*/
+   DSL_BF_PROFILE_30A = 0x00000080,
+} DSL_BF_VdslProfileConfigData_t;
+
+/**
+   Structure to write (SET) or read (GET) the configuration of the VDSL
+   Profiles.
+
+   \note All bits within this bit field have the following meaning:
+         0: Profile is *not* enabled
+         1: Profile is enabled
+*/
+typedef struct {
+   /**
+   Reboot criteria */
+   DSL_CFG DSL_BF_VdslProfileConfigData_t nVdslProfile;
+} DSL_VdslProfileConfigData_t;
+
+/**
+   This structure is used to configure VDSL profile selection.
+   This structure has to be used for ioctl
+   - \ref DSL_FIO_VDSL_PROFILE_CONFIG_SET
+   - \ref DSL_FIO_VDSL_PROFILE_CONFIG_GET
+*/
+typedef struct
+{
+   /**
+   Driver control/status structure */
+   DSL_IN_OUT DSL_AccessCtl_t accessCtl;
+   /**
+   Structure that contains status data */
+   DSL_IN_OUT DSL_VdslProfileConfigData_t data;
+} DSL_VdslProfileConfig_t;
 
 /**
    Structure to read the current band plan configuration.

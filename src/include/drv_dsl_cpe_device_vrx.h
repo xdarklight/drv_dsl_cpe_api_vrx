@@ -87,11 +87,9 @@
 #if defined (DSL_VRX_DEVICE_VR9)
    #define DSL_CHIPSET_TYPE_STRING "Lantiq-VRX200"
 #elif defined (DSL_VRX_DEVICE_VR10)
-   #define DSL_CHIPSET_TYPE_STRING "Lantiq-VRX318"
-#elif defined (DSL_VRX_DEVICE_VR10_320)
-   #define DSL_CHIPSET_TYPE_STRING "Lantiq-VRX320"
+   #define DSL_CHIPSET_TYPE_STRING "Lantiq-VRX300"
 #else
-   #error Please defined a valid VRX device (VR9|VR10|VR10_320)!!!
+   #error Please defined a valid VRX device (VR9|VR10)!!!
 #endif
 
 /** Timeout setting for far end status in mili seconds */
@@ -220,23 +218,6 @@ typedef enum
    DSL_APP_UNKNOWN,
    DSL_APP_LAST = DSL_APP_UNKNOWN
 } DSL_VRX_ApplicationCode_t;
-
-/** VDSL2 profile 8a */
-#define DSL_VRX_PROFILES_8A     0x01
-/** VDSL2 profile 8b */
-#define DSL_VRX_PROFILES_8B     0x02
-/** VDSL2 profile 8c */
-#define DSL_VRX_PROFILES_8C     0x04
-/** VDSL2 profile 8d */
-#define DSL_VRX_PROFILES_8D     0x08
-/** VDSL2 profile 12a */
-#define DSL_VRX_PROFILES_12A    0x10
-/** VDSL2 profile 12b */
-#define DSL_VRX_PROFILES_12B    0x20
-/** VDSL2 profile 17a */
-#define DSL_VRX_PROFILES_17A    0x40
-/** VDSL2 profile 30a */
-#define DSL_VRX_PROFILES_30A    0x80
 
 /**
    Firmware application and feature information extracted from

@@ -542,6 +542,11 @@ struct DSL_Context
    DSL_VRX_TestParams_Fe_Status_t eTestParametersFeReady;
    DSL_uint32_t                   nTestParametersFeRefreshTimeout;
 #endif /* INCLUDE_DSL_CPE_API_VRX*/
+
+   DSL_FirmwareDownloadStatusType_t nFwDownloadStatus;
+#if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)
+   DSL_BF_VdslProfileConfigData_t VdslProfileConfigData;
+#endif /* (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1)*/
 };
 
 #define DSL_EVENT2MASK(evt) ((DSL_uint32_t)(0x1 << ((DSL_uint32_t)evt)))
@@ -823,6 +828,23 @@ DSL_Error_t DSL_DRV_AutobootStatusSet(
    DSL_IN DSL_Context_t *pContext,
    DSL_IN_OUT DSL_AutobootStatGet_t nStatus,
    DSL_IN DSL_FirmwareRequestType_t nFirmwareRequestType);
+#endif
+
+#ifndef SWIG
+DSL_Error_t DSL_DRV_FirmwareDownloadStatusSet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_FirmwareDownloadStatusType_t nStatus);
+#endif
+
+/**
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_FIRMWARE_DOWNLOAD_STATUS_GET
+*/
+#ifndef SWIG_TMP
+DSL_Error_t DSL_DRV_FirmwareDownloadStatusGet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_FirmwareDownloadStatus_t *pData
+);
 #endif
 
 #ifdef INCLUDE_DSL_RESOURCE_STATISTICS
@@ -1223,6 +1245,29 @@ DSL_Error_t DSL_DRV_BandPlanSupportedGet(
    DSL_BandPlanSupport_t *pData
 );
 #endif
+
+/**
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_VDSL_PROFILE_CONFIG_SET
+*/
+#ifndef SWIG_TMP
+DSL_Error_t DSL_DRV_VdslProfileConfigSet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_VdslProfileConfig_t *pData);
+#endif
+
+#ifdef INCLUDE_DSL_CONFIG_GET
+/**
+   For a detailed description please refer to the equivalent ioctl
+   \ref DSL_FIO_VDSL_PROFILE_CONFIG_GET
+*/
+#ifndef SWIG_TMP
+DSL_Error_t DSL_DRV_VdslProfileConfigGet(
+   DSL_IN DSL_Context_t *pContext,
+   DSL_IN_OUT DSL_VdslProfileConfig_t *pData);
+#endif
+#endif /* INCLUDE_DSL_CONFIG_GET*/
+
 #endif /* #if (INCLUDE_DSL_CPE_API_VDSL_SUPPORT == 1) */
 
 /**

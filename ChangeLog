@@ -1,19 +1,31 @@
 NEXT VERSION
 
-V4.16.5.4 - 2014-04-21
+V4.16.6.3 - 2014-09-18
+common:
+- Included compatibility patch with VDSL MEI Driver V1.4.4.x because this API
+  maintenance version is intended to be used only with this VDSL MEI Driver
+  maintenance branch.
+
+V4.16.6.2 - 2014-09-09
 -
 
-V4.16.5.3 - 2014-04-15
-- VRX320 (DSLCPE_SW-790) Changes for QCA platform
-  + fixed MCAT header files for little endian case
+V4.16.6.1 - 2014-09-04
+common:
+- VRX (DSLCPE_SW-815) FEC and CRC values in pmccsg jump suddenly to a very high
+  number when disturbing the line
+  + extended showtime counters g_VRxPM_MsgChecklist with available state (exception)
+  + please note that this covers only a part of the issue! The Jira
+    DSLCPE_SW-824 (which is currently open) needs to be included in addition.
+- VRX (DSLCPE_SW-810) CPE configuration of supported VDSL Profiles
+  + Extended Vdsl profiled configuration set within Modem config init (use only
+    selected profiles via DSL_FIO_VDSL_PROFILE_CONFIG_SET)
 
-V4.16.5.2 - 2014-04-01
-- VRX320 (DSLCPE_SW-790) Changes for QCA platform
-  + included DSL/PP related interface functions
-
-V4.16.5.1 - 2014-03-21
-- VRX320 (DSLCPE_SW-790) Changes for QCA platform
-  + added new device VR10_320 handling
+V4.16.6 - 2014-04-16
+common:
+- (DSLCPE_SW-784) State 0xff on CPE after activation of Debug messages
+  for mutlimode tests
+  + added ioctl DSL_FIO_FIRMWARE_DOWNLOAD_STATUS_GET support to trigger
+  firmware download status within startup script
 
 V4.16.5 - 2014-03-07
 Bug fix(es):
